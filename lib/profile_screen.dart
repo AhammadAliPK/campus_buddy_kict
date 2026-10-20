@@ -11,12 +11,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const String _defaultNickname = 'Guest Student';
   static const String _defaultBio =
       'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+  static const String _defaultMatric = '202300000'; //default matric number
 
   String _nickname = _defaultNickname;
   String _bio = _defaultBio;
+  String _matric = '202300000'; //matric state
 
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+  final _matricCtrl = TextEditingController(); //add matric state
   bool _editing = false;
 
   @override
@@ -24,21 +27,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
+    _matricCtrl.text = _matric; //initialize matric controller
   }
 
   @override
   void dispose() {
     _nicknameCtrl.dispose();
     _bioCtrl.dispose();
+    _matricCtrl.dispose(); //dispose matric controller
     super.dispose();
   }
 
   void _toggleEdit() {
     setState(() {
       if (_editing) {
-        // leaving edit mode: copy controller values into state
-        _nickname = _nicknameCtrl.text.trim();
+        // Homework 2: Fallback to Guest Student if empty[cite: 9]
+        final trimmedName = _nicknameCtrl.text.trim();
+        _nickname = trimmedName.isEmpty ? _defaultNickname : trimmedName;
+
         _bio = _bioCtrl.text.trim();
+        _matric = _matricCtrl.text.trim();
       }
     });
     _editing = !_editing;
@@ -48,8 +56,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _nickname = _defaultNickname;
       _bio = _defaultBio;
+      _matric = '202300000'; //reset matric state
       _nicknameCtrl.text = _defaultNickname;
       _bioCtrl.text = _defaultBio;
+      _matricCtrl.text = _matric; //reset matric controller
     });
   }
 
@@ -72,7 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const CircleAvatar(
               radius: 48,
-              backgroundImage: NetworkImage('https://picsum.photos/200'),
+              backgroundImage: AssetImage('assets/me.png'), //use local asset image
             ),
             const SizedBox(height: 12),
             if (_editing) ...[
@@ -94,6 +104,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
+              const SizedBox(height: 12), //matric textfield with num keyboard
+              TextField(
+                controller: _matricCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Matric No.',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.badge),
+                ),
+              ),  
               const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: _toggleEdit,
@@ -115,6 +135,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 6),
               Text(
                 _bio,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.black54),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Matric No.: $_matric', //display matric number
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.black54),
               ),
