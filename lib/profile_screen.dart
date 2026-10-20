@@ -7,6 +7,8 @@ class ProfileScreen extends StatefulWidget {
 }
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'Guest Student';
+  String _matric = '202300000';
+final _matricCtrl = TextEditingController();
   String _bio =
       'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
   final _nicknameCtrl = TextEditingController();
@@ -16,11 +18,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _nicknameCtrl.text = _nickname;   // pre-fill from current state
+    _matricCtrl.text = _matric;
     _bioCtrl.text = _bio;
   }
   @override
   void dispose() {
     _nicknameCtrl.dispose();
+    _matricCtrl.dispose();
     _bioCtrl.dispose();
     super.dispose();
   }
@@ -28,7 +32,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       if (_editing) {
         // leaving edit mode: copy controller values into state
-        _nickname = _nicknameCtrl.text.trim();
+_nickname = _nicknameCtrl.text.trim().isEmpty
+    ? 'Guest Student'
+    : _nicknameCtrl.text.trim();
+
+_nicknameCtrl.text = _nickname;
+        _matric = _matricCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
       }
       _editing = !_editing;
@@ -37,6 +46,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _resetProfile() {
   setState(() {
     _nickname = 'Guest Student';
+    _matric = '202300000';
+    _matricCtrl.text = _matric;
     _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
 
     // Reset the text inside the input fields
@@ -63,7 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const CircleAvatar(
               radius: 48,
-              backgroundImage: NetworkImage('https://picsum.photos/200'),
+              backgroundImage: AssetImage('assets/me.jpg'),
             ),
             const SizedBox(height: 12),
             if (_editing) ...[
@@ -86,6 +97,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+
+TextField(
+  controller: _matricCtrl,
+  keyboardType: TextInputType.number,
+  decoration: const InputDecoration(
+    labelText: 'Matric Number',
+    border: OutlineInputBorder(),
+    prefixIcon: Icon(Icons.badge),
+  ),
+),
+              const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: _toggleEdit,
                 icon: const Icon(Icons.save),
@@ -104,6 +126,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text(_bio,
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.black54)),
+                const SizedBox(height: 6),
+
+Text(
+  _matric,
+  textAlign: TextAlign.center,
+  style: const TextStyle(
+    color: Colors.grey,
+    fontSize: 12,
+  ),
+),
             ],
           ],
         ),
