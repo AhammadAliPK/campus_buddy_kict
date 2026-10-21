@@ -35,8 +35,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
       }
+      _editing = !_editing;
     });
-    _editing = !_editing;
   }
 
   @override
@@ -85,6 +85,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: _toggleEdit,
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent, // Optional: makes it red
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _nicknameCtrl.text = 'Guest Student';
+                    _bioCtrl.text = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+                  });
+                },
+                child: const Text('Reset'),
               ),
             ] else ...[
               Text(
