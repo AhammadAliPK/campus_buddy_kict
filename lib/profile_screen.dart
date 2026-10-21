@@ -9,11 +9,13 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'Guest Student';
-  String _bio =
-       'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+  String _bio ='Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+  String _matric = "202300000"; 
 
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+  final _matricCtrl = TextEditingController();
+
   bool _editing = false;
 
   @override
@@ -21,17 +23,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
    super.initState();
    _nicknameCtrl.text = _nickname; // pre-fill from current state
    _bioCtrl.text = _bio;
+   _matricCtrl.text = _matric;
  }
 
   void _resetProfile() {
   setState(() {
     _nickname = 'Guest Student';
-    _bio =
-        'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+    _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+    _matric = "202300000";
 
     // Reset the text boxes too
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
+    _matricCtrl.text = _matric;
   });
 }
 
@@ -39,15 +43,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
  void dispose() {
    _nicknameCtrl.dispose();
    _bioCtrl.dispose();
+   _matricCtrl.dispose();
    super.dispose();
  }
 
  void _toggleEdit() {
    setState(() {
       if (_editing) {
+        final nicknameInput = _nicknameCtrl.text.trim();
+
+        _nickname = nicknameInput.isEmpty
+          ? 'Guest Student'
+          : nicknameInput;
+
         // leaving edit mode: copy controller values into state
-        _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
+        _matric = _matricCtrl.text.trim();
+
+         // Update the nickname box too
+        _nicknameCtrl.text = _nickname;
  }
  _editing = !_editing;
  });
@@ -72,7 +86,7 @@ Widget build(BuildContext context) {
      children: [
        const CircleAvatar(
          radius: 48,
-         backgroundImage: NetworkImage('https://picsum.photos/200'),
+         backgroundImage: AssetImage('assets/profilepicture.jpg'),
        ),
        const SizedBox(height: 12),
        if (_editing) ...[
@@ -95,6 +109,16 @@ Widget build(BuildContext context) {
            )   ,
           ),
           const SizedBox(height: 12),
+         TextField(
+            controller: _matricCtrl,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'Matric Number',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.badge),
+            ),
+          ),
+          const SizedBox(height: 12),
           ElevatedButton.icon(
             onPressed: _toggleEdit,
             icon: const Icon(Icons.save),
@@ -112,6 +136,11 @@ Widget build(BuildContext context) {
           Text(_bio,
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.black54)),
+          const SizedBox(height: 12),
+          Text(_matric,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.black54)),
+
         ],
       ],
     ),
