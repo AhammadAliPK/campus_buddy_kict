@@ -8,8 +8,9 @@ void main() {
     await tester.pumpWidget(const CampusBuddyKictApp());
 
     expect(find.text('My Profile'), findsOneWidget);
-    expect(find.text('Guest Student'), findsOneWidget);
-    expect(find.text('202300000'), findsOneWidget);
+    expect(find.text('ansimrn_'), findsOneWidget);
+    expect(find.textContaining('Year 4'), findsOneWidget);
+    expect(find.text('2317243'), findsOneWidget);
 
     // edit and save
     await tester.tap(find.byIcon(Icons.edit));
@@ -37,7 +38,7 @@ void main() {
     await tester.pump();
     await tester.tap(find.text('Save'));
     await tester.pump();
-    expect(find.text('Guest Student'), findsOneWidget);
-    expect(find.text('202300000'), findsOneWidget);
+    expect(find.text('ansimrn_'), findsOneWidget);
+    expect(find.text('2317243'), findsOneWidget);
   });
 }

@@ -8,10 +8,11 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const _defaultNickname = 'Guest Student';
+  static const _guestNickname = 'Guest Student';
+  static const _defaultNickname = 'ansimrn_';
   static const _defaultBio =
-      'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
-  static const _defaultMatric = '202300000';
+      'Kuliyyah of ICT · Year 4 · Loves nasi ayam and clean code.';
+  static const _defaultMatric = '2317243';
 
   String _nickname = _defaultNickname;
   String _bio = _defaultBio;
@@ -44,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // leaving edit mode: copy controller values into state
         final nickname = _nicknameCtrl.text.trim();
         // empty or spaces-only nickname -> keep the default
-        _nickname = nickname.isEmpty ? _defaultNickname : nickname;
+        _nickname = nickname.isEmpty ? _guestNickname : nickname;
         _nicknameCtrl.text = _nickname;
         _bio = _bioCtrl.text.trim();
         _matric = _matricCtrl.text.trim();
