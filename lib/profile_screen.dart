@@ -8,15 +8,14 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const String _defaultNickname = 'Aleya Syafiqah';
-  static const String _defaultBio =
-      'Kuliyyah of ICT - Year 4 - Loves nasi ayam and clean code.';
-
-  String _nickname = _defaultNickname;
-  String _bio = _defaultBio;
+  String _nickname = 'Guest Student';
+  String _bio = 'Kuliyyah of ICT - Year 4 - Loves nasi ayam and clean code.';
+  String _matric = '2316604';
 
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+  final _matricCtrl = TextEditingController();
+
   bool _editing = false;
 
   @override
@@ -24,12 +23,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
+    _matricCtrl.text = _matric;
   }
 
   @override
   void dispose() {
     _nicknameCtrl.dispose();
     _bioCtrl.dispose();
+    _matricCtrl.dispose();
     super.dispose();
   }
 
@@ -37,8 +38,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       if (_editing) {
         // leaving edit mode: copy controller values into state
-        _nickname = _nicknameCtrl.text.trim();
+        final nickname = _nicknameCtrl.text.trim();
+
+        _nickname = nickname.isEmpty ? 'Guest Student' : nickname;
         _bio = _bioCtrl.text.trim();
+        _matric = _matricCtrl.text.trim();
       }
       _editing = !_editing;
     });
@@ -46,12 +50,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _resetProfile() {
     setState(() {
-      // Reset the displayed text variables
-      _nickname = _defaultNickname;
-      _bio = _defaultBio;
       // Reset the text inside the input fields
-      _nicknameCtrl.text = _defaultNickname;
-      _bioCtrl.text = _defaultBio;
+      _nicknameCtrl.text = _nickname;
+      _bioCtrl.text = _bio;
+      _matricCtrl.text = _matric;
     });
   }
 
@@ -67,6 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -74,7 +77,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const CircleAvatar(
               radius: 48,
-              backgroundImage: NetworkImage('https://picsum.photos/200'),
+              backgroundImage: AssetImage('assets/me.jpg'),
             ),
 
             const SizedBox(height: 12),
@@ -82,7 +85,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextField(
                 controller: _nicknameCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Aleya',
+                  labelText: 'Nickname',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.person),
                 ),
@@ -96,6 +99,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Bio',
                   border: OutlineInputBorder(),
+                ),
+              ),
+
+              // Adding a box for matric number
+              const SizedBox(height: 12),
+              TextField(
+                controller: _matricCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Matric Number',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.badge),
                 ),
               ),
 
@@ -118,11 +133,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
               ),
+
               const SizedBox(height: 6),
               Text(
                 _bio,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.black54),
+              ),
+
+              const SizedBox(height: 4),
+              Text(
+                _matric,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
           ],
