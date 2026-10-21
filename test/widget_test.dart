@@ -8,8 +8,8 @@ void main() {
     await tester.pumpWidget(const CampusBuddyKictApp());
 
     expect(find.text('My Profile'), findsOneWidget);
-    expect(find.text('Guest Student'), findsOneWidget);
-    expect(find.text('202300000'), findsOneWidget);
+    expect(find.text('Nisrina'), findsOneWidget);
+    expect(find.text('2314188'), findsOneWidget);
 
     // Edit and save new values.
     await tester.tap(find.byIcon(Icons.edit));
@@ -22,13 +22,13 @@ void main() {
     expect(find.text('Ali'), findsOneWidget);
     expect(find.text('2312345'), findsOneWidget);
 
-    // Empty nickname falls back to Guest Student.
+    // Empty nickname falls back to the default nickname.
     await tester.tap(find.byIcon(Icons.edit));
     await tester.pump();
     await tester.enterText(find.widgetWithText(TextField, 'Nickname'), '   ');
     await tester.tap(find.text('Save'));
     await tester.pump();
-    expect(find.text('Guest Student'), findsOneWidget);
+    expect(find.text('Nisrina'), findsOneWidget);
 
     // Reset restores the defaults.
     await tester.tap(find.byIcon(Icons.edit));
@@ -36,7 +36,7 @@ void main() {
     await tester.tap(find.text('Reset'));
     await tester.tap(find.text('Save'));
     await tester.pump();
-    expect(find.text('Guest Student'), findsOneWidget);
-    expect(find.text('202300000'), findsOneWidget);
+    expect(find.text('Nisrina'), findsOneWidget);
+    expect(find.text('2314188'), findsOneWidget);
   });
 }

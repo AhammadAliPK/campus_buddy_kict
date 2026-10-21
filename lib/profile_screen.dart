@@ -8,10 +8,10 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const _defaultNickname = 'Guest Student';
+  static const _defaultNickname = 'Nisrina';
   static const _defaultBio =
-      'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
-  static const _defaultMatric = '202300000';
+      'Kuliyyah of ICT · Year 4 · Loves music.';
+  static const _defaultMatric = '2314188';
 
   String _nickname = _defaultNickname;
   String _bio = _defaultBio;
@@ -81,9 +81,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const CircleAvatar(
-              radius: 48,
-              backgroundImage: AssetImage('assets/me.jpg'),
+            const Center(
+              child: CircleAvatar(
+                radius: 48,
+                backgroundImage: AssetImage('assets/me.png'),
+              ),
             ),
             const SizedBox(height: 12),
             if (_editing) ...[
