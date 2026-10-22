@@ -10,6 +10,9 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false; // ← NEW
+  String _selectedDay = 'Monday'; // ← NEW
+
+  final List<String> _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']; // ← NEW
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +21,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
       totalCh = totalCh + c.creditHours; // ← NEW
     } // ← NEW
 
-    final shown = sampleCourses.where((c) => c.day == 'Monday').toList(); // ← NEW
+    final shown = sampleCourses.where((c) => c.day == _selectedDay).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -41,6 +44,30 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 '${sampleCourses.length} courses · $totalCh credit hours'), // ← UPDATED
             ),
           ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: Row(
+              children: _days.map((day) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: FilterChip(
+                    label: Text(day),
+                    selected: _selectedDay == day,
+                    onSelected: (bool selected) {
+                      if (selected) {
+                        setState(() {
+                          _selectedDay = day;
+                        });
+                      }
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          
           Expanded(
             child: _isGrid // ← CHANGED
             ? GridView.builder(
