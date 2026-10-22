@@ -9,16 +9,17 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'Guest Student';
-  String _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+  String _bio = 'Kuliyyah of ICT Year 2\nLoves nasi ayam and clean code.';
+  
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
   bool _editing = false;
+
   @override
   void initState() {
     super.initState();
-    _nicknameCtrl.text = _nickname;
+    _nicknameCtrl.text = _nickname; // pre-fill from current state
     _bioCtrl.text = _bio;
-    // pre-fill from current state
   }
 
   @override
@@ -35,8 +36,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
       }
+      _editing = !_editing;
     });
-    _editing = !_editing;
   }
 
   @override
