@@ -72,7 +72,7 @@ _nicknameCtrl.text = _nickname;
  children: [
  const CircleAvatar(
  radius: 48,
-backgroundImage: AssetImage('assets/Me.jpg'), 
+backgroundImage: AssetImage('assets/Me.jpeg'), 
 ),
  const SizedBox(height: 12),
  if (_editing) ...[
