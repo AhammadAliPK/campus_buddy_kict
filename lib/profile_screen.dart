@@ -10,9 +10,11 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'Guest Student';
   String _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+  String _matricNo = 'xxxxxxx';
 
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+  final _matricNoCtrl = TextEditingController();
   bool _editing = false;
 
   @override
@@ -20,12 +22,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
+    _matricNoCtrl.text = _matricNo;
   }
 
   @override
   void dispose() {
     _nicknameCtrl.dispose();
     _bioCtrl.dispose();
+    _matricNoCtrl.dispose();
     super.dispose();
   }
 
@@ -33,7 +37,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       if (_editing) {
         _nickname = _nicknameCtrl.text.trim();
+        _nickname = _nickname.isEmpty ? 'Guest Student' : _nickname; //keep default name if the user leave empty
+
         _bio = _bioCtrl.text.trim();
+        _matricNo = _matricNoCtrl.text.trim();
+        _matricNo = _matricNo.isEmpty ? 'xxxxxxx' : _matricNo; //keep default matric number if the user leave empty
+
       }
       _editing = !_editing;
     });
@@ -63,7 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   const CircleAvatar(
                     radius: 48,
-                    backgroundImage: NetworkImage('https://picsum.photos/200'),
+                    backgroundImage: AssetImage('assets/profile.jpeg'),
                   ),
 
                   const SizedBox(height: 12),
@@ -89,6 +98,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
 
                     const SizedBox(height: 12),
+                    TextField(
+                      controller: _matricNoCtrl,
+                      maxLines: 3,
+                      keyboardType: TextInputType.multiline,
+                      decoration: const InputDecoration(
+                        labelText: 'Matric Number',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
 
                     ElevatedButton.icon(
                       onPressed: _toggleEditing,
@@ -104,6 +124,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     const SizedBox(height: 6),
                     Text(
                       _bio,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      _matricNo,
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.black54),
                     ),
