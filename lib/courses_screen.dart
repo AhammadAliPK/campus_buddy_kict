@@ -18,6 +18,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
       totalCh = totalCh + c.creditHours; // ← NEW
     } // ← NEW
 
+    final shown = sampleCourses.where((c) => c.day == 'Sunday').toList(); // ← NEW
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -72,11 +74,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   );
                 },
               )
+            : shown.isEmpty
+            ? const Center(
+                child: Text(
+                  'No classes! Alhamdulillah :)',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                ),
+              )  
             : ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: sampleCourses.length,
+              itemCount: shown.length,
               itemBuilder: (context, index) {
-                final course = sampleCourses[index];
+                final course = shown[index];
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundColor: Theme.of(context).colorScheme.primaryContainer,
