@@ -76,7 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const CircleAvatar(
               radius: 48,
-              backgroundImage: NetworkImage('https://picsum.photos/200'),
+              backgroundImage: AssetImage('assets/me.jpg'),
             ),
             const SizedBox(height: 12),
             if (_editing) ...[
