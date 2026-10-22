@@ -10,27 +10,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     String _nickname = 'Guest Student';  
     String _bio =      
         'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';  
-            
+    String _matric = '2318165';
+
     final _nicknameCtrl = TextEditingController();  
-    final _bioCtrl = TextEditingController();  
+    final _bioCtrl = TextEditingController();
+    final _matricCtrl = TextEditingController();    
     bool _editing = false;  
     @override  
     void initState() {    
         super.initState();    
         _nicknameCtrl.text = _nickname;   // pre-fill from current state    
-        _bioCtrl.text = _bio;  
+        _bioCtrl.text = _bio;
+        _matricCtrl.text = _matric;
     }  
     @override  
     void dispose() {    
         _nicknameCtrl.dispose();    
-        _bioCtrl.dispose();    
+        _bioCtrl.dispose();       
+        _matricCtrl.dispose();
         super.dispose();  
     }  
     void _toggleEdit() {    
         setState(() {      
             if (_editing) {        // leaving edit mode: copy controller values into state        
-                _nickname = _nicknameCtrl.text.trim();        
+                _nickname = _nicknameCtrl.text.trim();
+                _nickname = _nickname.isEmpty ? 'Guest Student' : _nickname;        
                 _bio = _bioCtrl.text.trim();      
+                _matric = _matricCtrl.text.trim();
             }      
             _editing = !_editing;    
         });  
@@ -52,9 +58,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Column(          
                     crossAxisAlignment: CrossAxisAlignment.stretch,          
                     children: [            
-                        const CircleAvatar(              
-                            radius: 48,              
-                            backgroundImage: NetworkImage('https://picsum.photos/200'),            
+                        CircleAvatar(
+                            radius: 48,
+                            child: ClipOval(
+                                child: Image.asset(
+                                    'assets/images/Profile.jpg',
+                                    width: 96, // 48 radius * 2
+                                    height: 96,
+                                    fit: BoxFit.cover,
+                                    alignment: Alignment.topCenter, // Shifts the view up to catch the face
+                                ),
+                            ),
                         ),            
                         const SizedBox(height: 12),            
                         if (_editing) ...[              
@@ -75,6 +89,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     labelText: 'Bio',                  
                                     border: OutlineInputBorder(),                
                                 ),              
+                            ),
+                            TextField(                
+                                controller: _matricCtrl,                
+                                maxLines: 3,                
+                                keyboardType: TextInputType.number,                
+                                decoration: const InputDecoration(                  
+                                    labelText: 'Matric Number',                  
+                                    border: OutlineInputBorder(),                
+                                ),              
                             ),              
                             const SizedBox(height: 12),              
                             ElevatedButton.icon(                
@@ -88,9 +111,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     setState(() {
                                         _nickname = 'Guest Student';
                                         _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
-
+                                        _matric = '2318165';
                                         _nicknameCtrl.text = 'Guest Student';
                                         _bioCtrl.text = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+                                        _matricCtrl.text = '2318165';
                                     });
                                 },
                                 icon: const Icon(Icons.refresh),
@@ -104,7 +128,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             const SizedBox(height: 6),              
                             Text(_bio,                  
                                 textAlign: TextAlign.center,                  
-                                style: const TextStyle(color: Colors.black54)),            
+                                style: const TextStyle(color: Colors.black54)),
+                            Text(_matric,                  
+                                textAlign: TextAlign.center,                  
+                                style: const TextStyle(color: Colors.black54)),                
                         ],          
                     ],        
                 ),      
