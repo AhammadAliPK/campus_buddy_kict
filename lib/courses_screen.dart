@@ -1,39 +1,32 @@
 import 'package:flutter/material.dart';
 
+// The Model Class: Keeps data separate from widgets
+class Course {
+  final String code;
+  final String name;
+  final int creditHours;
+  final IconData icon;
+  final String day;
+
+  const Course(this.code, this.name, this.creditHours, this.icon, this.day);
+}
+
 class CoursesScreen extends StatelessWidget {
   const CoursesScreen({super.key});
 
-  final List<Map<String, String>> _courses = const [
-    {
-      'code': 'CSCI 4311',
-      'title': 'Mobile Application Development',
-      'section': 'Section 1',
-      'time': 'Mon & Wed, 10:00 AM - 11:20 AM',
-    },
-    {
-      'code': 'CSCI 4343',
-      'title': 'Data Science',
-      'section': 'Section 2',
-      'time': 'Tue & Thu, 2:00 PM - 3:20 PM',
-    },
-    {
-      'code': 'CSCI 3302',
-      'title': 'Network Security',
-      'section': 'Section 1',
-      'time': 'Mon & Wed, 8:30 AM - 9:50 AM',
-    },
-    {
-      'code': 'INFO 3305',
-      'title': 'Web Technologies',
-      'section': 'Section 3',
-      'time': 'Friday, 9:00 AM - 11:50 AM',
-    },
-    {
-      'code': 'UNGS 2011',
-      'title': 'Creative Thinking and Problem Solving',
-      'section': 'Section 5',
-      'time': 'Tue & Thu, 11:30 AM - 12:50 PM',
-    },
+  // Data stored as a list of Course objects
+  final List<Course> _courses = const [
+    Course(
+      'CSCI 4311',
+      'Mobile Application Development',
+      3,
+      Icons.phone_iphone,
+      'Mon & Wed',
+    ),
+    Course('CSCI 4343', 'Data Science', 3, Icons.analytics, 'Tue & Thu'),
+    Course('CSCI 3302', 'Network Security', 3, Icons.security, 'Mon & Wed'),
+    Course('INFO 3305', 'Web Technologies', 3, Icons.web, 'Friday'),
+    Course('UNGS 2011', 'Creative Thinking', 2, Icons.lightbulb, 'Tue & Thu'),
   ];
 
   @override
@@ -45,26 +38,29 @@ class CoursesScreen extends StatelessWidget {
         itemCount: _courses.length,
         itemBuilder: (context, index) {
           final course = _courses[index];
+
           return Card(
             elevation: 2,
             margin: const EdgeInsets.only(bottom: 12),
             child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.teal.shade100,
-                child: Text(
-                  course['code']!.split(' ')[0],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
+              leading: Icon(course.icon, size: 36, color: Colors.teal),
               title: Text(
-                '${course['code']} - ${course['title']}',
+                course.code,
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
-              subtitle: Text('${course['section']}\n${course['time']}'),
-              isThreeLine: true,
+              subtitle: Text(course.name),
+              trailing: Text(
+                course.day,
+                style: const TextStyle(color: Colors.grey),
+              ),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Tapped on ${course.code}'),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              },
             ),
           );
         },
