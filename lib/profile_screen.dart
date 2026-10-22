@@ -10,9 +10,11 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'Guest Student';
   String _bio = 'Kuliyyah of ICT Year 2\nLoves nasi ayam and clean code.';
+  String _matric = '2313387';
 
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+  final _matricCtrl = TextEditingController();
   bool _editing = false;
 
   @override
@@ -20,21 +22,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _nicknameCtrl.text = _nickname; // pre-fill from current state
     _bioCtrl.text = _bio;
+    _matricCtrl.text = _matric;
   }
 
   @override
   void dispose() {
     _nicknameCtrl.dispose();
     _bioCtrl.dispose();
+    _matricCtrl.dispose();
     super.dispose();
   }
 
   void _toggleEdit() {
     setState(() {
       if (_editing) {
-        // leaving edit mode: copy controller values into state
-        _nickname = _nicknameCtrl.text.trim();
+        // Requirement 2: Keep 'Guest Student' if nickname is empty
+        if (_nicknameCtrl.text.trim().isEmpty) {
+          _nickname = 'Guest Student';
+        } else {
+          _nickname = _nicknameCtrl.text.trim();
+        }
         _bio = _bioCtrl.text.trim();
+        _matric = _matricCtrl.text.trim(); // Save the matric number
       }
       _editing = !_editing;
     });
@@ -45,6 +54,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // Reset the text controllers back to the defaults
       _nicknameCtrl.text = 'Guest Student';
       _bioCtrl.text = 'Kuliyyah of ICT Year 2\nLoves nasi ayam and clean code.';
+      _matricCtrl.text = '2313387';
     });
   }
 
@@ -92,6 +102,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              TextField(
+                controller: _matricCtrl,
+                keyboardType: TextInputType.number, // Forces the number keyboard[cite: 9]
+                decoration: const InputDecoration(
+                  labelText: 'Matric Number',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: _toggleEdit,
                 icon: const Icon(Icons.save),
@@ -114,6 +133,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _bio,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.black54),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _matric,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey, fontSize: 12), // Small grey text[cite: 9]
               ),
             ],
           ],
