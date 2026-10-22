@@ -9,16 +9,18 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'Guest Student';
-  String _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+  String _bio =
+      'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
   bool _editing = false;
+
   @override
   void initState() {
     super.initState();
-    _nicknameCtrl.text = _nickname;
+    _nicknameCtrl.text = _nickname; // pre-fill from current state
     _bioCtrl.text = _bio;
-    // pre-fill from current state
   }
 
   @override
@@ -35,8 +37,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
       }
+      _editing = !_editing;
     });
-    _editing = !_editing;
+  }
+
+  void _reset() {
+    setState(() {
+      _nickname = 'Guest Student';
+      _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+      _nicknameCtrl.text = _nickname;
+      _bioCtrl.text = _bio;
+    });
   }
 
   @override
@@ -86,18 +97,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
               ),
+              const SizedBox(height: 8),
+                TextButton(
+                  onPressed: _reset,
+                  child: const Text('Reset'),
+              ),
             ] else ...[
-              Text(
-                _nickname,
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
+              Text(_nickname,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  textAlign: TextAlign.center),
               const SizedBox(height: 6),
-              Text(
-                _bio,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.black54),
-              ),
+              Text(_bio,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.black54)),
             ],
           ],
         ),
