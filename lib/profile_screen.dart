@@ -86,6 +86,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
               ),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    // 1. Reset the displayed text variables
+                    _nickname = 'Guest Student';
+                    _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+                    
+                    // 2. Reset the controllers so the text boxes start clean on the next edit
+                    _nicknameCtrl.text = 'Guest Student';
+                    _bioCtrl.text = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.'; 
+                  });
+                },
+                child: const Text('Reset'),
+              ),
             ] else ...[
               Text(
                 _nickname,
