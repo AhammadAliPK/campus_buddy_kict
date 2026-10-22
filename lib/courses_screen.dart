@@ -15,6 +15,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     for (final c in sampleCourses) { // ← NEW
       totalCh = totalCh + c.creditHours; // ← NEW
     } // ← NEW
+    final shown = sampleCourses.where((c) => c.day == 'Monday').toList(); // ← NEW
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -40,8 +41,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
       
           
           Expanded(
-            child: _isGrid
-                ? GridView.builder(
+                child: shown.isEmpty
+                ? const Center(
+                    child: Text('No classes! Alhamdulillah :)'),
+                  )
+                : _isGrid
+                    ? GridView.builder(
                     padding: const EdgeInsets.all(8),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
@@ -80,9 +85,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = shown[index];
 
                       return ListTile(
                         leading: CircleAvatar(
