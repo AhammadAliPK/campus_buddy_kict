@@ -105,7 +105,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                               Text('${course.day.substring(0, 3)} ${course.time} · ${course.venue}'),
-                              Text(course.instructor ?? 'TBA'), // 👈 The ?? means "if null, use 'TBA'"
+                              Text(course.instructor ?? 'TBA'), // The ?? means "if null, use 'TBA'"
                           ],
                         ),
                         trailing: Text(course.day),
