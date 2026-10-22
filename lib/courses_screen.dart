@@ -52,7 +52,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     ),
                     itemCount: sampleCourses.length,
                     itemBuilder: (context, index) {
-
                       final course = sampleCourses[index];
                       return Card(
                         child: Center(
