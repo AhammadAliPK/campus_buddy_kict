@@ -19,7 +19,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     for (final c in sampleCourses) {
       totalCh = totalCh + c.creditHours;
     }
-    final shown = sampleCourses.where((c) => c.day == 'Monday').toList();
+    final shown = sampleCourses;
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -101,7 +101,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                         ),
                         title: Text(course.code),
-                        subtitle: Text('${course.name} - ${course.creditHours} CH'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                              Text('${course.day.substring(0, 3)} ${course.time} · ${course.venue}'),
+                              Text(course.instructor ?? 'TBA'), // 👈 The ?? means "if null, use 'TBA'"
+                          ],
+                        ),
                         trailing: Text(course.day),
                         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('${course.code} tapped')),
