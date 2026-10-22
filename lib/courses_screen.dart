@@ -18,6 +18,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
       // ← NEW
       totalCh = totalCh + c.creditHours; // ← NEW
     } // ← NEW
+    const dayOrder = {
+      'Monday': 1,
+      'Tuesday': 2,
+      'Wednesday': 3,
+      'Thursday': 4,
+      'Friday': 5,
+      'Saturday': 6,
+      'Sunday': 7,
+    }; // ← NEW
+    final sorted =
+        [...sampleCourses] // ← NEW
+          ..sort(
+            (a, b) => (dayOrder[a.day] ?? 8).compareTo(dayOrder[b.day] ?? 8),
+          );
+    final shown = sorted.where((c) => c.day == 'Monday').toList(); // ← NEW
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -55,9 +70,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: sampleCourses.length,
+                    itemCount: sorted.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = sorted[index];
 
                       return Card(
                         child: Center(
@@ -84,11 +99,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       );
                     },
                   )
+                : shown
+                      .isEmpty // ← NEW
+                ? const Center(child: Text('No classes! Alhamdulillah :)'))
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
+                    itemCount: shown.length, // ← CHANGED
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = shown[index]; // ← CHANGED
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: Theme.of(context)
@@ -103,9 +121,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         ),
                         title: Text(course.code),
                         subtitle: Text(
-                          '${course.name} · ${course.creditHours} CH',
+                          '${course.name} · ${course.creditHours} CH\n'
+                          '${course.day.substring(0, 3)} ${course.time.split('–').first} · ${course.venue}', // ← CHANGED
                         ),
-                        trailing: Text(course.day),
+                        isThreeLine: true, // ← NEW
+                        trailing: Text(course.instructor ?? 'TBA'), // ← CHANGED
                         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('${course.code} tapped')),
                         ),
