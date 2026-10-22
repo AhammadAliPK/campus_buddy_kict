@@ -5,6 +5,18 @@ class Course {
   final String name;
   final int creditHours;
   final List<String> days;
+  final String time;
+  final String venue;
   final IconData icon;
-  const Course(this.code, this.name, this.creditHours, this.days, this.icon);
+  final String? instructor;
+  const Course(
+    this.code,
+    this.name,
+    this.creditHours,
+    this.days,
+    this.time,
+    this.venue,
+    this.icon, {
+    this.instructor,
+  });
 }
