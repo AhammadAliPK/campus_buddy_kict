@@ -15,7 +15,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   String _nickname = _defaultNickname;
   String _bio = _defaultBio;
-  String _matric = '202300000'; //matric state
+  String _matric = _defaultMatric; //matric state
 
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
@@ -56,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _nickname = _defaultNickname;
       _bio = _defaultBio;
-      _matric = '202300000'; //reset matric state
+      _matric = _defaultMatric; //reset matric state
       _nicknameCtrl.text = _defaultNickname;
       _bioCtrl.text = _defaultBio;
       _matricCtrl.text = _matric; //reset matric controller
