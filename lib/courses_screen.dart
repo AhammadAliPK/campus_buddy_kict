@@ -17,6 +17,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     for (final c in sampleCourses) {
       totalCh = totalCh + c.creditHours;
     }
+    final shown = sampleCourses.where((c) => c.day == 'Monday').toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -37,7 +38,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                  '${sampleCourses.length} courses · $totalCh credit hours'),
+                '${sampleCourses.length} courses · $totalCh credit hours',
+              ),
             ),
           ),
           // Step 12: grid or list?
@@ -47,10 +49,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     padding: const EdgeInsets.all(8),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // two cards per row
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                    ),
+                          crossAxisCount: 2, // two cards per row
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                        ),
                     itemCount: sampleCourses.length,
                     itemBuilder: (context, index) {
                       final course = sampleCourses[index];
@@ -61,42 +63,52 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             children: [
                               Icon(course.icon, size: 40),
                               const SizedBox(height: 8),
-                              Text(course.code,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold)),
-                              Text(course.name,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis),
+                              Text(
+                                course.code,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                course.name,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ],
                           ),
                         ),
                       );
                     },
                   )
+                : shown.isEmpty
+                ? const Center(child: Text('No classes! Alhamdulillah :)'))
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = shown[index];
                       return ListTile(
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
                         leading: CircleAvatar(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primaryContainer,
-                          child: Icon(course.icon,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer),
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .primaryContainer,
+                          child: Icon(
+                            course.icon,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                          ),
                         ),
                         title: Text(course.code),
-                        subtitle:
-                            Text('${course.name} · ${course.creditHours} CH'),
+                        subtitle: Text(
+                          '${course.name} · ${course.creditHours} CH',
+                        ),
                         trailing: Text(course.day),
-                        onTap: () =>
-                            ScaffoldMessenger.of(context).showSnackBar(
+                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('${course.code} tapped')),
                         ),
                       );
