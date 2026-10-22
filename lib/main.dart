@@ -5,6 +5,7 @@ void main() => runApp(const CampusBuddyKictApp());
 
 class CampusBuddyKictApp extends StatelessWidget {
   const CampusBuddyKictApp({super.key});
+  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
