@@ -20,8 +20,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
       totalCh += course.creditHours;
     }
 
-    final shown = sampleCourses;
     
+    final dayOrder = {
+      'Monday': 1,
+      'Tuesday': 2,
+      'Wednesday': 3,
+      'Thursday': 4,
+      'Friday': 5,
+    };
+
+    final shown = [...sampleCourses];
+
+    shown.sort((a, b) {
+      final aDay = a.day.split(' & ').first;
+      final bDay = b.day.split(' & ').first;
+
+      return (dayOrder[aDay] ?? 6).compareTo(dayOrder[bDay] ?? 6);
+    });
+
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -114,11 +131,17 @@ Expanded(
                       .onPrimaryContainer,
                 ),
               ),
+              
               title: Text(course.code),
-              subtitle: Text(
-                '${course.name} · ${course.creditHours} CH',
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${course.name} · ${course.creditHours} CH'),
+                  Text('${course.day} ${course.time} · ${course.venue}'),
+                  Text('Lecturer: ${course.instructor ?? 'TBA'}'),
+                ],
               ),
-              trailing: Text(course.day),
+
               onTap: () =>
                   ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

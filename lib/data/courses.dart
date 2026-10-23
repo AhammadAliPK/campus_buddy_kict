@@ -9,6 +9,9 @@ const List<Course> sampleCourses = [
     3,
     'Tuesday & Thursday',
     Icons.phone_iphone,
+    '15:30–16:50',
+    'ICT LR 13 LEVEL 2D',
+    'POYILIKANDIYIL AHAMMAD ALI',
   ),
   Course(
     'CSCI 4340',
@@ -16,6 +19,9 @@ const List<Course> sampleCourses = [
     3,
     'Tuesday & Thursday',
     Icons.psychology,
+    '08:30-09:50',
+    'ICT TEACH LAB 4 LEVEL 3C',
+    'AMIR AATIEFF BIN AMIR HUSSIN',
   ),
   Course(
     'CSCI 4341',
@@ -23,6 +29,9 @@ const List<Course> sampleCourses = [
     3,
     'Monday & Wednesday',
     Icons.analytics,
+    '14:00-15:20',
+    'ICT LR 14 LEVEL 2D',
+    'SHARYAR WANI',
   ),
   Course(
     'CSCI 4342',
@@ -30,6 +39,9 @@ const List<Course> sampleCourses = [
     3,
     'Tuesday & Thursday',
     Icons.language,
+    '14:00–15:20',
+    'ICT TL-D4-04 LEVEL 4D',
+    'SURIANI BT. SULAIMAN',
   ),
   Course(
     'CSCI 4343',
@@ -37,6 +49,9 @@ const List<Course> sampleCourses = [
     3,
     'Tuesday & Thursday',
     Icons.bar_chart,
+    '10:00-11:20',
+    'ICT TL-D4-02 LEVEL 4D',
+    'RAINI BINTI HASSAN',
   ),
   Course(
     'CSCI 4402',
@@ -44,5 +59,8 @@ const List<Course> sampleCourses = [
     4,
     'Friday',
     Icons.computer,
+    '11:30–12:50',
+    'ICT LT 1 LEVEL 4D',
+    'AHMAD ANWAR BIN ZAINUDDIN',
   ),
 ];
