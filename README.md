@@ -108,8 +108,8 @@ Examples:
 
 | You are… | Assignment given in | Matric no. | Your branch name |
 |---|---|---|---|
-| Section 1 | week 3 | G251000 | `section1/week3/G251000` |
-| Section 2 | week 4 | G251001 | `section2/week4/G251001` |
+| Section 1 | week 3 | G251000 | `section1_G251000` |
+| Section 2 | week 4 | G251001 | `section2_G251001` |
 
 **Steps** — example below is Section 1, week 3's assignment, matric G251000.
 Replace with **your** section, week, and matric:
@@ -118,7 +118,7 @@ Replace with **your** section, week, and matric:
    (same number as the week — week 3's assignment → tag `week-03`):
 
    ```
-   git checkout -b section1/week3/G251000 week-03
+   git checkout -b section1_G251000 week-03
    ```
 
 2. Build the assignment. **Commit as you go** — many small commits are
@@ -126,13 +126,13 @@ Replace with **your** section, week, and matric:
 
    ```
    git add -A
-   git commit -m "week3: added schedule screen"
+   git commit -m "week3: added profile screen"
    ```
 
 3. Submit = push your branch to GitHub:
 
    ```
-   git push -u origin section1/week3/G251000
+   git push -u origin section1_G251000
    ```
 
    💡 **The first time you ever push**, a browser window opens and asks you
