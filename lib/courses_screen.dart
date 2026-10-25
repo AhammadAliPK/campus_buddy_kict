@@ -13,11 +13,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int totalCh = 0;
+    num totalCh = 0;
     for (final c in sampleCourses) {
       totalCh = totalCh + c.creditHours;
     }
-    final shown = sampleCourses.where((c) => c.day == 'Monday').toList();
+    final shown = sampleCourses.where((c) => c.day.contains('Monday')).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -86,6 +86,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     itemCount: shown.length,
                     itemBuilder: (context, index) {
                       final course = shown[index];
+                      final shortDay = course.day
+                          .split(' & ')
+                          .map((d) => d.substring(0, 3))
+                          .join('/');
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: Theme.of(context)
@@ -101,7 +105,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         title: Text(course.code),
                         subtitle: Text(
                           '${course.name} · ${course.creditHours} CH\n'
-                          '${course.day.substring(0, 3)} ${course.time} · ${course.venue}',
+                          '$shortDay ${course.time} · ${course.venue}',
                         ),
                         isThreeLine: true,
                         trailing: Text(course.instructor ?? 'TBA'),

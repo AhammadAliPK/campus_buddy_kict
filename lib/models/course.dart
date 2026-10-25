@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class Course {
   final String code;
   final String name;
-  final int creditHours;
+  final num creditHours;
   final String day;
   final IconData icon;
   final String time;
