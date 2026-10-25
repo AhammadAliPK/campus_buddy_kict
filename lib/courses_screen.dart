@@ -17,6 +17,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     for (final c in sampleCourses) {        // go through every course, one by one, calling it c
       totalCh = totalCh + c.creditHours;    // add that course's credit hours to the counter
     }                                       // after the loop, totalCh = total credit hours
+    final shown = sampleCourses.where((c) => c.day == 'Thursday').toList();
     return Scaffold(                         // ready-made screen: top bar + body
       appBar: AppBar(
         title: const Text('My Courses'),      // title in the top bar
@@ -73,11 +74,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
         );
       },
     )
-  : ListView.builder(                   // a scrolling list that builds rows on demand
+     : shown.isEmpty
+         ? const Center(child: Text('No classes! Alhamdulillah :)'))
+         : ListView.builder(    // a scrolling list that builds rows on demand
         padding: const EdgeInsets.symmetric(vertical: 8), // space above and below the list
-        itemCount: sampleCourses.length,        // how many rows = how many courses
+        itemCount: shown.length,        // how many rows = how many courses
         itemBuilder: (context, index) {         // runs once per row; index = 0, 1, 2...
-          final course = sampleCourses[index];  // pick the course for this row
+          final course = shown[index];  // pick the course for this row
           return ListTile(                      // a standard row: left icon, texts, right text
             leading: CircleAvatar(              // round circle on the left
               backgroundColor: Theme.of(context).colorScheme.primaryContainer, // light teal
