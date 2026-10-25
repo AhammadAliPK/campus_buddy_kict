@@ -10,7 +10,7 @@ const List<Course> sampleCourses = [
     '3:30pm–4:50pm',
     'LR13 Level 2D',
     Icons.phone_iphone,
-    instructor: 'Poyilikandiyil Ahammad Ali',
+    instructor: 'Dr. Poyilikandiyil Ahammad Ali',
   ),
   Course(
     'CSCI 4320',
@@ -30,7 +30,7 @@ const List<Course> sampleCourses = [
     '2:00pm–3:20pm',
     'Cisco Lab2 Level 4E',
     Icons.lan,
-    instructor: 'Adamu Abubakar Ibrahim',
+    instructor: 'Dr. Adamu Abubakar Ibrahim',
   ),
   Course(
     'CSCI 4402',
@@ -40,6 +40,6 @@ const List<Course> sampleCourses = [
     '11:30am–12:50pm',
     'LT 1 Level 4D',
     Icons.school,
-    instructor: 'Ahmad Anwar Bin Zainuddin',
+    instructor: 'Dr. Ahmad Anwar Bin Zainuddin',
   ),
 ];

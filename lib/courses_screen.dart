@@ -74,6 +74,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
+                          mainAxisExtent: 240,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
@@ -93,8 +94,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(course.icon, size: 32),
-                                const SizedBox(height: 8),
+                                Icon(course.icon, size: 28),
+                                const SizedBox(height: 1),
                                 Text(
                                   course.code,
                                   style: Theme.of(context)
@@ -104,14 +105,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 Text(
                                   course.name,
                                   textAlign: TextAlign.center,
-                                  maxLines: 2,
+                                  maxLines: 5,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 Text(
-                                  '${course.creditHours} CH · ${course.days.map((d) => d.substring(0, 3)).join(', ')}',
+                                  '${course.creditHours} CH', //· ${course.days.map((d) => d.substring(0, 3)).join(', ')}
                                 ),
-                                Text('${course.time} · ${course.venue}'),
-                                Text(course.instructor ?? 'TBA'),
+                                Text('${course.time}'),
+                                Text('${course.venue}'),
+                                Center(
+                                  child: Text(
+                                    course.instructor ?? 'TBA',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -143,7 +150,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         isThreeLine: true,
                         subtitle: Text(
                           '${course.name} · ${course.creditHours} CH\n'
-                          '${course.days.map((d) => d.substring(0, 3)).join(', ')} '
+                          //'${course.days.map((d) => d.substring(0, 3)).join(', ')} '
                           '${course.time} · ${course.venue}\n'
                           '${course.instructor ?? 'TBA'}',
                         ),
