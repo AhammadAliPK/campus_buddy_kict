@@ -1,8 +1,10 @@
 
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/profile_screen.dart';
+import 'package:campus_buddy_kict/courses_screen.dart';
 
-void main() => runApp(const CampusBuddyKictApp());
+void main() {
+  runApp(const CampusBuddyKictApp());
+}
 
 class CampusBuddyKictApp extends StatelessWidget {
   const CampusBuddyKictApp({super.key});
@@ -11,12 +13,14 @@ class CampusBuddyKictApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Campus Buddy KICT',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.teal,
         ),
+        useMaterial3: true,
       ),
-      home: const ProfileScreen(),
+      home: const CoursesScreen(),
     );
   }
 }
