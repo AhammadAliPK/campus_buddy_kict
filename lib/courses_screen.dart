@@ -17,7 +17,15 @@ class _CoursesScreenState extends State<CoursesScreen> {
     for (final c in sampleCourses) {        // go through every course, one by one, calling it c
       totalCh = totalCh + c.creditHours;    // add that course's credit hours to the counter
     }                                       // after the loop, totalCh = total credit hours
-    final shown = sampleCourses.where((c) => c.day == 'Thursday').toList();
+    final shown = [...sampleCourses];  // a copy of ALL courses (the ... copies every item)
+    const dayOrder = {
+      'Monday': 1, 'Tuesday': 2, 'Wednesday': 3,
+      'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7,
+    };
+    shown.sort((a, b) => dayOrder[a.day]!.compareTo(dayOrder[b.day]!));
+    // sort compares two courses a and b at a time:
+    //   look up each one's day number, and the smaller number goes first.
+    // ! = "I promise this day is in the map" (it is, if you spelled it right)
     return Scaffold(                         // ready-made screen: top bar + body
       appBar: AppBar(
         title: const Text('My Courses'),      // title in the top bar
@@ -51,9 +59,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
       mainAxisSpacing: 8,         // gap between rows
       crossAxisSpacing: 8,        // gap between columns
       ),
-      itemCount: sampleCourses.length, // one card per course
+      itemCount: shown.length, // one card per course
       itemBuilder: (context, index) {  // builds each card
-        final course = sampleCourses[index];
+        final course = shown[index];
         return Card(
           child: Center(
             child: Column(
@@ -88,9 +96,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   color: Theme.of(context).colorScheme.onPrimaryContainer),    // dark teal
             ),
             title: Text(course.code),           // big text: 'CSCI 4311'
-            subtitle: Text('${course.name} · ${course.creditHours} CH'),
-            // small text. ${...} puts a value inside a string → 'Mobile App Dev · 3 CH'
-            trailing: Text(course.day),         // text on the right: 'Monday'
+            subtitle: Text(
+                '${course.name}\n'                         // line 1: the course name
+                '${course.day.substring(0, 3)} · ${course.time}\n'  // line 2: 'Mon · 09:00–10:30'
+                '${course.venue}'),
+                // \n = new line. substring(0, 3) = first 3 letters: 'Monday' → 'Mon'
+            isThreeLine: true,                             // give the row room for 2 subtitle lines
+            trailing: Text(course.instructor ?? 'TBA'),    // ?? = "if missing, use 'TBA'"
             tileColor: index.isOdd
                 ? Colors.black.withValues(alpha: 0.03)
                 : null,            
