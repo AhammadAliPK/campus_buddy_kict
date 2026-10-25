@@ -47,7 +47,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
       gridDelegate: 
       const SliverGridDelegateWithFixedCrossAxisCount( // grid layout rules:
       crossAxisCount: 2,          // 2 cards per row
-      mainAxisSpacing: 8,         // gap between rowscrossAxisSpacing: 8,        // gap between columns
+      mainAxisSpacing: 8,         // gap between rows
+      crossAxisSpacing: 8,        // gap between columns
       ),
       itemCount: sampleCourses.length, // one card per course
       itemBuilder: (context, index) {  // builds each card
@@ -87,6 +88,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
             subtitle: Text('${course.name} · ${course.creditHours} CH'),
             // small text. ${...} puts a value inside a string → 'Mobile App Dev · 3 CH'
             trailing: Text(course.day),         // text on the right: 'Monday'
+            tileColor: index.isOdd
+                ? Colors.black.withValues(alpha: 0.03)
+                : null,            
             onTap: () => ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('${course.code} tapped')),
             ),                                  // tap a row → grey message pops up at the bottom
