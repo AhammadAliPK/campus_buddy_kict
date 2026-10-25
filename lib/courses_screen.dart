@@ -17,7 +17,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
     for (final c in sampleCourses) {
       totalCh = totalCh + c.creditHours;
     }
-    final shown = sampleCourses.where((c) => c.day.contains('Monday')).toList();
+    const dayNumber = {
+      'Monday': 1,
+      'Tuesday': 2,
+      'Wednesday': 3,
+      'Thursday': 4,
+      'Friday': 5,
+      'Saturday': 6,
+      'Sunday': 7,
+    };
+    final sorted = [...sampleCourses];
+    sorted.sort((a, b) {
+      final byDay = dayNumber[a.day.split(' & ').first]!
+          .compareTo(dayNumber[b.day.split(' & ').first]!);
+      return byDay != 0 ? byDay : a.time.compareTo(b.time);
+    });
+    final shown = sorted.where((c) => c.day.contains('Tuesday')).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -51,9 +66,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: sampleCourses.length,
+                    itemCount: sorted.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = sorted[index];
                       return Card(
                         child: Center(
                           child: Column(
