@@ -11,8 +11,10 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
 
-  // "Which day am I free?" — null shows every course; try 'Mon' or 'Tue'.
-  final String? _dayFilter = null;
+  // "Which day am I free?" — null shows every course.
+  String? _dayFilter;
+
+  static const _days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 
   // 0.5 -> "0.5", 3.0 -> "3"
   String _ch(double ch) => ch == ch.truncate() ? '${ch.toInt()}' : '$ch';
@@ -24,9 +26,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
       totalCh = totalCh + c.creditHours;
     }
 
-    final shown = _dayFilter == null
+    final dayFilter = _dayFilter;
+    final shown = dayFilter == null
         ? sampleCourses
-        : sampleCourses.where((c) => c.day.contains(_dayFilter)).toList();
+        : sampleCourses.where((c) => c.day.contains(dayFilter)).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -47,6 +50,27 @@ class _CoursesScreenState extends State<CoursesScreen> {
               padding: const EdgeInsets.all(12),
               child: Text(
                   '${sampleCourses.length} courses · ${_ch(totalCh)} credit hours'),
+            ),
+          ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                FilterChip(
+                  label: const Text('All'),
+                  selected: _dayFilter == null,
+                  onSelected: (_) => setState(() => _dayFilter = null),
+                ),
+                for (final day in _days) ...[
+                  const SizedBox(width: 8),
+                  FilterChip(
+                    label: Text(day),
+                    selected: _dayFilter == day,
+                    onSelected: (_) => setState(() => _dayFilter = day),
+                  ),
+                ],
+              ],
             ),
           ),
           Expanded(
@@ -104,10 +128,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             ),
                             title: Text(course.code),
                             subtitle: Text(
-                                '${course.name} · ${_ch(course.creditHours)} CH\n'
-                                '${course.day} ${course.time} · ${course.venue}'),
+                                '${course.name}\n'
+                                '${course.day} · ${course.time} · ${course.venue}\n'
+                                'Instructor: ${course.instructor ?? 'TBA'}'),
                             isThreeLine: true,
-                            trailing: Text(course.instructor ?? 'TBA'),
+                            trailing: Text('${_ch(course.creditHours)} CH'),
                             onTap: () =>
                                 ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('${course.code} tapped')),
