@@ -11,6 +11,9 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
 
+  // "Which day am I free?" — null shows every course; try 'Mon' or 'Tue'.
+  final String? _dayFilter = null;
+
   // 0.5 -> "0.5", 3.0 -> "3"
   String _ch(double ch) => ch == ch.truncate() ? '${ch.toInt()}' : '$ch';
 
@@ -21,8 +24,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
       totalCh = totalCh + c.creditHours;
     }
 
-    // "Which day am I free?" — change 'Mon' to e.g. 'Tue' to see that day.
-    final shown = sampleCourses.where((c) => c.day.contains('Mon')).toList();
+    final shown = _dayFilter == null
+        ? sampleCourses
+        : sampleCourses.where((c) => c.day.contains(_dayFilter)).toList();
 
     return Scaffold(
       appBar: AppBar(
