@@ -9,15 +9,18 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'Guest Student';
+  String _matric = '2023000';
   String _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+  final _matricCtrl = TextEditingController();
   bool _editing = false;
   @override
   void initState() {
     super.initState();
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
+    _matricCtrl.text = _matric;
     // pre-fill from current state
   }
 
@@ -25,6 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void dispose() {
     _nicknameCtrl.dispose();
     _bioCtrl.dispose();
+    _matricCtrl.dispose();
     super.dispose();
   }
 
@@ -34,6 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         // leaving edit mode: copy controller values into state
         _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
+        _matric = _matricCtrl.text.trim();
       }
     });
     _editing = !_editing;
@@ -43,8 +48,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _nickname = 'Guest Student';
       _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+      _matric = '2023000';
       _nicknameCtrl.text = _nickname;
       _bioCtrl.text = _bio;
+      _matricCtrl.text = _matric;
     });
   }
 
@@ -67,7 +74,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const CircleAvatar(
               radius: 48,
-              backgroundImage: NetworkImage('https://picsum.photos/200'),
+              backgroundImage: AssetImage('assets/me.jpg'),
             ),
             const SizedBox(height: 12),
             if (_editing) ...[
@@ -87,6 +94,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: const InputDecoration(
                   labelText: 'Bio',
                   border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _matricCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Matric Number',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.badge),
                 ),
               ),
               const SizedBox(height: 12),
@@ -111,6 +128,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.black54),
               ),
+              const SizedBox(height: 4),
+              Text(
+                _matric,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.black54, fontSize: 12),
+              )
             ],
           ],
         ),
