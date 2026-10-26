@@ -99,8 +99,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             ),
                             title: Text(course.code),
                             subtitle: Text(
-                                '${course.name} · ${course.creditHours} CH'),
-                            trailing: Text(course.day),
+                                '${course.name} · ${course.creditHours} CH\n'
+                                '${course.day} ${course.time} · ${course.venue}'),
+                                isThreeLine: true,
+                            trailing: Text(course.instructor ?? 'TBA'),
                             onTap: () =>
                                 ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('${course.code} tapped')),
