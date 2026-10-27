@@ -9,7 +9,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'Siti Maisarah';
-  String _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+  String _bio = 'Kuliyyah of ICT · Year 4 · Cats and Digital Forensics';
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
   bool _editing = false;
@@ -58,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const CircleAvatar(
               radius: 48,
-              backgroundImage: NetworkImage('https://picsum.photos/200'),
+              backgroundImage: AssetImage('assets/images/profile.HEIC'),
             ),
             const SizedBox(height: 12),
             if (_editing) ...[
