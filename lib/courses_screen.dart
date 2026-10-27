@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 
 class CoursesScreen extends StatefulWidget {
@@ -9,7 +9,7 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
-  bool isGrid = false; // Remembers current view state
+  bool isGrid = false;
 
   @override
   Widget build(BuildContext context) {
@@ -18,93 +18,180 @@ class _CoursesScreenState extends State<CoursesScreen> {
       totalCh += c.creditHours;
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Courses'),
-        actions: [
-          IconButton(
-            icon: Icon(isGrid ? Icons.grid_on : Icons.list),
-            tooltip: 'Toggle View',
-            onPressed: () => setState(() => isGrid = !isGrid),
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('My Courses'),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: Icon(
+            isGrid ? CupertinoIcons.square_grid_2x2 : CupertinoIcons.list_bullet,
           ),
-        ],
+          onPressed: () => setState(() => isGrid = !isGrid),
+        ),
       ),
-      body: Column(
-        children: [
-          Card(
-            margin: const EdgeInsets.all(12),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                '${sampleCourses.length} courses • $totalCh credit hours',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+      child: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            // iOS Summary Card
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: CupertinoColors.secondarySystemBackground,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Total Courses',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
+                    ),
+                  ),
+                  Text(
+                    '${sampleCourses.length} courses • $totalCh CH',
+                    style: const TextStyle(
+                      color: CupertinoColors.systemGrey,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          Expanded(
-            child: isGrid
-                ? GridView.builder(
-                    padding: const EdgeInsets.all(8),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      childAspectRatio: 1.2,
-                    ),
-                    itemCount: sampleCourses.length,
-                    itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
-                      return Card(
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
+            const SizedBox(height: 12),
+            Expanded(
+              child: isGrid
+                  ? GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 1.1,
+                      ),
+                      itemCount: sampleCourses.length,
+                      itemBuilder: (context, index) {
+                        final course = sampleCourses[index];
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: CupertinoColors.secondarySystemBackground,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: CupertinoButton(
+                            padding: const EdgeInsets.all(8),
+                            onPressed: () => _showCourseDialog(context, course.code, course.name),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(course.icon, size: 40),
-                                const SizedBox(height: 8),
-                                Text(course.code,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold)),
-                                Text(course.name,
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis),
+                                Icon(course.icon, size: 32, color: CupertinoColors.activeBlue),
+                                const SizedBox(height: 6),
+                                Text(
+                                  course.code,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: CupertinoColors.label,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  course.name,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: CupertinoColors.systemGrey,
+                                    fontSize: 11,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
-                    itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
-                      return ListTile(
-                        tileColor: index.isOdd
-                            ? Colors.black.withValues(alpha: 0.03)
-                            : null,
-                        leading: CircleAvatar(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primaryContainer,
-                          child: Icon(course.icon,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer),
-                        ),
-                        title: Text(course.code),
-                        subtitle:
-                            Text('${course.name} • ${course.creditHours} CH'),
-                        trailing: Text(course.day),
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${course.code} tapped')),
-                        ),
-                      );
-                    },
-                  ),
+                        );
+                      },
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: sampleCourses.length,
+                      itemBuilder: (context, index) {
+                        final course = sampleCourses[index];
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: CupertinoColors.secondarySystemBackground,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: CupertinoButton(
+                            padding: const EdgeInsets.all(10),
+                            onPressed: () => _showCourseDialog(context, course.code, course.name),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: CupertinoColors.activeBlue.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(course.icon, color: CupertinoColors.activeBlue, size: 22),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        course.code,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 15,
+                                          color: CupertinoColors.label,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        '${course.name} • ${course.creditHours} CH',
+                                        style: const TextStyle(
+                                          color: CupertinoColors.systemGrey,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  course.day,
+                                  style: const TextStyle(
+                                    color: CupertinoColors.systemGrey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCourseDialog(BuildContext context, String code, String name) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text(code),
+        content: Text('$name tapped!'),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('OK'),
+            onPressed: () => Navigator.pop(context),
           ),
         ],
       ),
