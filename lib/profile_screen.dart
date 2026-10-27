@@ -10,15 +10,16 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'Guest Student';
   String _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
   bool _editing = false;
+
   @override
   void initState() {
     super.initState();
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
-    // pre-fill from current state
   }
 
   @override
@@ -31,12 +32,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _toggleEdit() {
     setState(() {
       if (_editing) {
-        // leaving edit mode: copy controller values into state
         _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
       }
+      _editing = !_editing;
     });
-    _editing = !_editing;
+  }
+
+  void _resetProfile() {
+    setState(() {
+      _nickname = 'Guest Student';
+      _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+      _nicknameCtrl.text = _nickname;
+      _bioCtrl.text = _bio;
+    });
   }
 
   @override
@@ -86,6 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
               ),
+              TextButton(onPressed: _resetProfile, child: const Text('Reset')),
             ] else ...[
               Text(
                 _nickname,
