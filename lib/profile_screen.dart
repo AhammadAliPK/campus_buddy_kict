@@ -8,10 +8,10 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const _defaultNickname = 'Guest Student';
+  static const _defaultNickname = 'Imran Azuhar';
   static const _defaultBio =
-      'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
-  static const _defaultMatric = '202300000';
+      'Kuliyyah of ICT · Year 4 · Get Gud.';
+  static const _defaultMatric = '2318281';
 
   String _nickname = _defaultNickname;
   String _bio = _defaultBio;
