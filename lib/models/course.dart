@@ -6,5 +6,18 @@ class Course {
   final int creditHours;
   final String day;
   final IconData icon;
-  const Course(this.code, this.name, this.creditHours, this.day, this.icon);
+  final String time;
+  final String venue;
+  final String? instructor;
+
+  const Course(
+    this.code,
+    this.name,
+    this.creditHours,
+    this.day,
+    this.icon,
+    this.time,
+    this.venue, [
+    this.instructor,
+  ]);
 }

@@ -14,11 +14,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int totalCh = 0; // ← NEW
+    final dayValues = {'M-W': 1, 'T-TH': 2, 'FRI': 5};
+
+    final sortedCourses = sampleCourses.toList();
+    sortedCourses.sort(
+      (a, b) => (dayValues[a.day] ?? 8).compareTo(dayValues[b.day] ?? 8),
+    );
+
+    int totalCh = 0;
     for (final c in sampleCourses) {
-      // ← NEW
-      totalCh = totalCh + c.creditHours; // ← NEW
-    } // ← NEW
+      totalCh = totalCh + c.creditHours;
+    }
+
+    final shown = sampleCourses
+        .where((c) => c.day == 'Monday')
+        .toList(); // ← NEW
 
     return Scaffold(
       appBar: AppBar(
@@ -42,13 +52,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
+                '${sortedCourses.length} courses · $totalCh credit hours',
               ),
             ),
           ),
           Expanded(
-            child:
-                _isGrid // ← CHANGED
+            child: sortedCourses.isEmpty
+                ? const Center(child: Text('No classes! Alhamdulillah :)'))
+                : _isGrid
                 ? GridView.builder(
                     padding: const EdgeInsets.all(8),
                     gridDelegate:
@@ -57,9 +68,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: sampleCourses.length,
+                    itemCount: sortedCourses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = sortedCourses[index];
+
                       return Card(
                         child: Center(
                           child: Column(
@@ -87,9 +99,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
+                    itemCount: sortedCourses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = sortedCourses[index];
+
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: Theme.of(context)
@@ -103,15 +116,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                         ),
                         title: Text(course.code),
-                        tileColor:
-                            index
-                                .isOdd // ← NEW
+                        tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
                         subtitle: Text(
-                          '${course.name} · ${course.creditHours} CH',
+                          '${course.day} ${course.time} · ${course.venue}',
                         ),
-                        trailing: Text(course.day),
+                        trailing: Text(course.instructor ?? 'TBA'),
                         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('${course.code} tapped')),
                         ),
