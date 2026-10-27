@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -9,110 +10,102 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
+  static const _days = ['All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+
   bool _isGrid = false;
+  String _day = 'All';
+
   @override
   Widget build(BuildContext context) {
-    int totalCh = 0; // ← NEW
-    for (final c in sampleCourses) {
-      // ← NEW
-      totalCh = totalCh + c.creditHours; // ← NEW
-    } //
+    // from courses, where day matches, make a list
+    final shown = _day == 'All'
+        ? courses
+        : courses.where((c) => c.day == _day).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
           IconButton(
-            icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
-            tooltip: 'Grid view',
+            icon: Icon(_isGrid ? Icons.list : Icons.grid_view),
             onPressed: () => setState(() => _isGrid = !_isGrid),
           ),
         ],
       ),
       body: Column(
         children: [
-          Card(
-            margin: const EdgeInsets.all(12),
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
-              ),
+          // chip row: a sideways list
+          SizedBox(
+            height: 56,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.all(8),
+              itemCount: _days.length,
+              itemBuilder: (context, index) {
+                final day = _days[index];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(day),
+                    selected: _day == day,
+                    onSelected: (_) => setState(() => _day = day),
+                  ),
+                );
+              },
             ),
           ),
-          Expanded(
-            child: _isGrid
-                ? GridView.builder(
-                    padding: const EdgeInsets.all(8),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2, // two cards per row
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                        ),
-                    itemCount: sampleCourses.length,
-                    itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
-                      return Card(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(course.icon, size: 40),
-                              const SizedBox(height: 8),
-                              Text(
-                                course.code,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                course.name,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
-                    itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer,
-                          child: Icon(
-                            course.icon,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
-                          ),
-                        ),
-                        title: Text(course.code),
-                        tileColor:
-                            index
-                                .isOdd // ← NEW
-                            ? Colors.black.withValues(alpha: 0.03)
-                            : null,
-                        subtitle: Text(
-                          '${course.name} · ${course.creditHours} CH',
-                        ),
-                        trailing: Text(course.day),
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${course.code} tapped')),
-                        ),
-                      );
-                    },
-                  ),
-          ),
+          // a ListView inside a Column needs Expanded
+          Expanded(child: _isGrid ? _buildGrid(shown) : _buildList(shown)),
         ],
       ),
+    );
+  }
+
+  Widget _buildList(List<Course> shown) {
+    return ListView.separated(
+      itemCount: shown.length,
+      itemBuilder: (context, index) {
+        final course = shown[index];
+        return ListTile(
+          leading: Icon(course.icon), // left: icon
+          title: Text(course.code), // the main line
+          subtitle: Text(course.name), // smaller grey second line
+          trailing: Text(course.day), // right: the day
+          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${course.code} tapped')),
+          ),
+        );
+      },
+      separatorBuilder: (_, _) => const Divider(), // thin line between rows
+    );
+  }
+
+  Widget _buildGrid(List<Course> shown) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(8),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2, // 2 cards per row
+        mainAxisSpacing: 8, // vertical gap between cards
+        crossAxisSpacing: 8, // horizontal gap between cards
+        childAspectRatio: 1.2,
+      ),
+      itemCount: shown.length,
+      itemBuilder: (context, index) {
+        final course = shown[index];
+        return Card(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(course.icon, size: 40),
+                const SizedBox(height: 8),
+                Text(course.code),
+                Text(course.day),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

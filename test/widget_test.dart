@@ -5,20 +5,26 @@ import 'package:campus_buddy_kict/main.dart';
 import 'package:campus_buddy_kict/profile_screen.dart';
 
 void main() {
-  testWidgets('Courses list and grid toggle', (tester) async {
+  testWidgets('Courses list, grid toggle and day filter', (tester) async {
     await tester.pumpWidget(const CampusBuddyKictApp());
 
     expect(find.text('My Courses'), findsOneWidget);
-    expect(find.text('2 courses · 6 credit hours'), findsOneWidget);
-    expect(find.text('Monday'), findsOneWidget);
+    expect(find.text('CSCI 4311'), findsOneWidget);
+    expect(find.text('CSCI 3211'), findsOneWidget);
 
     // tap a row -> SnackBar
     await tester.tap(find.text('CSCI 4311'));
     await tester.pump();
     expect(find.text('CSCI 4311 tapped'), findsOneWidget);
 
+    // filter by Tuesday
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Tuesday'));
+    await tester.pump();
+    expect(find.text('CSCI 4311'), findsNothing);
+    expect(find.text('CSCI 3211'), findsOneWidget);
+
     // switch to grid
-    await tester.tap(find.byIcon(Icons.list));
+    await tester.tap(find.byIcon(Icons.grid_view));
     await tester.pump();
     expect(find.byType(GridView), findsOneWidget);
   });
