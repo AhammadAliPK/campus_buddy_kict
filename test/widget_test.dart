@@ -1,30 +1,45 @@
-// This is a basic Flutter widget test.
+// Smoke test for the Week 4 courses screen.
 //
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Run with: flutter test
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Courses list shows the summary card and the course codes',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const CampusBuddyKictApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    final totalCh =
+        sampleCourses.fold<int>(0, (sum, c) => sum + c.creditHours);
+    expect(
+      find.text('${sampleCourses.length} courses · $totalCh credit hours'),
+      findsOneWidget,
+    );
+    expect(find.text(sampleCourses.first.code), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // The grid toggle flips the icon and keeps the data on screen.
+    await tester.tap(find.byIcon(Icons.list));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.grid_on), findsOneWidget);
+    expect(find.text(sampleCourses.first.code), findsOneWidget);
+  });
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('Day filter keeps only that day\'s courses',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const CampusBuddyKictApp());
+
+    final monday = sampleCourses.where((c) => c.day == 'Monday').toList();
+    final tuesday = sampleCourses.firstWhere((c) => c.day == 'Tuesday');
+
+    await tester.tap(find.widgetWithText(FilterChip, 'Monday'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(monday.first.code), findsOneWidget);
+    expect(find.text(tuesday.code), findsNothing);
+    expect(find.text('${monday.length} courses · 3 credit hours'), findsOneWidget);
   });
 }
