@@ -12,7 +12,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   @override
   Widget build(BuildContext context) {
-    // Updated sorting map to match your actual timetable days
+    
     final dayValues = {'M-W': 1, 'T-TH': 2, 'FRI': 5};
     
     final sortedCourses = sampleCourses.toList();
