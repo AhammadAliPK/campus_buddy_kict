@@ -18,7 +18,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     for (final c in sampleCourses) {
       totalCh = totalCh + c.creditHours;
     }
-    final shown = sampleCourses;
+    final shown = sampleCourses.where((c) => c.day == 'Monday').toList();
 
     return Scaffold(
       appBar: AppBar(
