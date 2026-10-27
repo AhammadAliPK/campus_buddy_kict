@@ -18,6 +18,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     for (final c in sampleCourses) {
       totalCh = totalCh + c.creditHours;
     }
+    final shown = sampleCourses;
 
     return Scaffold(
       appBar: AppBar(
@@ -79,11 +80,15 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       );
                     },
                   )
+                  : shown.isEmpty
+                  ? const Center(
+                    child: Text('No classes! Alhamdulillah :)'),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = shown[index];
                       return ListTile(
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
@@ -99,10 +104,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                         ),
                         title: Text(course.code),
-                        subtitle: Text(
-                          '${course.name} · ${course.creditHours} CH',
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(course.name),
+                            Text('${course.day} ${course.time} . ${course.venue}'),
+                            Text(course.instructor ?? 'TBA'),
+                          ],
                         ),
-                        trailing: Text(course.day),
                         onTap: () =>
                             ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
