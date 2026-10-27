@@ -8,8 +8,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String _nickname = 'Guest Student';
-  String _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+  String _nickname = 'Dayah';
+  String _bio = 'Kuliyyah of ICT · Year 4 · Loves coffee and sleeping.';
+  
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
   bool _editing = false;
