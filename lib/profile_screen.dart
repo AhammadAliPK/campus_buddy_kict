@@ -48,6 +48,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
+  void _resetProfile() {
+    setState(() {
+      _nickname = 'Guest Student';
+      _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+      _nicknameCtrl.text = _nickname;
+      _bioCtrl.text = _bio;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
