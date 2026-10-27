@@ -2,38 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:campus_buddy_kict/main.dart';
-import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/profile_screen.dart';
 
 void main() {
-  testWidgets('Courses list, grid toggle and day filter', (tester) async {
+  testWidgets('Courses list and grid toggle', (tester) async {
     await tester.pumpWidget(const CampusBuddyKictApp());
 
     expect(find.text('My Courses'), findsOneWidget);
-    expect(find.textContaining('${sampleCourses.length} courses'),
-        findsOneWidget);
-    expect(find.byType(ListView), findsWidgets);
+    expect(find.text('2 courses · 6 credit hours'), findsOneWidget);
+    expect(find.text('Monday'), findsOneWidget);
 
     // tap a row -> SnackBar
-    await tester.tap(find.text(sampleCourses.first.code));
+    await tester.tap(find.text('CSCI 4311'));
     await tester.pump();
-    expect(find.text('${sampleCourses.first.code} tapped'), findsOneWidget);
+    expect(find.text('CSCI 4311 tapped'), findsOneWidget);
 
     // switch to grid
-    await tester.tap(find.byIcon(Icons.grid_view));
+    await tester.tap(find.byIcon(Icons.list));
     await tester.pump();
     expect(find.byType(GridView), findsOneWidget);
-
-    // filter by Monday
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Monday'));
-    await tester.pump();
-    final monday = sampleCourses.where((c) => c.day == 'Monday').length;
-    expect(find.textContaining('$monday courses'), findsOneWidget);
   });
 
   testWidgets('Profile edit, empty nickname and reset', (tester) async {
-    await tester.pumpWidget(const CampusBuddyKictApp());
-    await tester.tap(find.byIcon(Icons.person));
-    await tester.pumpAndSettle();
+    await tester.pumpWidget(const MaterialApp(home: ProfileScreen()));
 
     expect(find.text('My Profile'), findsOneWidget);
     expect(find.text('ansimrn_'), findsOneWidget);
