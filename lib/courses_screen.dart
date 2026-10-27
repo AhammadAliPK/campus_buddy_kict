@@ -10,16 +10,21 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
-  String _selectedDay = 'All';
   @override
   Widget build(BuildContext context) {
-    int totalCh = 0; 
-    for (final c in sampleCourses) { 
-      totalCh = totalCh + c.creditHours; 
+    // 1. Map days to numbers for sorting[cite: 9]
+    final dayOrder = {'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5};
+    
+    // 2. Create a sorted copy of the courses
+    final sortedCourses = sampleCourses.toList()..sort((a, b) {
+      return (dayOrder[a.day] ?? 6).compareTo(dayOrder[b.day] ?? 6);
+    });
+
+    // 3. Count credit hours based on the new list
+    int totalCh = 0;
+    for (final c in sortedCourses) {
+      totalCh += c.creditHours;
     }
-    final shown = _selectedDay == 'All'
-    ? sampleCourses
-    : sampleCourses.where((c) => c.day == _selectedDay).toList();
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -40,74 +45,65 @@ class _CoursesScreenState extends State<CoursesScreen> {
               child: Text('${sampleCourses.length} courses | $totalCh credit hours'),
             ),
           ),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              children: ['All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map((day) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: FilterChip(
-                    label: Text(day),
-                    selected: _selectedDay == day,
-                    onSelected: (bool selected) {
-                      setState(() => _selectedDay = day); // Updates memory and redraws screen
+          Expanded(
+            child: _isGrid
+                ? GridView.builder(
+                    padding: const EdgeInsets.all(8),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                    ),
+                    itemCount: sortedCourses.length, // Updated to use the sorted list
+                    itemBuilder: (context, index) {
+                      final course = sortedCourses[index]; 
+                      return Card(
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(course.icon, size: 40),
+                              const SizedBox(height: 8),
+                              Text(course.code, style: const TextStyle(fontWeight: FontWeight.bold)),
+                              Text(course.name, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: sortedCourses.length, // Updated to use the sorted list
+                    itemBuilder: (context, index) {
+                      final course = sortedCourses[index]; 
+                      return ListTile(
+                        tileColor: index.isOdd ? Colors.black.withValues(alpha: 0.03) : null,
+                        leading: CircleAvatar(
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                          child: Icon(course.icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
+                        ),
+                        title: Text(
+                          course.code, 
+                          style: const TextStyle(fontWeight: FontWeight.bold)
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(course.name),
+                            Text('${course.creditHours} CH'),
+                            Text(course.venue),
+                            Text(course.instructor ?? 'TBA'), // Shows 'TBA' if instructor is missing[cite: 9]
+                          ],
+                        ),
+                        trailing: Text(course.day),
+                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${course.code} tapped')),
+                        ),
+                      );
                     },
                   ),
-                );
-              }).toList(),
-            ),
-          ),
-          Expanded(
-            child: shown.isEmpty
-                ? const Center(child: Text('No classes! Alhamdulillah :)'))
-                : _isGrid
-                    ? GridView.builder(
-                        padding: const EdgeInsets.all(8),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                        ),
-                        itemCount: shown.length,
-                        itemBuilder: (context, index) {
-                          final course = shown[index];
-                          return Card(
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(course.icon, size: 40),
-                                  const SizedBox(height: 8),
-                                  Text(course.code, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  Text(course.name, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      )
-                    : ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: shown.length,
-                      itemBuilder: (context, index) {
-                        final course = shown[index];
-                        return ListTile(
-                          tileColor: index.isOdd ? Colors.black.withValues(alpha: 0.03) : null,
-                          leading: CircleAvatar(
-                            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                            child: Icon(course.icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
-                          ),
-                          title: Text(course.code),
-                          subtitle: Text('${course.name} ${course.creditHours} CH'),
-                          trailing: Text(course.day),
-                          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('${course.code} tapped')),
-                          ),
-                        );
-                      },
-                    ),
-          ),
+          )
         ],
       ),
     );
