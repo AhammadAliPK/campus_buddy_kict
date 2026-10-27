@@ -9,16 +9,21 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'Guest Student';
-  String _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+
+  String _bio =
+      'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+
   bool _editing = false;
+
   @override
   void initState() {
     super.initState();
+
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
-    // pre-fill from current state
   }
 
   @override
@@ -31,12 +36,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _toggleEdit() {
     setState(() {
       if (_editing) {
-        // leaving edit mode: copy controller values into state
         _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
       }
+
+      _editing = !_editing;
     });
-    _editing = !_editing;
+  }
+
+  void _resetProfile() {
+    setState(() {
+      _nickname = 'Guest Student';
+
+      _bio =
+          'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+
+      _nicknameCtrl.text = _nickname;
+      _bioCtrl.text = _bio;
+    });
   }
 
   @override
@@ -46,7 +63,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title: const Text('My Profile'),
         actions: [
           IconButton(
-            icon: Icon(_editing ? Icons.check : Icons.edit),
+            icon: Icon(
+              _editing ? Icons.check : Icons.edit,
+            ),
             onPressed: _toggleEdit,
           ),
         ],
@@ -58,9 +77,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const CircleAvatar(
               radius: 48,
-              backgroundImage: NetworkImage('https://picsum.photos/200'),
+              backgroundImage: NetworkImage(
+                'https://picsum.photos/200',
+              ),
             ),
+
             const SizedBox(height: 12),
+
             if (_editing) ...[
               TextField(
                 controller: _nicknameCtrl,
@@ -70,7 +93,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   prefixIcon: Icon(Icons.person),
                 ),
               ),
+
               const SizedBox(height: 12),
+
               TextField(
                 controller: _bioCtrl,
                 maxLines: 3,
@@ -80,23 +105,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
+
               const SizedBox(height: 12),
+
               ElevatedButton.icon(
                 onPressed: _toggleEdit,
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
               ),
+
+              const SizedBox(height: 8),
+
+              TextButton(
+                onPressed: _resetProfile,
+                child: const Text('Reset'),
+              ),
             ] else ...[
               Text(
                 _nickname,
-                style: Theme.of(context).textTheme.headlineSmall,
                 textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
+
               const SizedBox(height: 6),
+
               Text(
                 _bio,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.black54),
+                style: const TextStyle(
+                  color: Colors.black54,
+                ),
               ),
             ],
           ],
