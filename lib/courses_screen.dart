@@ -92,7 +92,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   color: Theme.of(context).colorScheme.onPrimaryContainer),
                             ),
                             title: Text(course.code),
-                            // Using course.day directly since it is already short
+                            
                             subtitle: Text('${course.day} ${course.time} · ${course.venue}'),
                             trailing: Text(course.instructor ?? 'TBA'),
                             onTap: () => ScaffoldMessenger.of(context).showSnackBar(
