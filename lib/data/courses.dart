@@ -6,5 +6,10 @@ const List<Course> sampleCourses = [
     'Monday', Icons.phone_iphone),
   Course('CSCI 1301', 'Object Oriented Programming', 3,
     'Tuesday', Icons.code),
-// ... your courses here
+  Course('CSCI 1302', 'Data Structures and Algorithms', 3,
+    'Wednesday', Icons.storage),
+  Course('CSCI 1303', 'Database Systems', 3,
+    'Thursday', Icons.storage),
+  Course('CSCI 1304', 'Operating Systems', 3,
+    'Friday', Icons.computer),    
 ];
