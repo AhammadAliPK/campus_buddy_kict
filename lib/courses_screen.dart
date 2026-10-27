@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:flutter/material.dart';
+import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart'; // NEW
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -9,23 +12,28 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
-  bool _isGrid = false; 
+  bool _isGrid = false;
 
   @override
   Widget build(BuildContext context) {
-    int totalCh = 0; 
-    for (final c in sampleCourses) { 
-      totalCh = totalCh + c.creditHours; 
-    } 
+    int totalCh = 0;
+    for (final c in sampleCourses) {
+      totalCh = totalCh + c.creditHours;
+    }
+
+    // Homework Part 3: Sort the list by day
+    final dayMap = {'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5};
+    final sortedCourses = List<Course>.from(sampleCourses)
+      ..sort((a, b) => (dayMap[a.day] ?? 6).compareTo(dayMap[b.day] ?? 6));
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
           IconButton(
-            icon: _isGrid ? const Icon(Icons.list) : const Icon(Icons.grid_on), 
+            icon: _isGrid ? const Icon(Icons.list) : const Icon(Icons.grid_on),
             tooltip: 'Grid view',
-            onPressed: () => setState(() => _isGrid = !_isGrid), 
+            onPressed: () => setState(() => _isGrid = !_isGrid),
           ),
         ],
       ),
@@ -36,22 +44,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                  '${sampleCourses.length} courses • $totalCh credit hours'),
+                  '${sortedCourses.length} courses • $totalCh credit hours'),
             ),
           ),
           Expanded(
-            child: _isGrid 
+            child: _isGrid
                 ? GridView.builder(
                     padding: const EdgeInsets.all(8),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, 
+                      crossAxisCount: 2,
                       mainAxisSpacing: 8,
                       crossAxisSpacing: 8,
                     ),
-                    itemCount: sampleCourses.length,
+                    itemCount: sortedCourses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = sortedCourses[index];
                       return Card(
                         child: Center(
                           child: Column(
@@ -74,11 +82,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
+                    itemCount: sortedCourses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = sortedCourses[index];
                       return ListTile(
-                        tileColor: index.isOdd 
+                        tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
                         leading: CircleAvatar(
@@ -91,9 +99,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   .onPrimaryContainer),
                         ),
                         title: Text(course.code),
+                        // Homework Part 1 & 2: Update subtitle display
                         subtitle: Text(
-                            '${course.name}\n${course.creditHours} CH'),
-                        trailing: Text(course.day),
+                            '${course.name}\n${course.day} ${course.time} ${course.venue}\nInstructor: ${course.instructor ?? 'TBA'}'),
                         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('${course.code} tapped')),
                         ),
