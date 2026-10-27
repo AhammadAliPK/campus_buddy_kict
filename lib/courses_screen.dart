@@ -155,13 +155,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         itemBuilder: (context, index) {
                           final course = displayedCourses[index];
 
-                          return Container(
-                            color: index.isEven
-                                ? Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHighest
-                                : Theme.of(context).colorScheme.surface,
-                            child: ListTile(
+                          return Material(
+  color: index.isEven
+      ? Theme.of(context).colorScheme.surfaceContainerHighest
+      : Theme.of(context).colorScheme.surface,
+  child: ListTile(
                               leading: CircleAvatar(
                                 backgroundColor: Theme.of(context)
                                     .colorScheme
