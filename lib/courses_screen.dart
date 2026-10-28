@@ -10,21 +10,31 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
+
     for (final c in sampleCourses) {
       totalCh = totalCh + c.creditHours;
     }
+
+    // Exercise in class: Show only class on Monday - My schedule does exist
+    // No class on Saturday -> 'No classes! Alhamdulillah'
+    final shown = sampleCourses.where((c) => c.day == 'SAT').toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
           IconButton(
-            icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
-            tooltip: 'Grid View',
-            onPressed: () => _isGrid = !_isGrid,
+            icon: Icon(_isGrid ? Icons.list : Icons.grid_on),
+            tooltip: _isGrid ? 'List View' : 'Grid View',
+            onPressed: () {
+              setState(() {
+                _isGrid = !_isGrid;
+              });
+            },
           ),
         ],
       ),
@@ -40,18 +50,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
           ),
 
           Expanded(
-            child: _isGrid
+            child: shown.isEmpty
+                ? const Center(child: Text('No classes! Alhamdulillah :)'))
+                : _isGrid
                 ? GridView.builder(
                     padding: const EdgeInsets.all(8),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          mainAxisExtent: 8,
+                          mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: sampleCourses.length,
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = shown[index];
+
                       return Card(
                         child: Center(
                           child: Column(
@@ -79,9 +92,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = shown[index];
 
                       return ListTile(
                         tileColor: index.isOdd
@@ -98,15 +111,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 .onPrimaryContainer,
                           ),
                         ),
-
                         title: Text(course.code),
-
                         subtitle: Text(
                           '${course.name} • ${course.creditHours} CH',
                         ),
-
                         trailing: Text(course.day),
-
                         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('${course.code} tapped')),
                         ),
