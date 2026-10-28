@@ -13,15 +13,16 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int totalCh = 0;
+    final dayValues = {'M-W': 1, 'T-TH': 2, 'FRI': 5};
 
+    final sortedCourses = sampleCourses.toList();
+    sortedCourses.sort(
+      (a, b) => (dayValues[a.day] ?? 8).compareTo(dayValues[b.day] ?? 8),
+    );
+    int totalCh = 0;
     for (final c in sampleCourses) {
       totalCh = totalCh + c.creditHours;
     }
-
-    // Exercise in class: Show only class on Monday - My schedule does exist
-    // No class on Saturday -> 'No classes! Alhamdulillah'
-    final shown = sampleCourses.where((c) => c.day == 'SAT').toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -50,7 +51,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
           ),
 
           Expanded(
-            child: shown.isEmpty
+            child: sortedCourses.isEmpty
                 ? const Center(child: Text('No classes! Alhamdulillah :)'))
                 : _isGrid
                 ? GridView.builder(
@@ -61,9 +62,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: shown.length,
+                    itemCount: sortedCourses.length,
                     itemBuilder: (context, index) {
-                      final course = shown[index];
+                      final course = sortedCourses[index];
 
                       return Card(
                         child: Center(
@@ -92,9 +93,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: shown.length,
+                    itemCount: sortedCourses.length,
                     itemBuilder: (context, index) {
-                      final course = shown[index];
+                      final course = sortedCourses[index];
 
                       return ListTile(
                         tileColor: index.isOdd
@@ -113,9 +114,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         ),
                         title: Text(course.code),
                         subtitle: Text(
-                          '${course.name} • ${course.creditHours} CH',
+                          '${course.name} • ${course.creditHours} CH\n${course.day} • ${course.time}',
                         ),
-                        trailing: Text(course.day),
+                        trailing: Text(course.instructor ?? 'TBA'),
                         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('${course.code} tapped')),
                         ),
