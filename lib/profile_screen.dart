@@ -2,23 +2,21 @@ import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
-
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
-
 class _ProfileScreenState extends State<ProfileScreen> {
-  String _nickname = 'Guest Student';
-  String _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+  String _nickname = 'Irfan';
+  String _bio = 'Kuliyyah of ICT Year 4\nLoves Chelsea and coffee.';
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
   bool _editing = false;
+
   @override
   void initState() {
     super.initState();
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
-    // pre-fill from current state
   }
 
   @override
@@ -31,12 +29,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _toggleEdit() {
     setState(() {
       if (_editing) {
-        // leaving edit mode: copy controller values into state
         _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
       }
+      _editing = !_editing;
     });
-    _editing = !_editing;
   }
 
   @override
@@ -48,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           IconButton(
             icon: Icon(_editing ? Icons.check : Icons.edit),
             onPressed: _toggleEdit,
-          ),
+          )
         ],
       ),
       body: SingleChildScrollView(
@@ -80,28 +77,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: _toggleEdit,
-                icon: const Icon(Icons.save),
-                label: const Text('Save'),
-              ),
             ] else ...[
-              Text(
-                _nickname,
-                style: Theme.of(context).textTheme.headlineSmall,
-                textAlign: TextAlign.center,
-              ),
+              Text(_nickname, style: Theme.of(context).textTheme.headlineSmall, textAlign: TextAlign.center),
               const SizedBox(height: 6),
-              Text(
-                _bio,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.black54),
-              ),
+              Text(_bio, textAlign: TextAlign.center, style: const TextStyle(color: Colors.black54)),
             ],
           ],
         ),
       ),
     );
   }
+  
 }
