@@ -1,8 +1,10 @@
+
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 const Color _turquoise = Color(0xFF009FA3);
 const Color _darkTurquoise = Color(0xFF007C80);
@@ -17,35 +19,200 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  bool _favoritesOnly = false;
+  String _selectedDay = 'All Days';
 
-  int get _totalCreditHours =>
-      sampleCourses.fold(0, (total, course) => total + course.creditHours);
+  late List<Course> _courses;
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses);
+  }
+
+  int get _totalCreditHours => _courses
+      .where((course) => course.enrolled)
+      .fold(0, (total, course) => total + course.creditHours);
+
+  List<String> get _availableDays {
+    final days = _courses
+        .map((course) => course.day)
+        .where((day) => day.trim().isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+
+    return ['All Days', ...days];
+  }
+
+  List<Course> get _visibleCourses {
+    return _courses.where((course) {
+      final matchesDay =
+          _selectedDay == 'All Days' || course.day == _selectedDay;
+      final matchesFavorite =
+          !_favoritesOnly || course.isFavorite;
+
+      return matchesDay && matchesFavorite;
+    }).toList();
+  }
 
   void _openCourse(Course course) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => CourseDetailsScreen(course: course)),
+      MaterialPageRoute(
+        builder: (_) => CourseDetailsScreen(course: course),
+      ),
+    );
+  }
+
+  void _toggleFavorite(Course course) {
+    final index = _courses.indexOf(course);
+    if (index == -1) return;
+
+    setState(() {
+      _courses[index] = course.copyWith(
+        isFavorite: !course.isFavorite,
+      );
+    });
+  }
+
+  void _toggleEnrollment(Course course) {
+    final index = _courses.indexOf(course);
+    if (index == -1) return;
+
+    setState(() {
+      _courses[index] = course.copyWith(
+        enrolled: !course.enrolled,
+      );
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final Course? newCourse = await showDialog<Course>(
+      context: context,
+      builder: (context) => const AddCourseDialog(),
+    );
+
+    if (newCourse == null || !mounted) return;
+
+    final alreadyExists = _courses.any(
+      (course) =>
+          course.code.trim().toLowerCase() ==
+          newCourse.code.trim().toLowerCase(),
+    );
+
+    if (alreadyExists) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${newCourse.code} already exists in your course list.',
+          ),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _courses.add(newCourse);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${newCourse.code} added successfully!'),
+        backgroundColor: _darkTurquoise,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  Future<void> _deleteCourse(Course course) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Course?'),
+        content: Text(
+          'Are you sure you want to delete '
+          '${course.code} - ${course.name}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    setState(() {
+      _courses.remove(course);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${course.code} deleted successfully.'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: _darkTurquoise,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final visibleCourses = _visibleCourses;
+
     return Scaffold(
       backgroundColor: _paleAqua,
       appBar: AppBar(
         title: const Text('My Courses'),
         backgroundColor: _paleAqua,
         actions: [
+          IconButton(
+            tooltip: _favoritesOnly
+                ? 'Show all courses'
+                : 'Show favourite courses',
+            onPressed: () {
+              setState(() {
+                _favoritesOnly = !_favoritesOnly;
+              });
+            },
+            icon: Icon(
+              _favoritesOnly
+                  ? Icons.star_rounded
+                  : Icons.star_border_rounded,
+              color: _favoritesOnly
+                  ? Colors.amber.shade700
+                  : _darkTurquoise,
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 10),
             child: IconButton(
-              tooltip: _isGrid ? 'Switch to list view' : 'Switch to grid view',
+              tooltip: _isGrid ? 'List view' : 'Grid view',
               style: IconButton.styleFrom(
                 backgroundColor: Colors.white.withValues(alpha: 0.8),
                 foregroundColor: _darkTurquoise,
               ),
-              icon: Icon(_isGrid ? Icons.view_list : Icons.grid_view_rounded),
-              onPressed: () => setState(() => _isGrid = !_isGrid),
+              icon: Icon(
+                _isGrid
+                    ? Icons.view_list
+                    : Icons.grid_view_rounded,
+              ),
+              onPressed: () {
+                setState(() => _isGrid = !_isGrid);
+              },
             ),
           ),
         ],
@@ -58,14 +225,107 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
+                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 18),
                   child: _SemesterGlassCard(
-                    courseCount: sampleCourses.length,
+                    courseCount: _courses.length,
                     creditHours: _totalCreditHours,
                   ),
                 ),
+
+                // Day filter and favourite filter.
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 22),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _availableDays.contains(_selectedDay)
+                                  ? _selectedDay
+                                  : 'All Days',
+                              isExpanded: true,
+                              icon: const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: _darkTurquoise,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              items: _availableDays.map((day) {
+                                return DropdownMenuItem<String>(
+                                  value: day,
+                                  child: Text(
+                                    day,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: _darkTurquoise,
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (day) {
+                                if (day == null) return;
+                                setState(() => _selectedDay = day);
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _favoritesOnly = !_favoritesOnly;
+                          });
+                        },
+                        icon: Icon(
+                          _favoritesOnly
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
+                          size: 19,
+                        ),
+                        label: Text(
+                          _favoritesOnly ? 'Favorites' : 'All',
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: _favoritesOnly
+                              ? Colors.amber.shade800
+                              : _darkTurquoise,
+                          backgroundColor:
+                              Colors.white.withValues(alpha: 0.85),
+                          side: BorderSide(
+                            color: _favoritesOnly
+                                ? Colors.amber.shade300
+                                : Colors.white,
+                            width: 1.5,
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 18, 22, 10),
                   child: Row(
                     children: [
                       const Expanded(
@@ -79,85 +339,129 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 11,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white, width: 1.2),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              _isGrid
-                                  ? Icons.grid_view_rounded
-                                  : Icons.view_agenda_rounded,
-                              size: 15,
-                              color: _turquoise,
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              _isGrid ? 'Grid' : 'List',
-                              style: const TextStyle(
-                                color: _darkTurquoise,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
+                      Text(
+                        '${visibleCourses.length} courses',
+                        style: const TextStyle(
+                          color: _darkTurquoise,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
+
                 Expanded(
-                  child: _isGrid
-                      ? GridView.builder(
-                          padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
-                          itemCount: sampleCourses.length,
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
+                  child: visibleCourses.isEmpty
+                      ? Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(30),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  _favoritesOnly
+                                      ? Icons.star_border_rounded
+                                      : Icons.menu_book_rounded,
+                                  size: 54,
+                                  color: _turquoise.withValues(alpha: 0.6),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  _favoritesOnly
+                                      ? 'No favourite courses yet'
+                                      : 'No courses for this day',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: _darkTurquoise,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                const Text(
+                                  'Try changing your filters.',
+                                  style: TextStyle(
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : _isGrid
+                          ? GridView.builder(
+                              padding: const EdgeInsets.fromLTRB(
+                                18, 4, 18, 90,
+                              ),
+                              itemCount: visibleCourses.length,
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
                                 crossAxisSpacing: 13,
                                 mainAxisSpacing: 13,
                                 childAspectRatio: 0.77,
                               ),
-                          itemBuilder: (context, index) {
-                            final course = sampleCourses[index];
-                            return _CourseGridCard(
-                              course: course,
-                              onTap: () => _openCourse(course),
-                            );
-                          },
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(18, 4, 18, 24),
-                          itemCount: sampleCourses.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 13),
-                          itemBuilder: (context, index) {
-                            final course = sampleCourses[index];
-                            return _CourseListCard(
-                              course: course,
-                              onTap: () => _openCourse(course),
-                            );
-                          },
-                        ),
+                              itemBuilder: (context, index) {
+                                final course = visibleCourses[index];
+
+                                return _CourseGridCard(
+                                  course: course,
+                                  onTap: () => _openCourse(course),
+                                  onFavoriteTap: () =>
+                                      _toggleFavorite(course),
+                                  onEnrollmentTap: () =>
+                                      _toggleEnrollment(course),
+                                  onDelete: () => _deleteCourse(course),
+                                );
+                              },
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.fromLTRB(
+                                18, 4, 18, 90,
+                              ),
+                              itemCount: visibleCourses.length,
+                              separatorBuilder: (_, _) =>
+                                  const SizedBox(height: 13),
+                              itemBuilder: (context, index) {
+                                final course = visibleCourses[index];
+
+                                return _CourseListCard(
+                                  course: course,
+                                  onTap: () => _openCourse(course),
+                                  onFavoriteTap: () =>
+                                      _toggleFavorite(course),
+                                  onEnrollmentTap: () =>
+                                      _toggleEnrollment(course),
+                                  onDelete: () => _deleteCourse(course),
+                                );
+                              },
+                            ),
                 ),
               ],
             ),
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addCourse,
+        backgroundColor: _darkTurquoise,
+        foregroundColor: Colors.white,
+        elevation: 6,
+        icon: const Icon(Icons.add_rounded),
+        label: const Text(
+          'Add Course',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
     );
   }
 }
 
-// Soft aqua background decoration.
+// ============================================================
+// AQUA BACKGROUND
+// ============================================================
+
 class _AquaBackground extends StatelessWidget {
   const _AquaBackground();
 
@@ -169,13 +473,25 @@ class _AquaBackground extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFF6FFFF), Color(0xFFE7F7F6), Color(0xFFF3FAFC)],
+            colors: [
+              Color(0xFFF6FFFF),
+              Color(0xFFE7F7F6),
+              Color(0xFFF3FAFC),
+            ],
           ),
         ),
         child: Stack(
           children: [
-            Positioned(top: 30, right: -65, child: _SoftOrb(size: 190)),
-            Positioned(bottom: 80, left: -80, child: _SoftOrb(size: 170)),
+            Positioned(
+              top: 30,
+              right: -65,
+              child: _SoftOrb(size: 190),
+            ),
+            Positioned(
+              bottom: 80,
+              left: -80,
+              child: _SoftOrb(size: 170),
+            ),
           ],
         ),
       ),
@@ -207,7 +523,10 @@ class _SoftOrb extends StatelessWidget {
   }
 }
 
-// Glass-style semester summary.
+// ============================================================
+// SEMESTER SUMMARY
+// ============================================================
+
 class _SemesterGlassCard extends StatelessWidget {
   final int courseCount;
   final int creditHours;
@@ -226,7 +545,11 @@ class _SemesterGlassCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF14B9B6), Color(0xFF009FA3), Color(0xFF007C80)],
+          colors: [
+            Color(0xFF14B9B6),
+            Color(0xFF009FA3),
+            Color(0xFF007C80),
+          ],
         ),
         borderRadius: BorderRadius.circular(29),
         border: Border.all(
@@ -238,11 +561,6 @@ class _SemesterGlassCard extends StatelessWidget {
             color: _darkTurquoise.withValues(alpha: 0.22),
             blurRadius: 24,
             offset: const Offset(0, 12),
-          ),
-          BoxShadow(
-            color: Colors.white.withValues(alpha: 0.8),
-            blurRadius: 3,
-            offset: const Offset(-2, -2),
           ),
         ],
       ),
@@ -322,7 +640,7 @@ class _SemesterGlassCard extends StatelessWidget {
                     child: _SummaryGlassItem(
                       icon: Icons.school_rounded,
                       value: '$creditHours',
-                      label: 'Credit hours',
+                      label: 'Enrolled credit hours',
                     ),
                   ),
                 ],
@@ -353,11 +671,16 @@ class _SummaryGlassItem extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 13,
+            vertical: 12,
+          ),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.17),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.30)),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.30),
+            ),
           ),
           child: Row(
             children: [
@@ -377,7 +700,7 @@ class _SummaryGlassItem extends StatelessWidget {
                     ),
                     Text(
                       label,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Color(0xFFE0FFFF),
@@ -396,16 +719,26 @@ class _SummaryGlassItem extends StatelessWidget {
   }
 }
 
-// Reusable glass card decoration.
+// ============================================================
+// SHARED GLASS STYLE
+// ============================================================
+
 BoxDecoration _glassDecoration({double radius = 24}) {
   return BoxDecoration(
     gradient: const LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
-      colors: [Color(0xFFFFFFFF), Color(0xF4F8FFFF), Color(0xEAF0FBFA)],
+      colors: [
+        Color(0xFFFFFFFF),
+        Color(0xF4F8FFFF),
+        Color(0xEAF0FBFA),
+      ],
     ),
     borderRadius: BorderRadius.circular(radius),
-    border: Border.all(color: Colors.white.withValues(alpha: 0.98), width: 1.5),
+    border: Border.all(
+      color: Colors.white.withValues(alpha: 0.98),
+      width: 1.5,
+    ),
     boxShadow: [
       BoxShadow(
         color: _darkTurquoise.withValues(alpha: 0.10),
@@ -421,11 +754,24 @@ BoxDecoration _glassDecoration({double radius = 24}) {
   );
 }
 
+// ============================================================
+// COURSE LIST CARD
+// ============================================================
+
 class _CourseListCard extends StatelessWidget {
   final Course course;
   final VoidCallback onTap;
+  final VoidCallback onFavoriteTap;
+  final VoidCallback onEnrollmentTap;
+  final VoidCallback onDelete;
 
-  const _CourseListCard({required this.course, required this.onTap});
+  const _CourseListCard({
+    required this.course,
+    required this.onTap,
+    required this.onFavoriteTap,
+    required this.onEnrollmentTap,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -435,10 +781,10 @@ class _CourseListCard extends StatelessWidget {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(23),
         child: InkWell(
-          onTap: onTap,
+          onTap: onEnrollmentTap,
+          onLongPress: onDelete,
           borderRadius: BorderRadius.circular(23),
           splashColor: _turquoise.withValues(alpha: 0.08),
-          highlightColor: _turquoise.withValues(alpha: 0.04),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
@@ -455,7 +801,6 @@ class _CourseListCard extends StatelessWidget {
                           color: _darkTurquoise,
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: 0.3,
                         ),
                       ),
                       const SizedBox(height: 5),
@@ -488,18 +833,44 @@ class _CourseListCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(width: 5),
+                IconButton(
+                  tooltip: course.isFavorite
+                      ? 'Remove from favorites'
+                      : 'Add to favorites',
+                  onPressed: onFavoriteTap,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
+                  ),
+                  padding: EdgeInsets.zero,
+                  icon: Icon(
+                    course.isFavorite
+                        ? Icons.star_rounded
+                        : Icons.star_border_rounded,
+                    color: course.isFavorite
+                        ? Colors.amber.shade700
+                        : _turquoise,
+                    size: 25,
+                  ),
+                ),
                 Container(
                   width: 30,
                   height: 30,
                   decoration: BoxDecoration(
-                    color: _turquoise.withValues(alpha: 0.09),
+                    color: course.enrolled
+                        ? Colors.green.withValues(alpha: 0.12)
+                        : _turquoise.withValues(alpha: 0.09),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: _darkTurquoise,
-                    size: 14,
+                  child: Icon(
+                    course.enrolled
+                        ? Icons.check_rounded
+                        : Icons.arrow_forward_ios_rounded,
+                    color: course.enrolled
+                        ? Colors.green
+                        : _darkTurquoise,
+                    size: 17,
                   ),
                 ),
               ],
@@ -511,11 +882,24 @@ class _CourseListCard extends StatelessWidget {
   }
 }
 
+// ============================================================
+// COURSE GRID CARD
+// ============================================================
+
 class _CourseGridCard extends StatelessWidget {
   final Course course;
   final VoidCallback onTap;
+  final VoidCallback onFavoriteTap;
+  final VoidCallback onEnrollmentTap;
+  final VoidCallback onDelete;
 
-  const _CourseGridCard({required this.course, required this.onTap});
+  const _CourseGridCard({
+    required this.course,
+    required this.onTap,
+    required this.onFavoriteTap,
+    required this.onEnrollmentTap,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -526,6 +910,7 @@ class _CourseGridCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         child: InkWell(
           onTap: onTap,
+          onLongPress: onDelete,
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(13),
@@ -536,16 +921,25 @@ class _CourseGridCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     _CourseIcon(course: course, size: 53),
-                    Container(
-                      padding: const EdgeInsets.all(7),
-                      decoration: BoxDecoration(
-                        color: _paleAqua,
-                        borderRadius: BorderRadius.circular(12),
+                    IconButton(
+                      tooltip: course.isFavorite
+                          ? 'Remove from favorites'
+                          : 'Add to favorites',
+                      onPressed: onFavoriteTap,
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
                       ),
-                      child: const Icon(
-                        Icons.open_in_new_rounded,
-                        color: _darkTurquoise,
-                        size: 17,
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        course.isFavorite
+                            ? Icons.star_rounded
+                            : Icons.star_border_rounded,
+                        color: course.isFavorite
+                            ? Colors.amber.shade700
+                            : _turquoise,
+                        size: 24,
                       ),
                     ),
                   ],
@@ -559,7 +953,6 @@ class _CourseGridCard extends StatelessWidget {
                     color: _darkTurquoise,
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
-                    letterSpacing: 0.2,
                   ),
                 ),
                 const SizedBox(height: 7),
@@ -586,17 +979,31 @@ class _CourseGridCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: _paleAqua,
                     borderRadius: BorderRadius.circular(13),
-                    border: Border.all(color: Colors.white, width: 1),
-                  ),
-                  child: Text(
-                    '${course.creditHours} credit hours',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: _darkTurquoise,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
+                    border: Border.all(
+                      color: Colors.white,
                     ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${course.creditHours} credit hours',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: _darkTurquoise,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (course.enrolled)
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          size: 16,
+                          color: Colors.green,
+                        ),
+                    ],
                   ),
                 ),
               ],
@@ -608,11 +1015,18 @@ class _CourseGridCard extends StatelessWidget {
   }
 }
 
+// ============================================================
+// COURSE ICON AND PILL
+// ============================================================
+
 class _CourseIcon extends StatelessWidget {
   final Course course;
   final double size;
 
-  const _CourseIcon({required this.course, required this.size});
+  const _CourseIcon({
+    required this.course,
+    required this.size,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -623,10 +1037,17 @@ class _CourseIcon extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Colors.white, Color(0xFFDFF8F5), Color(0xFFC8EBE7)],
+          colors: [
+            Colors.white,
+            Color(0xFFDFF8F5),
+            Color(0xFFC8EBE7),
+          ],
         ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white, width: 1.5),
+        border: Border.all(
+          color: Colors.white,
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: _turquoise.withValues(alpha: 0.16),
@@ -635,7 +1056,11 @@ class _CourseIcon extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(course.icon, color: _darkTurquoise, size: size * 0.48),
+      child: Icon(
+        course.icon,
+        color: _darkTurquoise,
+        size: size * 0.48,
+      ),
     );
   }
 }
@@ -644,16 +1069,24 @@ class _MiniPill extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _MiniPill({required this.icon, required this.text});
+  const _MiniPill({
+    required this.icon,
+    required this.text,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 5,
+      ),
       decoration: BoxDecoration(
         color: _paleAqua,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _turquoise.withValues(alpha: 0.07)),
+        border: Border.all(
+          color: _turquoise.withValues(alpha: 0.07),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -674,11 +1107,17 @@ class _MiniPill extends StatelessWidget {
   }
 }
 
-// Course details screen.
+// ============================================================
+// COURSE DETAILS SCREEN
+// ============================================================
+
 class CourseDetailsScreen extends StatelessWidget {
   final Course course;
 
-  const CourseDetailsScreen({super.key, required this.course});
+  const CourseDetailsScreen({
+    super.key,
+    required this.course,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -740,13 +1179,14 @@ class CourseDetailsScreen extends StatelessWidget {
                       icon: const Icon(Icons.arrow_back_rounded),
                       label: const Text(
                         'Back to My Courses',
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       style: FilledButton.styleFrom(
                         backgroundColor: _darkTurquoise,
                         foregroundColor: Colors.white,
                         elevation: 5,
-                        shadowColor: _turquoise.withValues(alpha: 0.25),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
@@ -776,7 +1216,11 @@ class _CourseHero extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF14B9B6), Color(0xFF009FA3), Color(0xFF007C80)],
+          colors: [
+            Color(0xFF14B9B6),
+            Color(0xFF009FA3),
+            Color(0xFF007C80),
+          ],
         ),
         borderRadius: BorderRadius.circular(30),
         border: Border.all(
@@ -799,18 +1243,18 @@ class _CourseHero extends StatelessWidget {
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Colors.white, Color(0xFFDDF5F2)],
+                colors: [
+                  Colors.white,
+                  Color(0xFFDDF5F2),
+                ],
               ),
               borderRadius: BorderRadius.circular(25),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.10),
-                  blurRadius: 15,
-                  offset: const Offset(0, 7),
-                ),
-              ],
             ),
-            child: Icon(course.icon, color: _darkTurquoise, size: 39),
+            child: Icon(
+              course.icon,
+              color: _darkTurquoise,
+              size: 39,
+            ),
           ),
           const SizedBox(height: 19),
           Text(
@@ -832,16 +1276,20 @@ class _CourseHero extends StatelessWidget {
               fontWeight: FontWeight.w800,
               fontSize: 23,
               height: 1.25,
-              letterSpacing: -0.4,
             ),
           ),
           const SizedBox(height: 18),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 17,
+              vertical: 10,
+            ),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(30),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.42)),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.42),
+              ),
             ),
             child: Text(
               '${course.creditHours} Credit Hours',
@@ -885,18 +1333,18 @@ class _DetailGlassTile extends StatelessWidget {
                 gradient: const LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Colors.white, Color(0xFFDDF5F2)],
+                  colors: [
+                    Colors.white,
+                    Color(0xFFDDF5F2),
+                  ],
                 ),
                 borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: _turquoise.withValues(alpha: 0.12),
-                    blurRadius: 9,
-                    offset: const Offset(2, 4),
-                  ),
-                ],
               ),
-              child: Icon(icon, color: _darkTurquoise, size: 23),
+              child: Icon(
+                icon,
+                color: _darkTurquoise,
+                size: 23,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
