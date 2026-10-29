@@ -46,7 +46,9 @@ void _toggleFavorite(int index) {
   Future<void> _addCourse() async {               // async = can pause and wait
     final course = await showDialog<Course>(      // open popup, WAIT for a Course (or null)
       context: context,
-      builder: (_) => const AddCourseDialog(),
+      builder: (_) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).toList(), // list of every current code
+      ),
     );
     if (course == null) return;                   // Cancel → do nothing
     setState(() {

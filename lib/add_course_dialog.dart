@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';         // Step 13: popup builds a Course
 
 class AddCourseDialog extends StatefulWidget {
-  const AddCourseDialog({super.key});
+  const AddCourseDialog({super.key, required this.existingCodes}); // required = must be given
+  final List<String> existingCodes;                                 // codes already in the list
 
   @override
   State<AddCourseDialog> createState() => _AddCourseDialogState();
@@ -61,6 +62,10 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                   if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(t)) {
                     // 4 capital letters, optional space, 4 digits
                     return 'Format: 4 letters + 4 digits';
+                  }
+                  if (widget.existingCodes.contains(t.toUpperCase())) {
+                    // widget. = "reach the value passed into AddCourseDialog"
+                    return 'Already added';
                   }
                   return null;                   // null = OK
                 },
