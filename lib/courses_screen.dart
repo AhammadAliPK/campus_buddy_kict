@@ -1,4 +1,6 @@
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
 import 'package:flutter/material.dart';
 
 class CoursesScreen extends StatefulWidget {
@@ -10,13 +12,55 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  late List<Course> _courses;
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses);
+  }
+
+  void _toggleFavorite(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        isFavorite: !_courses[index].isFavorite,
+      );
+    });
+  }
+
+  void _toggleEnrolled(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        enrolled: !_courses[index].enrolled,
+      );
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (_) => AddCourseDialog(
+        existingCodes: _courses.map((course) => course.code).toList(),
+      ),
+    );
+
+    if (course == null) {
+      return;
+    }
+
+    setState(() => _courses.add(course));
+  }
 
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
-    for (final course in sampleCourses) {
+    for (final course in _courses) {
       totalCh += course.creditHours;
     }
+
+    final enrolledCh = _courses
+        .where((course) => course.enrolled)
+        .fold<int>(0, (sum, course) => sum + course.creditHours);
 
     return Scaffold(
       appBar: AppBar(
@@ -27,6 +71,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
             tooltip: 'Grid view',
             onPressed: () => setState(() => _isGrid = !_isGrid),
           ),
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Add course',
+            onPressed: _addCourse,
+          ),
         ],
       ),
       body: Column(
@@ -36,7 +85,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
+                '${_courses.length} courses · $totalCh credit hours\n'
+                'Enrolled: $enrolledCh CH',
               ),
             ),
           ),
@@ -46,34 +96,81 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     padding: const EdgeInsets.all(8),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                          childAspectRatio: 1.2,
-                        ),
-                    itemCount: sampleCourses.length,
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      childAspectRatio: 1.2,
+                    ),
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = _courses[index];
                       return Card(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(course.icon, size: 40),
-                              const SizedBox(height: 8),
-                              Text(
-                                course.code,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => _toggleEnrolled(index),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Icon(
+                                      course.enrolled
+                                          ? Icons.check_circle
+                                          : course.icon,
+                                      size: 28,
+                                      color: course.enrolled
+                                          ? Colors.green
+                                          : Theme.of(context)
+                                              .colorScheme
+                                              .onPrimaryContainer,
+                                    ),
+                                    IconButton(
+                                      visualDensity: VisualDensity.compact,
+                                      onPressed: () => _toggleFavorite(index),
+                                      icon: Icon(
+                                        course.isFavorite
+                                            ? Icons.star
+                                            : Icons.star_border,
+                                        color: course.isFavorite
+                                            ? Colors.amber
+                                            : null,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                              Text(
-                                course.name,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                                const SizedBox(height: 12),
+                                Text(
+                                  course.code,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Expanded(
+                                  child: Text(
+                                    course.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('${course.creditHours} CH'),
+                                    Checkbox(
+                                      value: course.enrolled,
+                                      onChanged: (_) => _toggleEnrolled(index),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -81,9 +178,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = _courses[index];
                       return ListTile(
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
@@ -93,20 +190,34 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               .colorScheme
                               .primaryContainer,
                           child: Icon(
-                            course.icon,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
+                            course.enrolled ? Icons.check_circle : course.icon,
+                            color: course.enrolled
+                                ? Colors.green
+                                : Theme.of(context).colorScheme.onPrimaryContainer,
                           ),
                         ),
-                        title: Text(course.code),
+                        title: Row(
+                          children: [
+                            Expanded(child: Text(course.code)),
+                            IconButton(
+                              onPressed: () => _toggleFavorite(index),
+                              icon: Icon(
+                                course.isFavorite
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: course.isFavorite ? Colors.amber : null,
+                              ),
+                            ),
+                          ],
+                        ),
                         subtitle: Text(
-                          '${course.name} · ${course.creditHours} CH',
+                          '${course.name} · ${course.day}',
                         ),
-                        trailing: Text(course.day),
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${course.code} tapped')),
+                        trailing: Checkbox(
+                          value: course.enrolled,
+                          onChanged: (_) => _toggleEnrolled(index),
                         ),
+                        onTap: () => _toggleEnrolled(index),
                       );
                     },
                   ),
