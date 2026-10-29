@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 
+
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
 
@@ -16,6 +17,10 @@ Widget build(BuildContext context) {
   for (final c in sampleCourses) { // ← NEW
     totalCh = totalCh + c.creditHours; // ← NEW
   }
+
+  final shown = sampleCourses
+      .where((c) => c.day == 'Monday')
+      .toList(); // ← NEW
 
   return Scaffold(
     appBar: AppBar(
@@ -41,7 +46,12 @@ Widget build(BuildContext context) {
       ),
     ),
     Expanded(
-      child: _isGrid // ← CHANGED
+      child: shown.isEmpty
+          ? const Center(
+               child: Text('No classes! Alhamdulillah :)'),
+             )
+          
+          : _isGrid // ← CHANGED
           ? GridView.builder(
               padding: const EdgeInsets.all(8),
               gridDelegate:
@@ -50,9 +60,9 @@ Widget build(BuildContext context) {
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
           ),
-          itemCount: sampleCourses.length,
+          itemCount: shown.length,
           itemBuilder: (context, index) {
-            final course = sampleCourses[index];
+            final course = shown[index];
             return Card(
               child: Center(
                 child: Column(
@@ -75,9 +85,9 @@ Widget build(BuildContext context) {
 )
       : ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: sampleCourses.length,
+      itemCount: shown.length,
       itemBuilder: (context, index) {
-        final course = sampleCourses[index];
+        final course = shown[index];
         return ListTile(
           tileColor: index.isOdd // ← NEW
               ? Colors.black.withValues(alpha: 0.03)
@@ -89,14 +99,17 @@ Widget build(BuildContext context) {
           
           ),
           title: Text(course.code),
-          subtitle: Text('${course.name} · ${course.creditHours} CH'),
+          subtitle: Text(
+                        '${course.day.substring(0, 3)} ${course.time.split('–').first} · ${course.venue}\n'
+                        '${course.instructor ?? 'TBA'}',
+),
           trailing: Text(course.day),
           onTap: () => ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('${course.code} tapped')),
            ),
         );
         },
-      ),
+      )
     ),
   ],
 ),
