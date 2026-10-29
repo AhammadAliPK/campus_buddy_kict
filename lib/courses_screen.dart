@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 
-class CoursesScreen extends StatelessWidget {
+class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
 
+  @override
+  State<CoursesScreen> createState() => _CoursesScreenState();
+}
+
+class _CoursesScreenState extends State<CoursesScreen> {
+  bool _isGrid = false; 
+  
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
@@ -15,10 +22,10 @@ class CoursesScreen extends StatelessWidget {
         title: const Text('My Courses'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.grid_on),
+            icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid View',
-            onPressed: () {},
-          ),
+            onPressed: () => setState( () => _isGrid = !_isGrid ),
+          ), //teach top button to flip memory
         ],
       ),
       body: Column(
@@ -35,8 +42,35 @@ class CoursesScreen extends StatelessWidget {
           ),
 
           Expanded(
-            child: ListView.builder(
+            child: _isGrid ? 
+            GridView.builder(
               padding: const EdgeInsets.symmetric(vertical: 8),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: sampleCourses.length,
+              itemBuilder: (context, index) {
+                final course = sampleCourses[index];
+                return Card(
+                  child: Center(
+                    child: Column (
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(course.icon, size: 40),
+                        const SizedBox(height: 8),
+                        Text(course.code, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(course.name, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ],
+                    )
+                  ),
+                );
+              },
+            ) : 
+            ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              
               itemCount: sampleCourses.length,
               itemBuilder: (context, index) {
                 print('Building row $index');
