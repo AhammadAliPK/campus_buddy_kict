@@ -17,6 +17,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
     for (final c in sampleCourses) { 
       totalCh = totalCh + c.creditHours; 
     }
+    final sortedCourses = [...sampleCourses];
+    
+    const dayOrder = {
+      'Monday': 1,
+      'Tuesday': 2,
+      'Wednesday': 3,
+      'Thursday': 4,
+      'Friday': 5,
+      'Saturday': 6,
+      'Sunday': 7,
+    };
+
+    sortedCourses.sort(
+      (a, b) =>
+          dayOrder[a.day]!.compareTo(dayOrder[b.day]!),
+    );
+    final shown = sortedCourses
+      .where((c) => c.day == 'Monday')
+      .toList();
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -39,7 +58,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
           ),
           Expanded(
-            child: _isGrid // ← CHANGED
+            child: shown.isEmpty
+            ? const Center(
+                child: Text(
+                  'No classes! Alhamdulillah :)',
+                ),
+              )
+            : _isGrid // ← CHANGED
               ? GridView.builder(
                 padding: const EdgeInsets.all(8),
                 gridDelegate:
@@ -73,9 +98,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
             )
             : ListView.builder(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: sampleCourses.length,
+              itemCount: shown.length,
               itemBuilder: (context, index) {
-                final course = sampleCourses[index];
+                final course = shown[index];
                 return ListTile(
                   tileColor: index.isOdd // ← NEW
                     ? Colors.black.withValues(alpha: 0.03)
@@ -86,7 +111,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 color: Theme.of(context).colorScheme.onPrimaryContainer),
             ),
             title: Text(course.code),
-            subtitle: Text('${course.name} · ${course.creditHours} CH'),
+            subtitle: Text(
+              '${course.day.substring(0, 3)} ${course.time} · '
+              '${course.venue}\n'
+              '${course.instructor ?? 'TBA'}',
+            ),
+            isThreeLine: true,            
             trailing: Text(course.day),
             onTap: () => ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('${course.code} tapped')),
