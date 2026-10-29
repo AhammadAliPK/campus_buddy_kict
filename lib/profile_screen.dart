@@ -71,15 +71,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ClipOval(
-              child: Image.asset(
-                'assets/me.jpg',
-              width: 96,
-              height: 96,
-              fit: BoxFit.cover,
-              alignment: Alignment.center,
-              ),
+            
+      Center(
+        child: SizedBox(
+          width: 96,
+          height: 96,
+          child: ClipOval(
+            child: Image.asset(
+            'assets/me.jpg',
+            width: 96,
+            height: 96,
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
             ),
+          ),
+        ),
+      ),
             const SizedBox(height: 12),
 
             if (_editing) ...[
