@@ -8,19 +8,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
  String _nickname = 'Guest Student';
  String _bio =
  'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+ String _matric = '202300000';
+
  final _nicknameCtrl = TextEditingController();
  final _bioCtrl = TextEditingController();
+final _matricCtrl = TextEditingController();
+
  bool _editing = false;
+
  @override
  void initState() {
  super.initState();
  _nicknameCtrl.text = _nickname; // pre-fill from current state
  _bioCtrl.text = _bio;
+ _matricCtrl.text = _matric;
  }
+
  @override
  void dispose() {
  _nicknameCtrl.dispose();
  _bioCtrl.dispose();
+ _matricCtrl.dispose();
  super.dispose();
  }
  void _toggleEdit() {
@@ -29,10 +37,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
  // leaving edit mode: copy controller values into state
  _nickname = _nicknameCtrl.text.trim();
  _bio = _bioCtrl.text.trim();
+ _matric = _matricCtrl.text.trim ();
  }
  _editing = !_editing;
  });
  }
+
  @override
  Widget build(BuildContext context) {
  return Scaffold(
@@ -56,6 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
  ),
  const SizedBox(height: 12),
  if (_editing) ...[
+
  TextField(
  controller: _nicknameCtrl,
  decoration: const InputDecoration(
@@ -65,6 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
  ),
  ),
  const SizedBox(height: 12),
+
  TextField(
  controller: _bioCtrl,
  maxLines: 3,
@@ -74,6 +86,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
  border: OutlineInputBorder(),
  ),
  ),
+
+ TextField(
+  controller: _matricCtrl,
+  keyboardType: TextInputType.number, // Requirement 1
+  decoration: const InputDecoration(
+    labelText: 'Matric Number',
+  ),
+),
+
+const SizedBox(height: 12),
  const SizedBox(height: 12),
  ElevatedButton.icon(
  onPressed: _toggleEdit,
@@ -98,13 +120,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: const Text('Reset'),
               ),
  ] else ...[
+
  Text(_nickname,
  style: Theme.of(context).textTheme.headlineSmall,
  textAlign: TextAlign.center),
  const SizedBox(height: 6),
+
  Text(_bio,
  textAlign: TextAlign.center,
  style: const TextStyle(color: Colors.black54)),
+
+ Text(
+  'Matric: $_matric',
+  textAlign: TextAlign.center,
+  style: const TextStyle(color: Colors.grey, fontSize: 12),
+ )
  ],
  ],
  ),
