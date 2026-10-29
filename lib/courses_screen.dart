@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 class CoursesScreen extends StatefulWidget {
 const CoursesScreen({super.key});
 
@@ -10,18 +12,63 @@ State<CoursesScreen> createState() => _CoursesScreenState();
 class _CoursesScreenState extends State<CoursesScreen> {
     bool _isGrid = false; // ← NEW
     String _selectedDay = 'All'; 
-  final List<String> _days = ['All','Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  final List<String> _days = ['All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  late List<Course> _courses;
+  @override
+  void initState() {
+  super.initState();
+  _courses = List.of(sampleCourses); // our own copy, safe to change
+  }
+
+  void toggleFavorite(int index) {
+    setState(() {
+      // This replaces the old course with a new copy where isFavorite is flipped
+      _courses[index] = _courses[index].copyWith(
+        isFavorite: !_courses[index].isFavorite,
+      );
+    });
+  }
+
+  void _toggleEnrolled(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        enrolled: !_courses[index].enrolled,
+      );
+    });
+  }
+
 @override
 Widget build(BuildContext context) {
     final shown = _selectedDay == 'All' 
-    ? sampleCourses 
-    : sampleCourses.where((c) => c.days.contains(_selectedDay)).toList();
+    ? _courses
+    : _courses.where((c) => c.days.contains(_selectedDay)).toList();
     int totalCh = 0; // ← NEW
     for (final c in shown) {
     totalCh = totalCh + c.creditHours;
     }
+    final enrolledCh = _courses
+    .where((c) => c.enrolled)
+    .fold<int>(0, (sum, c) => sum + c.creditHours);
     
 return Scaffold(
+  floatingActionButton: FloatingActionButton(
+  onPressed: () async {
+    // 'await' pauses this code until the dialog closes
+    final newCourse = await showDialog<Course>(
+      context: context,
+      builder: (context) => const AddCourseDialog(),
+    );
+
+    // If they pressed 'Add' (and didn't just hit Cancel), add it to the list!
+    if (newCourse != null) {
+      setState(() {
+        _courses.add(newCourse);
+      });
+    }
+  },
+  child: const Icon(Icons.add),
+),
 appBar: AppBar(
 title: const Text('My Courses'),
 actions: [
@@ -39,7 +86,9 @@ margin: const EdgeInsets.all(12),
 child: Padding(
 padding: const EdgeInsets.all(12),
 child: Text(
-'${shown.length} courses · $totalCh credit hours'),
+  '${_courses.length} courses · $totalCh credit hours\n' // \n starts a new line
+  'Enrolled: $enrolledCh CH', 
+),
 ),
 ),
 SingleChildScrollView(
@@ -108,23 +157,45 @@ tileColor: index.isOdd
 ? Colors.black.withValues(alpha: 0.03)
 : null,
 leading: CircleAvatar(
-backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-child: Icon(course.icon,
-color: Theme.of(context).colorScheme.onPrimaryContainer),
+  backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+  child: Icon(
+    course.enrolled ? Icons.check_circle : course.icon, // Green tick if enrolled
+    color: course.enrolled 
+        ? Colors.green 
+        : Theme.of(context).colorScheme.onPrimaryContainer,
+  ),
 ),
 title: Text(course.code),
 subtitle: Text('${course.days.join(', ')} · ${course.time} · ${course.venue}'),
-trailing: Column(
-  mainAxisAlignment: MainAxisAlignment.center,
-  crossAxisAlignment: CrossAxisAlignment.end,
+trailing: Row(
+  mainAxisSize: MainAxisSize.min, // Keeps the row from taking up the whole tile
   children: [
-    Text('${course.creditHours} CH'),
-    Text(course.instructor ?? 'TBA', style: const TextStyle(color: Colors.grey, fontSize: 12)), 
+    Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text('${course.creditHours} CH'),
+        Text(course.instructor ?? 'TBA', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+      ],
+    ),
+    // --- NEW STAR BUTTON ---
+    IconButton(
+      icon: Icon(
+        course.isFavorite ? Icons.star : Icons.star_border,
+        color: course.isFavorite ? Colors.amber : null,
+      ),
+      onPressed: () {
+        // Find the actual index of this course in the main _courses list
+        final realIndex = _courses.indexWhere((c) => c.code == course.code);
+        toggleFavorite(realIndex);
+      },
+    ),
   ],
 ),
-onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-SnackBar(content: Text('${course.code} tapped')),
-),
+onTap: () {
+  final realIndex = _courses.indexWhere((c) => c.code == course.code);
+  _toggleEnrolled(realIndex);
+},
 );
 },
 ),
