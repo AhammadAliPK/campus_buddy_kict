@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -28,39 +29,29 @@ class _CoursesScreenState extends State<CoursesScreen> {
     'Sunday': 7,
   };
 
-  // A copy of the const list, so we can add and replace items.
-  final List<Course> _courses = List.of(sampleCourses);
+  late List<Course> _courses;
   bool _isGrid = false;
-  String? _selectedDay; // null means "All days"
+  String? _selectedDay; // null = all days
+  bool _favOnly = false; // "favourites only" chip
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses); // our own copy, safe to change
+  }
 
   // ---------- helpers ----------
 
-  int get _totalCh {
-    int total = 0;
-    for (final c in _courses) {
-      total = total + c.creditHours;
-    }
-    return total;
-  }
-
-  int get _enrolledCh {
-    int total = 0;
-    for (final c in _courses) {
-      if (c.isEnrolled) total = total + c.creditHours;
-    }
-    return total;
-  }
-
-  int get _enrolledCount => _courses.where((c) => c.isEnrolled).length;
-
-  // Filtered by day, then sorted by day and time.
+  // Day filter + favourites filter, then sorted by day and time.
+  // Always built from _courses.
   List<Course> get _shown {
     final list = _courses
-        .where((c) => _selectedDay == null || c.day == _selectedDay)
+        .where((c) =>
+            (_selectedDay == null || c.day == _selectedDay) &&
+            (!_favOnly || c.isFavorite))
         .toList();
     list.sort((a, b) {
-      final byDay =
-          (_dayOrder[a.day] ?? 8).compareTo(_dayOrder[b.day] ?? 8);
+      final byDay = (_dayOrder[a.day] ?? 8).compareTo(_dayOrder[b.day] ?? 8);
       return byDay != 0 ? byDay : a.time.compareTo(b.time);
     });
     return list;
@@ -74,32 +65,71 @@ class _CoursesScreenState extends State<CoursesScreen> {
   // Example: "Mon 09:00 · LT A"
   String _info(Course c) => '${_shortDay(c)} ${_startTime(c)} · ${c.venue}';
 
-  // Replace-with-copy pattern (Week 5, section 5).
-  void _replace(Course old, Course updated) {
-    final i = _courses.indexOf(old);
+  // The list on screen is filtered and sorted, so we look up the real
+  // position in _courses instead of using the row's index.
+  void _toggleFavorite(Course course) {
+    final i = _courses.indexOf(course);
     if (i == -1) return;
-    setState(() => _courses[i] = updated);
+    setState(() {
+      _courses[i] = course.copyWith(isFavorite: !course.isFavorite);
+    });
   }
 
-  void _toggleFavorite(Course c) =>
-      _replace(c, c.copyWith(isFavorite: !c.isFavorite));
+  void _toggleEnrolled(Course course) {
+    final i = _courses.indexOf(course);
+    if (i == -1) return;
+    setState(() {
+      _courses[i] = course.copyWith(enrolled: !course.enrolled);
+    });
+  }
 
-  void _setEnrolled(Course c, bool value) =>
-      _replace(c, c.copyWith(isEnrolled: value));
-
-  Future<void> _showAddDialog() async {
-    final newCourse = await showDialog<Course>(
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
       context: context,
-      builder: (context) => const _AddCourseDialog(),
+      builder: (_) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).toList(),
+      ),
     );
-    if (newCourse == null || !mounted) return;
-    setState(() => _courses.add(newCourse));
+    if (course == null) return; // the user cancelled
+    setState(() => _courses.add(course));
+  }
+
+  Future<void> _confirmRemove(Course course) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Are you sure?'),
+        content: Text('Remove ${course.code} from your courses?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      setState(() => _courses.remove(course));
+    }
   }
 
   // ---------- build ----------
 
   @override
   Widget build(BuildContext context) {
+    int totalCh = 0;
+    for (final c in _courses) {
+      totalCh = totalCh + c.creditHours;
+    }
+
+    final enrolledCh = _courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
+
     final shown = _shown;
 
     return Scaffold(
@@ -107,16 +137,16 @@ class _CoursesScreenState extends State<CoursesScreen> {
         title: const Text('My Courses'),
         actions: [
           IconButton(
-            icon: _isGrid ? const Icon(Icons.list) : const Icon(Icons.grid_on),
-            tooltip: _isGrid ? 'List view' : 'Grid view',
+            icon: const Icon(Icons.add),
+            tooltip: 'Add course',
+            onPressed: _addCourse,
+          ),
+          IconButton(
+            icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
+            tooltip: 'Grid view',
             onPressed: () => setState(() => _isGrid = !_isGrid),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddDialog,
-        icon: const Icon(Icons.add),
-        label: const Text('Add course'),
       ),
       body: Column(
         children: [
@@ -126,18 +156,24 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${_courses.length} courses · $_totalCh credit hours\n'
-                'Enrolled: $_enrolledCount courses · $_enrolledCh credit hours',
+                '${_courses.length} courses · $totalCh credit hours\n'
+                'Enrolled: $enrolledCh CH',
               ),
             ),
           ),
 
-          // Day filter chips
+          // Filter chips: favourites + days
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Row(
               children: [
+                FilterChip(
+                  label: const Text('★ Favourites only'),
+                  selected: _favOnly,
+                  onSelected: (v) => setState(() => _favOnly = v),
+                ),
+                const SizedBox(width: 8),
                 ChoiceChip(
                   label: const Text('All'),
                   selected: _selectedDay == null,
@@ -159,7 +195,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
           // List / grid / empty message
           Expanded(
             child: shown.isEmpty
-                ? const Center(child: Text('No classes! Alhamdulillah :)'))
+                ? Center(
+                    child: Text(
+                      _favOnly
+                          ? 'No starred courses here yet'
+                          : 'No classes! Alhamdulillah :)',
+                    ),
+                  )
                 : _isGrid
                     ? _buildGrid(shown)
                     : _buildList(shown),
@@ -171,7 +213,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   Widget _buildList(List<Course> shown) {
     return ListView.builder(
-      padding: const EdgeInsets.only(top: 4, bottom: 88),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       itemCount: shown.length,
       itemBuilder: (context, index) {
         final course = shown[index];
@@ -181,34 +223,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
           leading: CircleAvatar(
             backgroundColor: Theme.of(context).colorScheme.primaryContainer,
             child: Icon(
-              course.icon,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
+              course.enrolled ? Icons.check_circle : course.icon,
+              color: course.enrolled
+                  ? Colors.green
+                  : Theme.of(context).colorScheme.onPrimaryContainer,
             ),
           ),
           title: Text('${course.code} · ${course.creditHours} CH'),
           subtitle: Text(
             '${course.name}\n${_info(course)} · ${course.instructor ?? 'TBA'}',
           ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: Icon(
-                  course.isFavorite ? Icons.star : Icons.star_border,
-                  color: course.isFavorite ? Colors.amber : null,
-                ),
-                tooltip: 'Favourite',
-                onPressed: () => _toggleFavorite(course),
-              ),
-              Checkbox(
-                value: course.isEnrolled,
-                onChanged: (v) => _setEnrolled(course, v ?? false),
-              ),
-            ],
+          trailing: IconButton(
+            icon: Icon(
+              course.isFavorite ? Icons.star : Icons.star_border,
+              color: course.isFavorite ? Colors.amber : null,
+            ),
+            onPressed: () => _toggleFavorite(course),
           ),
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${course.code} tapped')),
-          ),
+          onTap: () => _toggleEnrolled(course),
+          onLongPress: () => _confirmRemove(course),
         );
       },
     );
@@ -216,200 +249,60 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   Widget _buildGrid(List<Course> shown) {
     return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 88),
+      padding: const EdgeInsets.all(8),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
-        childAspectRatio: 0.95,
+        childAspectRatio: 1.0,
       ),
       itemCount: shown.length,
       itemBuilder: (context, index) {
         final course = shown[index];
         return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(6),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(course.icon, size: 32),
-                const SizedBox(height: 4),
-                Text(
-                  course.code,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  course.name,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  _info(course),
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        course.isFavorite ? Icons.star : Icons.star_border,
-                        color: course.isFavorite ? Colors.amber : null,
-                      ),
-                      onPressed: () => _toggleFavorite(course),
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () => _toggleEnrolled(course),
+            onLongPress: () => _confirmRemove(course),
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    course.enrolled ? Icons.check_circle : course.icon,
+                    size: 32,
+                    color: course.enrolled ? Colors.green : null,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    course.code,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    course.name,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    _info(course),
+                    style:
+                        const TextStyle(fontSize: 12, color: Colors.black54),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      course.isFavorite ? Icons.star : Icons.star_border,
+                      color: course.isFavorite ? Colors.amber : null,
                     ),
-                    Checkbox(
-                      value: course.isEnrolled,
-                      onChanged: (v) => _setEnrolled(course, v ?? false),
-                    ),
-                  ],
-                ),
-              ],
+                    onPressed: () => _toggleFavorite(course),
+                  ),
+                ],
+              ),
             ),
           ),
         );
       },
-    );
-  }
-}
-
-// ---------------------------------------------------------------
-// Popup form: Add a course (dialog + form + validators)
-// ---------------------------------------------------------------
-class _AddCourseDialog extends StatefulWidget {
-  const _AddCourseDialog();
-
-  @override
-  State<_AddCourseDialog> createState() => _AddCourseDialogState();
-}
-
-class _AddCourseDialogState extends State<_AddCourseDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _codeCtrl = TextEditingController();
-  final _nameCtrl = TextEditingController();
-  final _chCtrl = TextEditingController(text: '3');
-  final _timeCtrl = TextEditingController();
-  final _venueCtrl = TextEditingController();
-  String _day = 'Monday';
-
-  @override
-  void dispose() {
-    _codeCtrl.dispose();
-    _nameCtrl.dispose();
-    _chCtrl.dispose();
-    _timeCtrl.dispose();
-    _venueCtrl.dispose();
-    super.dispose();
-  }
-
-  void _save() {
-    // Only continue when every validator returns null.
-    if (!_formKey.currentState!.validate()) return;
-
-    final time = _timeCtrl.text.trim().isEmpty ? 'TBA' : _timeCtrl.text.trim();
-    final venue =
-        _venueCtrl.text.trim().isEmpty ? 'TBA' : _venueCtrl.text.trim();
-
-    Navigator.pop(
-      context,
-      Course(
-        _codeCtrl.text.trim(),
-        _nameCtrl.text.trim(),
-        int.parse(_chCtrl.text.trim()),
-        _day,
-        Icons.book,
-        time,
-        venue,
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add a course'),
-      content: SingleChildScrollView(
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _codeCtrl,
-                textCapitalization: TextCapitalization.characters,
-                decoration: const InputDecoration(labelText: 'Course code'),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Code is required';
-                  }
-                  if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(value.trim())) {
-                    return 'Use a format like CSCI 4311';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _nameCtrl,
-                decoration: const InputDecoration(labelText: 'Course name'),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Name is required';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                controller: _chCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Credit hours'),
-                validator: (value) {
-                  final n = int.tryParse((value ?? '').trim());
-                  if (n == null) return 'Enter a number';
-                  if (n < 1 || n > 6) return 'Between 1 and 6';
-                  return null;
-                },
-              ),
-              DropdownButtonFormField<String>(
-                initialValue: _day,
-                decoration: const InputDecoration(labelText: 'Day'),
-                items: const [
-                  DropdownMenuItem(value: 'Monday', child: Text('Monday')),
-                  DropdownMenuItem(value: 'Tuesday', child: Text('Tuesday')),
-                  DropdownMenuItem(
-                      value: 'Wednesday', child: Text('Wednesday')),
-                  DropdownMenuItem(value: 'Thursday', child: Text('Thursday')),
-                  DropdownMenuItem(value: 'Friday', child: Text('Friday')),
-                ],
-                onChanged: (v) => setState(() => _day = v ?? 'Monday'),
-              ),
-              TextFormField(
-                controller: _timeCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Time (optional)',
-                  hintText: '09:00-10:30',
-                ),
-              ),
-              TextFormField(
-                controller: _venueCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Venue (optional)',
-                  hintText: 'LT A',
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _save,
-          child: const Text('Save'),
-        ),
-      ],
     );
   }
 }
