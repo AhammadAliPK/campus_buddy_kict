@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/data/sample_courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 
@@ -13,24 +14,73 @@ class TimetableScreen extends StatefulWidget {
 class _TimetableScreenState extends State<TimetableScreen> {
   bool _showGrid = false;
 
+  late List<Course> _courses;
+
   static const _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
   String? _selectedDay; //null means "All"
 
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses);
+  }
+
+  void _toggleFavorite(Course course) {
+    final i = _courses.indexWhere((c) => c.code == course.code);
+    if (i == -1) return;
+    setState(() {
+      _courses[i] =
+          _courses[i].copyWith(isFavorite: !_courses[i].isFavorite);
+    });
+  }
+
+  void _toggleEnrolled(Course course) {
+    final i = _courses.indexWhere((c) => c.code == course.code);
+    if (i == -1) return;
+    setState(() {
+      _courses[i] =
+          _courses[i].copyWith(enrolled: !_courses[i].enrolled);
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (_) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).toList(),
+      ),
+    );
+    if (course == null) return;
+    setState(() => _courses.add(course));
+  }
+
   List<Course> get _visibleCourses {
     final day = _selectedDay;
 
-    if (day == null) return sampleCourses;
+    if (day == null) return _courses;
 
-    return sampleCourses.where((course) => course.day == day).toList();
+    return _courses.where((course) => course.day == day).toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    var totalCh = 0;
+    for (final c in _courses) {
+      totalCh += c.creditHours;
+    }
+    final enrolledCh = _courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Timetable'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _addCourse,
+          ),
           IconButton(
             tooltip: _showGrid ? 'Show List' : 'Show Grid',
             icon: Icon(_showGrid ? Icons.list : Icons.grid_view),
@@ -44,6 +94,19 @@ class _TimetableScreenState extends State<TimetableScreen> {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  '${_courses.length} courses · $totalCh credit hours\n'
+                  'Enrolled: $enrolledCh CH',
+                ),
+              ),
+            ),
+          ),
           SizedBox(
             height: 56,
             child: ListView.separated(
@@ -92,21 +155,24 @@ class _TimetableScreenState extends State<TimetableScreen> {
         final course = courses[index];
 
         return ListTile(
-          leading: Icon(course.icon),
+          leading: Icon(
+            course.enrolled ? Icons.check_circle : course.icon,
+            color: course.enrolled
+                ? Colors.green
+                : Theme.of(context).colorScheme.primary,
+          ),
           title: Text(course.code),
-          subtitle: Text(course.name),
-          trailing: Text(course.day),
-          onTap: () {
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Text(
-                    '${course.code} · ${course.lecturer} · ${course.day}, ${course.time}',
-                  ),
-                ),
-              );
-          },
+          subtitle: Text(
+            '${course.name} · ${course.day}',
+          ),
+          trailing: IconButton(
+            icon: Icon(
+              course.isFavorite ? Icons.star : Icons.star_border,
+              color: course.isFavorite ? Colors.amber : null,
+            ),
+            onPressed: () => _toggleFavorite(course),
+          ),
+          onTap: () => _toggleEnrolled(course),
         );
       },
     );
@@ -121,7 +187,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
         crossAxisCount: 2,
         mainAxisSpacing: 8,
         crossAxisSpacing: 8,
-        childAspectRatio: 1.1,
+        childAspectRatio: 0.85,
       ),
       itemCount: courses.length,
       itemBuilder: (context, index) {
@@ -131,25 +197,38 @@ class _TimetableScreenState extends State<TimetableScreen> {
           margin: EdgeInsets.zero,
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: () {
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '${course.code} · ${course.lecturer} · ${course.day}, ${course.time}',
-                    ),
-                  ),
-                );
-            },
+            onTap: () => _toggleEnrolled(course),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    course.icon,
-                    color: Theme.of(context).colorScheme.primary,
+                  Row(
+                    children: [
+                      Icon(
+                        course.enrolled
+                            ? Icons.check_circle
+                            : course.icon,
+                        color: course.enrolled
+                            ? Colors.green
+                            : Theme.of(context).colorScheme.primary,
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        iconSize: 20,
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: Icon(
+                          course.isFavorite
+                              ? Icons.star
+                              : Icons.star_border,
+                        ),
+                        color:
+                            course.isFavorite ? Colors.amber : null,
+                        onPressed: () => _toggleFavorite(course),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -165,6 +244,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                   const Spacer(),
                   Text(course.day),
                   Text(course.time),
+                  Text('${course.creditHours} CH'),
                 ],
               ),
             ),
