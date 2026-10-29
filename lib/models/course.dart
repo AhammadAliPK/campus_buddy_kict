@@ -9,6 +9,8 @@ class Course {
   final String venue;
   final String? instructor; // null = not known yet
   final IconData icon;
+  final bool isFavorite; // true when the user stars this course
+  final bool enrolled; // true when the user enrolls in it
 
   const Course(
     this.code,
@@ -19,7 +21,23 @@ class Course {
     this.venue,
     this.icon, {
     this.instructor,
+    this.isFavorite = false,
+    this.enrolled = false,
   });
+
+  // Make a copy with one difference (fields are final, so we copy)
+  Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
+        code,
+        name,
+        creditHours,
+        day,
+        time,
+        venue,
+        icon,
+        instructor: instructor,
+        isFavorite: isFavorite ?? this.isFavorite,
+        enrolled: enrolled ?? this.enrolled,
+      );
 
   // 3.0 -> "3", 0.5 -> "0.5"
   String get chText =>
