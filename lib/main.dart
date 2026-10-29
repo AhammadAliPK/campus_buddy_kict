@@ -4,8 +4,6 @@ import 'package:campus_buddy_kict/courses_screen.dart';
 
 void main() {
   runApp(const CampusBuddyKictApp());
-
-  
 }
 
 class CampusBuddyKictApp extends StatelessWidget {
@@ -18,6 +16,7 @@ class CampusBuddyKictApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
       ),
       home: const CoursesScreen(),
+      // home: const ProfileScreen(),
     );
   }
 }
