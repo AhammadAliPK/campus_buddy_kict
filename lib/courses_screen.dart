@@ -12,6 +12,7 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false; // the screen remembers which view is on
+  bool _favOnly = false; // Homework 3: is the "favourites only" chip on?
   late List<Course> _courses;
 
   @override
@@ -46,6 +47,31 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
+  // Homework 2: long-press -> "Are you sure?" -> remove
+  Future<void> _confirmRemove(int index) async {
+    final course = _courses[index];
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove course?'),
+        content: Text('Remove ${course.code} from your list?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      setState(() => _courses.remove(course));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
@@ -56,8 +82,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
         .where((c) => c.enrolled)
         .fold<int>(0, (sum, c) => sum + c.creditHours);
 
-    // Week 4 day filter, now reading from _courses
-    final shown = _courses.where((c) => c.day == 'Monday').toList();
+    // Week 4 day filter, now reading from _courses.
+    // Homework 3: when the chip is on, also keep only starred courses.
+    final shown = _courses
+        .where((c) => c.day == 'Monday')
+        .where((c) => !_favOnly || c.isFavorite)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -87,6 +117,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
             ),
           ),
+          // Homework 3: the filter chip (the list view uses it)
+          if (!_isGrid)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  FilterChip(
+                    label: const Text('★ favourites only'),
+                    selected: _favOnly,
+                    onSelected: (v) => setState(() => _favOnly = v),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: _isGrid
                 ? GridView.builder(
@@ -126,7 +170,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     },
                   )
                 : shown.isEmpty
-                ? const Center(child: Text('No classes! Alhamdulillah :)'))
+                ? Center(
+                    child: Text(
+                      _favOnly
+                          ? 'No starred courses yet — tap a ☆ first'
+                          : 'No classes! Alhamdulillah :)',
+                    ),
+                  )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: shown.length,
@@ -163,6 +213,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           onPressed: () => _toggleFavorite(realIndex),
                         ),
                         onTap: () => _toggleEnrolled(realIndex),
+                        onLongPress: () => _confirmRemove(realIndex),
                       );
                     },
                   ),
