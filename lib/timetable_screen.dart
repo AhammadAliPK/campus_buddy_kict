@@ -20,6 +20,8 @@ class _TimetableScreenState extends State<TimetableScreen> {
 
   String? _selectedDay; //null means "All"
 
+  bool _favoritesOnly = false;
+
   @override
   void initState() {
     super.initState();
@@ -55,12 +57,41 @@ class _TimetableScreenState extends State<TimetableScreen> {
     setState(() => _courses.add(course));
   }
 
+  Future<void> _confirmRemove(Course course) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Remove ${course.code}?'),
+        content: const Text('Are you sure?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      setState(
+        () => _courses.removeWhere((c) => c.code == course.code),
+      );
+    }
+  }
+
   List<Course> get _visibleCourses {
     final day = _selectedDay;
 
-    if (day == null) return _courses;
-
-    return _courses.where((course) => course.day == day).toList();
+    var list = day == null
+        ? List<Course>.of(_courses)
+        : _courses.where((course) => course.day == day).toList();
+    if (_favoritesOnly) {
+      list = list.where((course) => course.isFavorite).toList();
+    }
+    return list;
   }
 
   @override
@@ -132,6 +163,18 @@ class _TimetableScreenState extends State<TimetableScreen> {
               separatorBuilder: (_, _) => const SizedBox(width: 8),
             ),
           ),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FilterChip(
+                label: const Text('★ favourites only'),
+                selected: _favoritesOnly,
+                onSelected: (v) => setState(() => _favoritesOnly = v),
+              ),
+            ),
+          ),
           Expanded(child: _buildContent()),
         ],
       ),
@@ -173,6 +216,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
             onPressed: () => _toggleFavorite(course),
           ),
           onTap: () => _toggleEnrolled(course),
+          onLongPress: () => _confirmRemove(course),
         );
       },
     );
@@ -198,6 +242,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: () => _toggleEnrolled(course),
+          onLongPress: () => _confirmRemove(course),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
