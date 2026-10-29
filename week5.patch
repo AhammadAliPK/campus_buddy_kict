@@ -1,0 +1,307 @@
+diff --git a/lib/add_course_dialog.dart b/lib/add_course_dialog.dart
+new file mode 100644
+index 0000000..a509c74
+--- /dev/null
++++ b/lib/add_course_dialog.dart
+@@ -0,0 +1,120 @@
++import 'package:flutter/material.dart';
++import 'package:campus_buddy_kict/models/course.dart';
++
++class AddCourseDialog extends StatefulWidget {
++  // Exercise: the screen passes in the codes it already has
++  const AddCourseDialog({super.key, required this.existingCodes});
++
++  final List<String> existingCodes;
++
++  @override
++  State<AddCourseDialog> createState() => _AddCourseDialogState();
++}
++
++class _AddCourseDialogState extends State<AddCourseDialog> {
++  final _formKey = GlobalKey<FormState>(); // the form's name tag
++  final _codeCtrl = TextEditingController(); // remembers the typing
++  final _nameCtrl = TextEditingController();
++
++  String _day = 'Monday'; // current choice in the dropdown
++  static const _days = [
++    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
++  ];
++
++  int _creditHours = 3; // the slider's current value
++
++  @override
++  void dispose() {
++    _codeCtrl.dispose();
++    _nameCtrl.dispose();
++    super.dispose();
++  }
++
++  void _submit() {
++    if (!_formKey.currentState!.validate()) return; // run every check
++    final course = Course(
++      _codeCtrl.text.trim().toUpperCase(),
++      _nameCtrl.text.trim(),
++      _creditHours,
++      _day,
++      Icons.auto_stories,
++    );
++    Navigator.pop(context, course); // close AND answer
++  }
++
++  @override
++  Widget build(BuildContext context) {
++    return AlertDialog(
++      title: const Text('Add a course'),
++      content: Form(
++        key: _formKey,
++        child: SingleChildScrollView(
++          child: Column(
++            mainAxisSize: MainAxisSize.min,
++            children: [
++              TextFormField(
++                controller: _codeCtrl,
++                decoration: const InputDecoration(
++                  labelText: 'Code (e.g. CSCI 4311)',
++                ),
++                validator: (v) {
++                  final t = v?.trim() ?? '';
++                  if (t.isEmpty) return 'Code is required';
++                  if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(t)) {
++                    return 'Format: 4 letters + 4 digits';
++                  }
++                  // Exercise: duplicate guard
++                  if (widget.existingCodes.contains(t)) {
++                    return 'Already added';
++                  }
++                  return null; // returning null means "this input is fine"
++                },
++              ),
++              TextFormField(
++                controller: _nameCtrl,
++                decoration: const InputDecoration(labelText: 'Course name'),
++                validator: (v) =>
++                    (v?.trim().isEmpty ?? true) ? 'Name is required' : null,
++              ),
++              DropdownButtonFormField<String>(
++                initialValue: _day,
++                items: _days
++                    .map((d) => DropdownMenuItem(value: d, child: Text(d)))
++                    .toList(),
++                onChanged: (v) => setState(() => _day = v!),
++              ),
++              const SizedBox(height: 8),
++              Row(
++                children: [
++                  const Text('Credit hours'),
++                  Expanded(
++                    child: Slider(
++                      min: 1,
++                      max: 4,
++                      divisions: 3,
++                      label: '$_creditHours',
++                      value: _creditHours.toDouble(),
++                      onChanged: (v) =>
++                          setState(() => _creditHours = v.round()),
++                    ),
++                  ),
++                  Text('$_creditHours'),
++                ],
++              ),
++            ],
++          ),
++        ),
++      ),
++      actions: [
++        TextButton(
++          onPressed: () => Navigator.pop(context),
++          child: const Text('Cancel'),
++        ),
++        FilledButton(
++          onPressed: _submit,
++          child: const Text('Add'),
++        ),
++      ],
++    );
++  }
++}
+diff --git a/lib/courses_screen.dart b/lib/courses_screen.dart
+index 5b7960c..3d57e2e 100644
+--- a/lib/courses_screen.dart
++++ b/lib/courses_screen.dart
+@@ -1,5 +1,7 @@
+ import 'package:flutter/material.dart';
+ import 'package:campus_buddy_kict/data/courses.dart';
++import 'package:campus_buddy_kict/models/course.dart';
++import 'package:campus_buddy_kict/add_course_dialog.dart';
+ 
+ class CoursesScreen extends StatefulWidget {
+   const CoursesScreen({super.key});
+@@ -9,21 +11,63 @@ class CoursesScreen extends StatefulWidget {
+ }
+ 
+ class _CoursesScreenState extends State<CoursesScreen> {
+-  bool _isGrid = false; // Step 11: the screen remembers which view is on
++  bool _isGrid = false; // the screen remembers which view is on
++  late List<Course> _courses;
++
++  @override
++  void initState() {
++    super.initState();
++    _courses = List.of(sampleCourses); // our own copy, safe to change
++  }
++
++  void _toggleFavorite(int index) {
++    setState(() {
++      _courses[index] =
++          _courses[index].copyWith(isFavorite: !_courses[index].isFavorite);
++    });
++  }
++
++  void _toggleEnrolled(int index) {
++    setState(() {
++      _courses[index] = _courses[index].copyWith(
++        enrolled: !_courses[index].enrolled,
++      );
++    });
++  }
++
++  Future<void> _addCourse() async {
++    final course = await showDialog<Course>(
++      context: context,
++      builder: (_) => AddCourseDialog(
++        existingCodes: _courses.map((c) => c.code).toList(),
++      ),
++    );
++    if (course == null) return; // the user cancelled, so do nothing
++    setState(() => _courses.add(course));
++  }
+ 
+   @override
+   Widget build(BuildContext context) {
+     int totalCh = 0;
+-    for (final c in sampleCourses) {
++    for (final c in _courses) {
+       totalCh = totalCh + c.creditHours;
+     }
+-    final shown = sampleCourses.where((c) => c.day == 'Monday').toList();
++    final enrolledCh = _courses
++        .where((c) => c.enrolled)
++        .fold<int>(0, (sum, c) => sum + c.creditHours);
++
++    // Week 4 day filter, now reading from _courses
++    final shown = _courses.where((c) => c.day == 'Monday').toList();
+ 
+     return Scaffold(
+       appBar: AppBar(
+         title: const Text('My Courses'),
+         actions: [
+-          // Step 13: flip the view and change the icon
++          IconButton(
++            icon: const Icon(Icons.add),
++            tooltip: 'Add course',
++            onPressed: _addCourse,
++          ),
+           IconButton(
+             icon: Icon(_isGrid ? Icons.list : Icons.grid_on),
+             tooltip: _isGrid ? 'List view' : 'Grid view',
+@@ -38,11 +82,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
+             child: Padding(
+               padding: const EdgeInsets.all(12),
+               child: Text(
+-                '${sampleCourses.length} courses · $totalCh credit hours',
++                '${_courses.length} courses · $totalCh credit hours\n'
++                'Enrolled: $enrolledCh CH',
+               ),
+             ),
+           ),
+-          // Step 12: grid or list?
+           Expanded(
+             child: _isGrid
+                 ? GridView.builder(
+@@ -53,9 +97,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
+                           mainAxisSpacing: 8,
+                           crossAxisSpacing: 8,
+                         ),
+-                    itemCount: sampleCourses.length,
++                    itemCount: _courses.length,
+                     itemBuilder: (context, index) {
+-                      final course = sampleCourses[index];
++                      final course = _courses[index];
+                       return Card(
+                         child: Center(
+                           child: Column(
+@@ -88,6 +132,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
+                     itemCount: shown.length,
+                     itemBuilder: (context, index) {
+                       final course = shown[index];
++                      // `index` counts rows in the FILTERED list.
++                      // The toggles must change the course in _courses,
++                      // so find where this course sits in the full list.
++                      final realIndex = _courses.indexOf(course);
+                       return ListTile(
+                         tileColor: index.isOdd
+                             ? Colors.black.withValues(alpha: 0.03)
+@@ -97,20 +145,24 @@ class _CoursesScreenState extends State<CoursesScreen> {
+                               .colorScheme
+                               .primaryContainer,
+                           child: Icon(
+-                            course.icon,
+-                            color: Theme.of(context)
+-                                .colorScheme
+-                                .onPrimaryContainer,
++                            course.enrolled ? Icons.check_circle : course.icon,
++                            color: course.enrolled
++                                ? Colors.green
++                                : Theme.of(context)
++                                    .colorScheme
++                                    .onPrimaryContainer,
+                           ),
+                         ),
+                         title: Text(course.code),
+-                        subtitle: Text(
+-                          '${course.name} · ${course.creditHours} CH',
+-                        ),
+-                        trailing: Text(course.day),
+-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
+-                          SnackBar(content: Text('${course.code} tapped')),
++                        subtitle: Text('${course.name} · ${course.day}'),
++                        trailing: IconButton(
++                          icon: Icon(
++                            course.isFavorite ? Icons.star : Icons.star_border,
++                            color: course.isFavorite ? Colors.amber : null,
++                          ),
++                          onPressed: () => _toggleFavorite(realIndex),
+                         ),
++                        onTap: () => _toggleEnrolled(realIndex),
+                       );
+                     },
+                   ),
+diff --git a/lib/models/course.dart b/lib/models/course.dart
+index fd81603..e0a95a4 100644
+--- a/lib/models/course.dart
++++ b/lib/models/course.dart
+@@ -6,6 +6,21 @@ class Course {
+   final int creditHours;
+   final String day;
+   final IconData icon;
++  final bool isFavorite; // true when the user stars this course
++  final bool enrolled; // true when the user enrolls in it
+ 
+-  const Course(this.code, this.name, this.creditHours, this.day, this.icon);
+-}
+\ No newline at end of file
++  // two optional extras in {curly braces}, both default to false
++  const Course(this.code, this.name, this.creditHours, this.day, this.icon,
++      {this.isFavorite = false, this.enrolled = false});
++
++  // make a copy with one difference
++  Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
++        code,
++        name,
++        creditHours,
++        day,
++        icon,
++        isFavorite: isFavorite ?? this.isFavorite,
++        enrolled: enrolled ?? this.enrolled,
++      );
++}
