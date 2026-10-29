@@ -33,7 +33,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
         child: Column(
           children: [
             const SizedBox(height: 12),
-            // iOS Summary Card
+            // Summary Card
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(14),
