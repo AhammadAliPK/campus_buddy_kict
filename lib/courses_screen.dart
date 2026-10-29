@@ -1,5 +1,8 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -10,17 +13,58 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool isGrid = false;
+  late List<Course> courses;
+
+  @override
+  void initState() {
+    super.initState();
+    courses = List.of(sampleCourses);
+  }
+
+  void toggleFavorite(int index) {
+    setState(() {
+      courses[index] = courses[index].copyWith(
+        isFavorite: !courses[index].isFavorite,
+      );
+    });
+  }
+
+  void toggleEnrolled(int index) {
+    setState(() {
+      courses[index] = courses[index].copyWith(
+        enrolled: !courses[index].enrolled,
+      );
+    });
+  }
+
+  Future<void> addCourse() async {
+    final course = await showCupertinoDialog<Course>(
+      context: context,
+      builder: (context) => const AddCourseDialog(),
+    );
+    if (course == null) return;
+    setState(() => courses.add(course));
+  }
 
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
-    for (final c in sampleCourses) {
+    for (final c in courses) {
       totalCh += c.creditHours;
     }
+
+    final enrolledCh = courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: const Text('My Courses'),
+        leading: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: const Icon(CupertinoIcons.add),
+          onPressed: addCourse,
+        ),
         trailing: CupertinoButton(
           padding: EdgeInsets.zero,
           child: Icon(
@@ -33,7 +77,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
         child: Column(
           children: [
             const SizedBox(height: 12),
-            // Summary Card
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16),
               padding: const EdgeInsets.all(14),
@@ -45,17 +88,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Total Courses',
+                    'Summary',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
                     ),
                   ),
                   Text(
-                    '${sampleCourses.length} courses • $totalCh CH',
+                    '${courses.length} courses • $totalCh CH\nEnrolled: $enrolledCh CH',
+                    textAlign: TextAlign.end,
                     style: const TextStyle(
                       color: CupertinoColors.systemGrey,
-                      fontSize: 14,
+                      fontSize: 13,
                     ),
                   ),
                 ],
@@ -73,9 +117,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         crossAxisSpacing: 10,
                         childAspectRatio: 1.1,
                       ),
-                      itemCount: sampleCourses.length,
+                      itemCount: courses.length,
                       itemBuilder: (context, index) {
-                        final course = sampleCourses[index];
+                        final course = courses[index];
                         return Container(
                           decoration: BoxDecoration(
                             color: CupertinoColors.secondarySystemBackground,
@@ -83,11 +127,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           child: CupertinoButton(
                             padding: const EdgeInsets.all(8),
-                            onPressed: () => _showCourseDialog(context, course.code, course.name),
+                            onPressed: () => toggleEnrolled(index),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(course.icon, size: 32, color: CupertinoColors.activeBlue),
+                                Icon(
+                                  course.enrolled
+                                      ? CupertinoIcons.check_mark_circled_solid
+                                      : course.icon,
+                                  size: 32,
+                                  color: course.enrolled
+                                      ? CupertinoColors.activeGreen
+                                      : CupertinoColors.activeBlue,
+                                ),
                                 const SizedBox(height: 6),
                                 Text(
                                   course.code,
@@ -116,9 +168,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     )
                   : ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: sampleCourses.length,
+                      itemCount: courses.length,
                       itemBuilder: (context, index) {
-                        final course = sampleCourses[index];
+                        final course = courses[index];
                         return Container(
                           margin: const EdgeInsets.only(bottom: 8),
                           decoration: BoxDecoration(
@@ -127,21 +179,34 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           child: CupertinoButton(
                             padding: const EdgeInsets.all(10),
-                            onPressed: () => _showCourseDialog(context, course.code, course.name),
+                            onPressed: () => toggleEnrolled(index),
                             child: Row(
                               children: [
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: CupertinoColors.activeBlue.withOpacity(0.12),
+                                    color: course.enrolled
+                                        ? CupertinoColors.activeGreen
+                                            .withOpacity(0.12)
+                                        : CupertinoColors.activeBlue
+                                            .withOpacity(0.12),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Icon(course.icon, color: CupertinoColors.activeBlue, size: 22),
+                                  child: Icon(
+                                    course.enrolled
+                                        ? CupertinoIcons.check_mark_circled_solid
+                                        : course.icon,
+                                    color: course.enrolled
+                                        ? CupertinoColors.activeGreen
+                                        : CupertinoColors.activeBlue,
+                                    size: 22,
+                                  ),
                                 ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         course.code,
@@ -153,7 +218,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        '${course.name} • ${course.creditHours} CH',
+                                        '${course.name} • ${course.day}',
                                         style: const TextStyle(
                                           color: CupertinoColors.systemGrey,
                                           fontSize: 12,
@@ -162,12 +227,17 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                     ],
                                   ),
                                 ),
-                                Text(
-                                  course.day,
-                                  style: const TextStyle(
-                                    color: CupertinoColors.systemGrey,
-                                    fontSize: 12,
+                                CupertinoButton(
+                                  padding: EdgeInsets.zero,
+                                  child: Icon(
+                                    course.isFavorite
+                                        ? CupertinoIcons.star_fill
+                                        : CupertinoIcons.star,
+                                    color: course.isFavorite
+                                        ? CupertinoColors.systemYellow
+                                        : CupertinoColors.systemGrey,
                                   ),
+                                  onPressed: () => toggleFavorite(index),
                                 ),
                               ],
                             ),
@@ -178,22 +248,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showCourseDialog(BuildContext context, String code, String name) {
-    showCupertinoDialog(
-      context: context,
-      builder: (context) => CupertinoAlertDialog(
-        title: Text(code),
-        content: Text('$name tapped!'),
-        actions: [
-          CupertinoDialogAction(
-            child: const Text('OK'),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
       ),
     );
   }
