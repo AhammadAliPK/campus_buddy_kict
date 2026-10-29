@@ -8,33 +8,23 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const _defaultNickname = 'Imran Azuhar';
-  static const _defaultBio =
-      'Kuliyyah of ICT · Year 4 · Get Gud.';
-  static const _defaultMatric = '2318281';
-
-  String _nickname = _defaultNickname;
-  String _bio = _defaultBio;
-  String _matric = _defaultMatric;
+  String _nickname = 'Guest Student';
+  String _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
-  final _matricCtrl = TextEditingController();
   bool _editing = false;
-
   @override
   void initState() {
     super.initState();
-    // pre-fill from current state
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
-    _matricCtrl.text = _matric;
+    // pre-fill from current state
   }
 
   @override
   void dispose() {
     _nicknameCtrl.dispose();
     _bioCtrl.dispose();
-    _matricCtrl.dispose();
     super.dispose();
   }
 
@@ -42,27 +32,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       if (_editing) {
         // leaving edit mode: copy controller values into state
-        final nickname = _nicknameCtrl.text.trim();
-        // empty or spaces-only nickname falls back to the default
-        _nickname = nickname.isEmpty ? _defaultNickname : nickname;
-        _nicknameCtrl.text = _nickname;
+        _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
-        _matric = _matricCtrl.text.trim();
       }
-      _editing = !_editing;
     });
-  }
-
-  void _reset() {
-    setState(() {
-      _nickname = _defaultNickname;
-      _bio = _defaultBio;
-      _matric = _defaultMatric;
-      // fix the boxes too, so the next edit starts clean
-      _nicknameCtrl.text = _nickname;
-      _bioCtrl.text = _bio;
-      _matricCtrl.text = _matric;
-    });
+    _editing = !_editing;
   }
 
   @override
@@ -84,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const CircleAvatar(
               radius: 48,
-              backgroundImage: AssetImage('assets/me.jpg'),
+              backgroundImage: NetworkImage('https://picsum.photos/200'),
             ),
             const SizedBox(height: 12),
             if (_editing) ...[
@@ -107,24 +81,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _matricCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Matric number',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.badge),
-                ),
-              ),
-              const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: _toggleEdit,
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
-              ),
-              TextButton(
-                onPressed: _reset,
-                child: const Text('Reset'),
               ),
             ] else ...[
               Text(
@@ -137,12 +97,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _bio,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.black54),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _matric,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
           ],
