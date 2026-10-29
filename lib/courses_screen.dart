@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/data/courses.dart' as course_data;
+import 'package:campus_buddy_kict/models/course.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -11,18 +12,31 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
 
+  late List<Course> _courses;
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(course_data.sampleCourses);
+  }
+
+  void _toggleFavorite(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        isFavorite: !_courses[index].isFavorite,
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
 
-    for (final course in sampleCourses) {
-      totalCh = totalCh + course.creditHours;
+    for (final course in _courses) {
+      totalCh += course.creditHours;
     }
 
-    // Exercise: tunjukkan kursus hari Monday sahaja
-    final shown = sampleCourses
-        .where((course) => course.day == 'Monday')
-        .toList();
+    final shown = _courses.where((course) => course.day == 'Monday').toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -45,9 +59,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
             margin: const EdgeInsets.all(12),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
-              ),
+              child: Text('${_courses.length} courses · $totalCh credit hours'),
             ),
           ),
           Expanded(
@@ -60,9 +72,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: sampleCourses.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = _courses[index];
 
                       return Card(
                         child: Center(
@@ -113,15 +125,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                         ),
                         title: Text(course.code),
-                        subtitle: Text(
-                          '${course.name} · ${course.creditHours} CH',
+                        subtitle: Text('${course.name} · ${course.day}'),
+                        trailing: IconButton(
+                          icon: Icon(
+                            course.isFavorite ? Icons.star : Icons.star_border,
+                            color: course.isFavorite ? Colors.amber : null,
+                          ),
+                          onPressed: () => _toggleFavorite(index),
                         ),
-                        trailing: Text(course.day),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('${course.code} tapped')),
-                          );
-                        },
                       );
                     },
                   ),
