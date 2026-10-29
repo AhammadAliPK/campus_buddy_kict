@@ -15,6 +15,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   final _formKey = GlobalKey<FormState>();
   final _codeCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
+  final _lecturerCtrl = TextEditingController();
 
   String _day = 'Monday';
   static const _days = [
@@ -31,6 +32,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   void dispose() {
     _codeCtrl.dispose();
     _nameCtrl.dispose();
+    _lecturerCtrl.dispose();
     super.dispose();
   }
 
@@ -39,7 +41,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
     final course = Course(
       code: _codeCtrl.text.trim().toUpperCase(),
       name: _nameCtrl.text.trim(),
-      lecturer: 'TBA',
+      lecturer: _lecturerCtrl.text.trim(),
       day: _day,
       time: '08:00 - 10:00',
       creditHours: _creditHours,
@@ -83,6 +85,15 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                     const InputDecoration(labelText: 'Course name'),
                 validator: (v) =>
                     (v?.trim().isEmpty ?? true) ? 'Name is required' : null,
+              ),
+              TextFormField(
+                controller: _lecturerCtrl,
+                decoration:
+                    const InputDecoration(labelText: 'Lecturer'),
+                validator: (v) =>
+                    (v?.trim().isEmpty ?? true)
+                        ? 'Lecturer is required'
+                        : null,
               ),
               DropdownButtonFormField<String>(
                 initialValue: _day,

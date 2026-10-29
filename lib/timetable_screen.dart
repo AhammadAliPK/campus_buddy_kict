@@ -163,7 +163,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
           ),
           title: Text(course.code),
           subtitle: Text(
-            '${course.name} · ${course.day}',
+            '${course.name} · ${course.day} · ${course.lecturer}',
           ),
           trailing: IconButton(
             icon: Icon(
@@ -244,6 +244,7 @@ class _TimetableScreenState extends State<TimetableScreen> {
                   const Spacer(),
                   Text(course.day),
                   Text(course.time),
+                  Text(course.lecturer),
                   Text('${course.creditHours} CH'),
                 ],
               ),
