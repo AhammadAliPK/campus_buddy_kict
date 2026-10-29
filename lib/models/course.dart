@@ -10,6 +10,9 @@ class Course {
   final IconData icon;
   final String? instructor;
 
+  final bool isFavorite;
+  final bool enrolled;
+
   const Course(
     this.code,
     this.name,
@@ -19,5 +22,22 @@ class Course {
     this.venue,
     this.icon, {
     this.instructor,
+    this.isFavorite = false,
+    this.enrolled = false,
   });
+
+  Course copyWith({bool? isFavorite, bool? enrolled}) {
+    return Course(
+      code,
+      name,
+      creditHours,
+      day,
+      time,
+      venue,
+      icon,
+      instructor: instructor,
+      isFavorite: isFavorite ?? this.isFavorite,
+      enrolled: enrolled ?? this.enrolled,
+    );
+  }
 }

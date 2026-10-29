@@ -48,15 +48,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  void _resetProfile() {
-    setState(() {
-      _nickname = 'Guest Student';
-      _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
-      _nicknameCtrl.text = _nickname;
-      _bioCtrl.text = _bio;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,7 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
               ),
-              TextButton(onPressed: _resetProfile, child: const Text('Reset')),
+              // TextButton(onPressed: _resetProfile, child: const Text('Reset')),
             ] else ...[
               Text(
                 _nickname,
