@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/courses_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -73,12 +72,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         title: const Text('My Profile'),
         actions: [
-          IconButton(
-            tooltip: 'My Courses',
-            icon: const Icon(Icons.menu_book),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const CoursesScreen())),
-          ),
           IconButton(
             icon: Icon(_editing ? Icons.check : Icons.edit),
             onPressed: _toggleEdit,
