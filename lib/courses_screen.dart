@@ -14,6 +14,7 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   bool _favoritesOnly = false;
+  String _selectedDay = 'All';
 
   late List<Course> _courses;
 
@@ -89,7 +90,9 @@ Future<void> _removeCourse(Course course) async {
 Future<void> _openAddDialog() async {
   final newCourse = await showDialog<Course>(
     context: context,
-    builder: (_) => const AddCourseDialog(),
+    builder: (_) => AddCourseDialog(
+      existingCodes: _courses.map((c) => c.code).toList(),
+    ),
   );
 
   if (!mounted || newCourse == null) return;
@@ -138,9 +141,14 @@ Widget build(BuildContext context) {
       'Friday': 5,
     };
 
-    final shown = _courses
-        .where((course) => !_favoritesOnly || course.isFavorite)
-        .toList();
+    final shown = _courses.where((course) {
+      final matchesFavorite = !_favoritesOnly || course.isFavorite;
+
+      final matchesDay = _selectedDay == 'All' ||
+          course.day.split(' & ').contains(_selectedDay);
+
+      return matchesFavorite && matchesDay;
+    }).toList();
 
     shown.sort((a, b) {
       final aDay = a.day.split(' & ').first;
@@ -176,6 +184,39 @@ Widget build(BuildContext context) {
       
 body: Column(
   children: [
+    Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 8,
+      ),
+      child: DropdownButtonFormField<String>(
+        value: _selectedDay,
+        decoration: const InputDecoration(
+          labelText: 'Filter by Day',
+          border: OutlineInputBorder(),
+        ),
+        items: [
+          'All',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+        ].map((day) {
+          return DropdownMenuItem(
+            value: day,
+            child: Text(day),
+          );
+        }).toList(),
+        onChanged: (value) {
+          if (value != null) {
+            setState(() {
+              _selectedDay = value;
+            });
+          }
+        },
+      ),
+    ),
     Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Align(
@@ -274,10 +315,12 @@ Expanded(
                 backgroundColor:
                     Theme.of(context).colorScheme.primaryContainer,
                 child: Icon(
-                  course.icon,
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onPrimaryContainer,
+                  course.enrolled
+                      ? Icons.check_circle
+                      : course.icon,
+                  color: course.enrolled
+                      ? Colors.green
+                      : Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
               
@@ -315,12 +358,7 @@ Expanded(
                 ],
               ),
 
-              onTap: () =>
-                  ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${course.code} tapped'),
-                ),
-              ),
+              onTap: () => _toggleEnroll(course),
               onLongPress: () => _removeCourse(course),
             );
             
