@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
-// In-class exercise: show only this day. Set to null to show every day.
+// Day filter from Week 4: show only this day. null = show every day.
 const String? _filterDay = null;
 
 const _dayOrder = {
@@ -32,17 +34,81 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  bool _favOnly = false; // Homework 3: "favourites only" chip
+  late List<Course> _courses;
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses); // our own copy, safe to change
+  }
+
+  // The list on screen is a filtered view, so find the course in _courses
+  // instead of trusting the row number.
+  int _indexOf(Course course) => _courses.indexOf(course);
+
+  void _toggleFavorite(Course course) {
+    final i = _indexOf(course);
+    setState(() {
+      _courses[i] = _courses[i].copyWith(isFavorite: !_courses[i].isFavorite);
+    });
+  }
+
+  void _toggleEnrolled(Course course) {
+    final i = _indexOf(course);
+    setState(() {
+      _courses[i] = _courses[i].copyWith(enrolled: !_courses[i].enrolled);
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (_) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).toList(),
+      ),
+    );
+    if (course == null) return; // the user cancelled, so do nothing
+    setState(() => _courses.add(course));
+  }
+
+  // Homework 2: long-press a row -> "Are you sure?" -> remove
+  Future<void> _confirmRemove(Course course) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove course?'),
+        content: Text('Are you sure you want to remove ${course.code}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    setState(() => _courses.remove(course));
+  }
 
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
-    for (final c in sampleCourses) {
+    for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
     }
+    final enrolledCh = _courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
 
-    // Exercise: keep only one day. Homework 3: sort by day.
-    final shown = sampleCourses
+    // Day filter + favourites filter + sort by day, all on _courses
+    final shown = _courses
         .where((c) => _filterDay == null || c.day.contains(_filterDay!))
+        .where((c) => !_favOnly || c.isFavorite)
         .toList()
       ..sort((a, b) => _dayRank(a.day).compareTo(_dayRank(b.day)));
 
@@ -50,6 +116,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Add course',
+            onPressed: _addCourse,
+          ),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
@@ -64,7 +135,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                  '${sampleCourses.length} courses · $totalCh credit hours'),
+                '${_courses.length} courses · $totalCh credit hours\n'
+                'Enrolled: $enrolledCh CH',
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FilterChip(
+                label: const Text('★ favourites only'),
+                selected: _favOnly,
+                onSelected: (v) => setState(() => _favOnly = v),
+              ),
             ),
           ),
           Expanded(
@@ -115,10 +199,16 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               backgroundColor: Theme.of(context)
                                   .colorScheme
                                   .primaryContainer,
-                              child: Icon(course.icon,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer),
+                              child: Icon(
+                                course.enrolled
+                                    ? Icons.check_circle
+                                    : course.icon,
+                                color: course.enrolled
+                                    ? Colors.green
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                              ),
                             ),
                             title: Text(course.code),
                             isThreeLine: true,
@@ -127,10 +217,17 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               '${course.day} ${course.time} · '
                               '${course.venue} · ${course.instructor ?? 'TBA'}',
                             ),
-                            onTap: () =>
-                                ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${course.code} tapped')),
+                            trailing: IconButton(
+                              icon: Icon(
+                                course.isFavorite
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: course.isFavorite ? Colors.amber : null,
+                              ),
+                              onPressed: () => _toggleFavorite(course),
                             ),
+                            onTap: () => _toggleEnrolled(course),
+                            onLongPress: () => _confirmRemove(course),
                           );
                         },
                       ),
