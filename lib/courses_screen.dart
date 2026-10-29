@@ -18,7 +18,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
       totalCh = totalCh + c.creditHours.toInt();
     }
 
-    final shown = sampleCourses.where((c) => c.day == 'Monday').toList();
+    const dayOrder = {
+      'Monday': 1,
+      'Tuesday': 2,
+      'Wednesday': 3,
+      'Thursday': 4,
+      'Friday': 5,
+      'Saturday': 6,
+      'Sunday': 7,
+    };
+
+    final shown = sampleCourses.toList();
+
+    shown.sort((a,b) => (dayOrder[a.day] ?? 8).compareTo(dayOrder[b.day] ?? 8));
 
     return Scaffold(
       appBar: AppBar(
@@ -67,16 +79,35 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               Icon(course.icon, size: 40),
                               const SizedBox(height: 8),
                               Text(
-                                course.code,
+                                course.code ?? 'TBA',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                course.name,
+                                course.name ?? 'TBA',
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8), // ADD
+
+                              Text(
+                                // ADD: Hari dan masa.
+                                '${course.day.substring(0, 3)} ${course.time}',
+                                textAlign: TextAlign.center,
+                              ),
+
+                              Text(
+                                // ADD: Venue.
+                                course.venue,
+                                textAlign: TextAlign.center,
+                              ),
+
+                              Text(
+                                // ADD: Instructor, atau TBA jika tiada.
+                                course.instructor ?? 'TBA',
+                                textAlign: TextAlign.center,
                               ),
                             ],
                           ),
@@ -104,7 +135,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                         ),
                         title: Text(
-                          course.code,
+                          '${course.code}',
                           style: TextStyle(
                             color: index.isOdd
                                 ? Colors.black.withValues(alpha: 0.3)
@@ -112,9 +143,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          '${course.name} · ${course.creditHours} CH',
+                          '${course.day.substring(0,3)} · ${course.time} · ${course.venue}\n · ${course.instructor ?? 'TBA'}',
                         ),
-                        trailing: Text(course.day),
+                        isThreeLine: true,
                         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('${course.code} opened')),
                         ),
