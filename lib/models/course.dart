@@ -9,45 +9,37 @@ class Course {
   final String time;
   final String venue;
   final String? instructor;
-  final bool isFavorite;
   final bool isEnrolled;
+  final bool isFavorite;
 
   const Course(
-    this.code, 
-    this.name, 
-    this.creditHours, 
-    this.day, 
+    this.code,
+    this.name,
+    this.creditHours,
+    this.day,
     this.icon,
     this.time,
-    this.venue,
-    [this.instructor], {
-    this.isFavorite = false,
+    this.venue, [
+    this.instructor,
     this.isEnrolled = false,
-  });
+    this.isFavorite = false,
+  ]);
 
   Course copyWith({
-    String? code,
-    String? name,
-    int? creditHours,
-    String? day,
-    IconData? icon,
-    String? time,
-    String? venue,
-    String? instructor,
-    bool? isFavorite,
     bool? isEnrolled,
+    bool? isFavorite,
   }) {
     return Course(
-      code ?? this.code,
-      name ?? this.name,
-      creditHours ?? this.creditHours,
-      day ?? this.day,
-      icon ?? this.icon,
-      time ?? this.time,
-      venue ?? this.venue,
-      instructor ?? this.instructor,
-      isFavorite: isFavorite ?? this.isFavorite,
-      isEnrolled: isEnrolled ?? this.isEnrolled,
+      code,
+      name,
+      creditHours,
+      day,
+      icon,
+      time,
+      venue,
+      instructor,
+      isEnrolled ?? this.isEnrolled,
+      isFavorite ?? this.isFavorite,
     );
   }
 }
