@@ -9,6 +9,8 @@ class Course {
   final String time;
   final String? instructor;
   final String venue;
+  final bool isFavorite;
+  final bool enrolled;
 
   const Course(
     this.code,
@@ -19,5 +21,20 @@ class Course {
     this.time, { // ADD: Sixth positional argument.
     required this.venue, // ADD: Named argument.
     this.instructor, // ADD: Optional named argument.
+    this.isFavorite = false, // ADD: Default value.
+    this.enrolled = false, // ADD: Default value.
   });
+
+  Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
+    code,
+    name,
+    creditHours,
+    day,
+    icon,
+    time,
+    venue: venue,
+    instructor: instructor,
+    isFavorite: isFavorite ?? this.isFavorite,
+    enrolled: enrolled ?? this.enrolled,
+  );
 }

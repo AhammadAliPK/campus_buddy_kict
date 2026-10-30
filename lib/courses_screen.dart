@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -9,12 +11,51 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
+  double get enrolledCh => _courses
+      .where((c) => c.enrolled)
+      .fold<double>(0, (sum, c) => sum + c.creditHours);
+
   bool _isGrid = false;
+
+  late List<Course> _courses;
+
+  void _toggleFavorite(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        isFavorite: !_courses[index].isFavorite,
+      );
+    });
+  }
+
+  void _toggleEnrolled(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        enrolled: !_courses[index].enrolled,
+      );
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (_) => const AddCourseDialog(),
+    );
+    if (course == null) return; // the user cancelled, so do nothing
+    setState(() => _courses.add(course));
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(
+      sampleCourses,
+    ); //list.of make a copy of the sampleCourses list, so that we can modify it without affecting the original list.
+  }
 
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
-    for (final c in sampleCourses) {
+    for (final c in _courses) {
       totalCh = totalCh + c.creditHours.toInt();
     }
 
@@ -30,12 +71,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
     final shown = sampleCourses.toList();
 
-    shown.sort((a,b) => (dayOrder[a.day] ?? 8).compareTo(dayOrder[b.day] ?? 8));
+    shown.sort(
+      (a, b) => (dayOrder[a.day] ?? 8).compareTo(dayOrder[b.day] ?? 8),
+    );
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add), //opens add gp dialog
+            onPressed: _addCourse,
+          ),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid View',
@@ -50,7 +97,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
+                '${_courses.length} courses · $totalCh credit hours\n'
+                'Enrolled: $enrolledCh CH',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
@@ -68,9 +116,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           crossAxisSpacing: 8,
                           mainAxisSpacing: 8,
                         ),
-                    itemCount: shown.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = shown[index];
+                      final course = _courses[index];
                       return Card(
                         child: Center(
                           child: Column(
@@ -118,20 +166,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
 
-                    itemCount: sampleCourses.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      print('Building row $index');
-                      final course = sampleCourses[index];
+                      //print('Building row $index');
+                      final course = _courses[index];
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: Theme.of(
                             context,
                           ).colorScheme.primaryContainer,
                           child: Icon(
-                            course.icon,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onPrimaryContainer,
+                            course.enrolled ? Icons.check_circle : course.icon,
+                            color: course.enrolled
+                                ? Colors.green
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer,
                           ),
                         ),
                         title: Text(
@@ -143,12 +193,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          '${course.day.substring(0,3)} · ${course.time} · ${course.venue}\n · ${course.instructor ?? 'TBA'}',
+                          '${course.day.substring(0, 3)} · ${course.time} · ${course.venue}\n · ${course.instructor ?? 'TBA'}',
                         ),
                         isThreeLine: true,
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${course.code} opened')),
-                        ),
+                        onTap: () => _toggleEnrolled(index),
                       );
                     },
                   ),
