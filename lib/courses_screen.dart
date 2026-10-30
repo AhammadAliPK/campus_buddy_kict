@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -12,23 +14,68 @@ class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   String _day = 'All';
   static const _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  late List<Course> _courses; // FIX: field was never declared
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses);
+  }
+
+  void _toggleFavourite(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        isFavourite: !_courses[index].isFavourite,
+      );
+    });
+  }
+
+  Future<void> _addCourse() async {
+    // ← CHANGED: was _openAddDialog
+    final course = await showDialog<Course>(
+      context: context,
+      // NEW: pass current codes so dialog can reject duplicates (no const: list built at runtime)
+      builder: (_) =>
+          AddCourseDialog(existingCodes: _courses.map((c) => c.code).toList()),
+    );
+    if (course == null) return; // the user cancelled, so do nothing
+    setState(() => _courses.add(course));
+  }
+
+  void _toggleEnrolled(int index) {
+    // ← NEW: same shape as the star
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        enrolled: !_courses[index].enrolled,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     int totalCh = 0; // ← NEW
-    for (final c in sampleCourses) {
+    for (final c in _courses) {
       // ← NEW
       totalCh = totalCh + c.creditHours; // ← NEW
     } // ← NEW
+    final enrolledCh =
+        _courses // ← NEW
+            .where((c) => c.enrolled)
+            .fold<int>(0, (sum, c) => sum + c.creditHours);
     final shown = _day == 'All'
-        ? ([...sampleCourses]..sort(
+        ? ([..._courses]..sort(
+            // FIX: was sampleCourses, so added/toggled courses ignored
             (a, b) => _days.indexOf(a.days.first) - _days.indexOf(b.days.first),
           ))
-        : sampleCourses.where((c) => c.days.contains(_day)).toList();
+        : _courses.where((c) => c.days.contains(_day)).toList(); // FIX: same
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _addCourse, // ← NEW
+          ),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
@@ -44,7 +91,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
+                '${_courses.length} courses · $totalCh credit hours\n'
+                'Enrolled: $enrolledCh CH',
               ),
             ),
           ),
@@ -78,23 +126,28 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
-                    itemCount: shown.length,
+                    itemCount: shown
+                        .length, // FIX: render filtered list so day chips work
                     itemBuilder: (context, index) {
-                      final course = shown[index];
+                      final course = shown[index]; // FIX: same
+                      final realIndex = _courses.indexOf(course); // FIX: shown is sorted/filtered, find position in _courses
                       return Card(
                         child: InkWell(
-                          onTap: () => ScaffoldMessenger.of(context)
-                              .showSnackBar(
-                                SnackBar(
-                                  content: Text('${course.code} tapped'),
-                                ),
-                              ),
+                          onTap: () => _toggleEnrolled(
+                            realIndex,
+                          ), // FIX: use realIndex, not shown index
                           child: Padding(
                             padding: const EdgeInsets.all(12),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(course.icon, size: 28),
+                                Icon(
+                                  course.enrolled
+                                      ? Icons.check_circle
+                                      : course.icon, // FIX: show enrolled state in grid too
+                                  size: 28,
+                                  color: course.enrolled ? Colors.green : null,
+                                ),
                                 const SizedBox(height: 1),
                                 Text(
                                   course.code,
@@ -111,8 +164,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 Text(
                                   '${course.creditHours} CH', //· ${course.days.map((d) => d.substring(0, 3)).join(', ')}
                                 ),
-                                Text('${course.time}'),
-                                Text('${course.venue}'),
+                                Text(
+                                  course.time,
+                                ), // FIX: no need '${}' for plain String (lint)
+                                Text(course.venue), // FIX: same
                                 Center(
                                   child: Text(
                                     course.instructor ?? 'TBA',
@@ -128,9 +183,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: shown.length,
+                    itemCount: shown
+                        .length, // FIX: render filtered list so day chips work
                     itemBuilder: (context, index) {
-                      final course = shown[index];
+                      final course = shown[index]; // FIX: same
+                      final realIndex = _courses.indexOf(course); // FIX: shown is sorted/filtered, find position in _courses
                       return ListTile(
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
@@ -140,23 +197,38 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               .colorScheme
                               .primaryContainer,
                           child: Icon(
-                            course.icon,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
+                            course
+                                    .enrolled // ← CHANGED: was course.icon
+                                ? Icons.check_circle
+                                : course.icon,
+                            color:
+                                course
+                                    .enrolled // ← CHANGED
+                                ? Colors.green
+                                : Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
                           ),
                         ),
                         title: Text(course.code),
                         isThreeLine: true,
                         subtitle: Text(
-                          '${course.name} · ${course.creditHours} CH\n'
-                          //'${course.days.map((d) => d.substring(0, 3)).join(', ')} '
-                          '${course.time} · ${course.venue}\n'
+                          '${course.name} \n' // FIX: CH label had days instead of creditHours
+                          '${course.creditHours} CH · ${course.time} \n'
+                          '${course.venue}\n'
                           '${course.instructor ?? 'TBA'}',
                         ),
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${course.code} tapped')),
+                        trailing: IconButton(
+                          icon: Icon(
+                            course.isFavourite ? Icons.star : Icons.star_border,
+                            color: course.isFavourite
+                                ? Colors.amber
+                                : null, // FIX: typo isFavourtie
+                          ),
+                          onPressed: () => _toggleFavourite(realIndex), // FIX: moved inside IconButton (ListTile has no onPressed), pass index not IndexError
                         ),
+                        onTap: () =>
+                            _toggleEnrolled(realIndex), // FIX: use realIndex
                       );
                     },
                   ),
