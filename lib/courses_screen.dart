@@ -13,6 +13,7 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   String _day = 'All';
+  bool _favOnly = false; // NEW: "★ favourites only" chip state
   static const _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   late List<Course> _courses; // FIX: field was never declared
 
@@ -42,6 +43,29 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
+  // NEW: long-press -> confirm -> remove
+  Future<void> _removeCourse(Course course) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Are you sure?'),
+        content: Text('Remove ${course.code}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false), // NEW: cancel -> false
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true), // NEW: confirm -> true
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return; // NEW: null = tapped outside, treat as cancel
+    setState(() => _courses.remove(course)); // NEW: remove by object, safe with filtered/sorted view
+  }
+
   void _toggleEnrolled(int index) {
     // ← NEW: same shape as the star
     setState(() {
@@ -62,12 +86,16 @@ class _CoursesScreenState extends State<CoursesScreen> {
         _courses // ← NEW
             .where((c) => c.enrolled)
             .fold<int>(0, (sum, c) => sum + c.creditHours);
+    // NEW: favourites filter applied first, then day filter (same _courses, just a view)
+    final base = _favOnly
+        ? _courses.where((c) => c.isFavourite).toList()
+        : _courses;
     final shown = _day == 'All'
-        ? ([..._courses]..sort(
+        ? ([...base]..sort(
             // FIX: was sampleCourses, so added/toggled courses ignored
             (a, b) => _days.indexOf(a.days.first) - _days.indexOf(b.days.first),
           ))
-        : _courses.where((c) => c.days.contains(_day)).toList(); // FIX: same
+        : base.where((c) => c.days.contains(_day)).toList(); // CHANGED: _courses -> base
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -113,9 +141,27 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ],
             ),
           ),
+          // NEW: second chip row, favourites only toggle
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FilterChip(
+                label: const Text('★ favourites only'),
+                selected: _favOnly,
+                onSelected: (on) => setState(() => _favOnly = on),
+              ),
+            ),
+          ),
           Expanded(
             child: shown.isEmpty
-                ? const Center(child: Text('No classes! Alhamdulillah :)'))
+                ? Center(
+                    child: Text(
+                      _favOnly
+                          ? 'No starred courses' // NEW: clearer message when fav filter on
+                          : 'No classes! Alhamdulillah :)',
+                    ),
+                  )
                 : _isGrid
                 ? GridView.builder(
                     padding: const EdgeInsets.all(12),
@@ -136,6 +182,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           onTap: () => _toggleEnrolled(
                             realIndex,
                           ), // FIX: use realIndex, not shown index
+                          onLongPress: () => _removeCourse(course), // NEW: long-press card to remove
                           child: Padding(
                             padding: const EdgeInsets.all(12),
                             child: Column(
@@ -229,6 +276,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         ),
                         onTap: () =>
                             _toggleEnrolled(realIndex), // FIX: use realIndex
+                        onLongPress: () => _removeCourse(course), // NEW: long-press row to remove
                       );
                     },
                   ),
