@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campus_buddy_kict/profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -11,12 +12,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const _defaultNickname = 'Ammar';
   static const _defaultBio =
       'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+  static const _defaultMatric = '2317263';
 
   String _nickname = _defaultNickname;
   String _bio = _defaultBio;
+  String _matric = '2317263';
 
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+  final _matricCtrl = TextEditingController();
   bool _editing = false;
 
   @override
@@ -24,12 +28,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _nicknameCtrl.text = _nickname; // pre-fill from current state
     _bioCtrl.text = _bio;
+    _matricCtrl.text = _matric;
   }
 
   @override
   void dispose() {
     _nicknameCtrl.dispose();
     _bioCtrl.dispose();
+    _matricCtrl.dispose();
     super.dispose();
   }
 
@@ -37,8 +43,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       if (_editing) {
         // leaving edit mode: copy controller values into state
-        _nickname = _nicknameCtrl.text.trim();
+        _nickname = _nicknameCtrl.text.trim().isEmpty
+            ? _defaultNickname
+            : _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
+        _matric = _matricCtrl.text.trim();
+        _nicknameCtrl.text = _nickname;
       }
       _editing = !_editing;
     });
@@ -48,8 +58,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _nickname = _defaultNickname;
       _bio = _defaultBio;
+      _matric = _defaultMatric;
       _nicknameCtrl.text = _defaultNickname;
       _bioCtrl.text = _defaultBio;
+      _matricCtrl.text = _defaultMatric;
     });
   }
 
@@ -74,7 +86,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               radius: 48,
               child: ClipOval(
                 child: Image(
-                  image: const NetworkImage('https://picsum.photos/200'),
+                  image: AssetImage('assets/me.jpg'),
                   width: 96,
                   height: 96,
                   fit: BoxFit.cover,
@@ -104,6 +116,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              TextField(
+                controller: _matricCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Matric Number',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.badge),
+                ),
+              ),
+              const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: _toggleEdit,
                 icon: const Icon(Icons.save),
@@ -124,6 +146,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _bio,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.black54),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _matric,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.black54, fontSize: 12),
               ),
             ],
           ],

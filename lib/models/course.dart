@@ -6,5 +6,6 @@ class Course {
   final int creditHours;
   final String day;
   final IconData icon;
+  
   const Course(this.code, this.name, this.creditHours, this.day, this.icon);
 }
