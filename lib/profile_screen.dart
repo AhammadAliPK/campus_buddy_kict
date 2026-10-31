@@ -40,16 +40,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
   }
 
-  void _toggleReset() {
-    setState(() {
-      _nickname = 'Guest Student';
-      _bio = 'Kuliyyah of ICT · Year 4 · Loves nasi ayam and clean code.';
+  Future<void> _showResetDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reset profile?'),
+        content: const Text('This cannot be undone'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      setState(() {
+        setState(() {
+          _nickname = 'Guest Student';
+          _bio = 'Kuliyyah of ICT · Year 4 · Loves nasi ayam and clean code.';
 
-      _nicknameCtrl.text = _nickname;
-      _bioCtrl.text = _bio;
+          _nicknameCtrl.text = _nickname;
+          _bioCtrl.text = _bio;
 
-      _editing = true;
-    });
+          _editing = true;
+        });
+      });
+    }
   }
 
   @override
@@ -103,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 label: const Text('Save'),
               ),
               TextButton.icon(
-                onPressed: _toggleReset,
+                onPressed: _showResetDialog,
                 icon: const Icon(Icons.refresh),
                 label: const Text('Reset'),
               ),
