@@ -8,18 +8,22 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String _nickname = 'Dayah';
-  String _bio = 'Kuliyyah of ICT · Year 4 · Loves coffee and sleeping.';
-  
+  static const _defaultNickname = 'Ammar';
+  static const _defaultBio =
+      'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+
+  String _nickname = _defaultNickname;
+  String _bio = _defaultBio;
+
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
   bool _editing = false;
+
   @override
   void initState() {
     super.initState();
-    _nicknameCtrl.text = _nickname;
+    _nicknameCtrl.text = _nickname; // pre-fill from current state
     _bioCtrl.text = _bio;
-    // pre-fill from current state
   }
 
   @override
@@ -36,8 +40,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
       }
+      _editing = !_editing;
     });
-    _editing = !_editing;
+  }
+
+  void _resetProfile() {
+    setState(() {
+      _nickname = _defaultNickname;
+      _bio = _defaultBio;
+      _nicknameCtrl.text = _defaultNickname;
+      _bioCtrl.text = _defaultBio;
+    });
   }
 
   @override
@@ -57,9 +70,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 48,
-              backgroundImage: NetworkImage('https://picsum.photos/200'),
+              child: ClipOval(
+                child: Image(
+                  image: const NetworkImage('https://picsum.photos/200'),
+                  width: 96,
+                  height: 96,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Center(child: Icon(Icons.person, size: 48)),
+                ),
+              ),
             ),
             const SizedBox(height: 12),
             if (_editing) ...[
@@ -86,6 +108,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onPressed: _toggleEdit,
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
+              ),
+              TextButton(
+                onPressed: _resetProfile,
+                child: const Text('Reset'),
               ),
             ] else ...[
               Text(

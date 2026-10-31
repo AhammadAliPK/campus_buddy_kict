@@ -1,11 +1,11 @@
-
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/profile_screen.dart';
+import 'profile_screen.dart';
 
 void main() => runApp(const CampusBuddyKictApp());
 
 class CampusBuddyKictApp extends StatelessWidget {
   const CampusBuddyKictApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

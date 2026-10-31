@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -10,10 +11,18 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  late List<Course> _courses;
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses);
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0; // ← NEW
-    for (final c in sampleCourses) {
+    for (final c in _courses) {
       // ← NEW
       totalCh = totalCh + c.creditHours; // ← NEW
     } //
@@ -35,7 +44,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
+                '${_courses.length} courses · $totalCh credit hours',
               ),
             ),
           ),
@@ -49,9 +58,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: sampleCourses.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = _courses[index];
                       return Card(
                         child: Center(
                           child: Column(
@@ -79,9 +88,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = _courses[index];
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: Theme.of(context)
