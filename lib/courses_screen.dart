@@ -20,6 +20,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
       totalCh = totalCh + c.creditHours;
     }
 
+    final shown = sampleCourses.where((c) => c.day == 'Monday').toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -89,11 +91,16 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       );
                     },
                   )
-                : ListView.builder(
+
+                : shown.isEmpty
+                    ? const Center(
+                        child: Text('No classes! Alhamdulillah :)'),
+                      )
+                    : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = shown[index];
 
                       return ListTile(
                         tileColor: index.isOdd
