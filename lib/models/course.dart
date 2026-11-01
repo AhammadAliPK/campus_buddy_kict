@@ -9,6 +9,8 @@ class Course {
   final String venue;
   final IconData icon;
   final String? instructor; // may be missing
+  final bool starred;
+  final bool enrolled;
 
   const Course(
     this.code,
@@ -19,5 +21,21 @@ class Course {
     this.venue,
     this.icon, {
     this.instructor,
+    this.starred = false,
+    this.enrolled = false,
   });
+
+  // Fields are final, so a "change" is a copy with at most one difference.
+  Course copyWith({bool? starred, bool? enrolled}) => Course(
+        code,
+        name,
+        creditHours,
+        day,
+        time,
+        venue,
+        icon,
+        instructor: instructor,
+        starred: starred ?? this.starred,
+        enrolled: enrolled ?? this.enrolled,
+      );
 }

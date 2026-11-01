@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -11,6 +13,9 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
 
+  // sampleCourses is const (frozen), so work on a copy we may change.
+  List<Course> _courses = List.of(sampleCourses);
+
   // "Which day am I free?" — null shows every course.
   String? _dayFilter;
 
@@ -19,17 +24,41 @@ class _CoursesScreenState extends State<CoursesScreen> {
   // 0.5 -> "0.5", 3.0 -> "3"
   String _ch(double ch) => ch == ch.truncate() ? '${ch.toInt()}' : '$ch';
 
+  // Replace, don't edit: swap the course for a copy with one difference.
+  void _replace(Course old, Course updated) {
+    setState(() {
+      final i = _courses.indexWhere((c) => identical(c, old));
+      _courses[i] = updated;
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (context) => const AddCourseDialog(),
+    );
+    if (course != null) {
+      setState(() => _courses = [..._courses, course]);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double totalCh = 0;
-    for (final c in sampleCourses) {
+    double enrolledCh = 0;
+    int enrolledCount = 0;
+    for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
+      if (c.enrolled) {
+        enrolledCh = enrolledCh + c.creditHours;
+        enrolledCount = enrolledCount + 1;
+      }
     }
 
     final dayFilter = _dayFilter;
     final shown = dayFilter == null
-        ? sampleCourses
-        : sampleCourses.where((c) => c.day.contains(dayFilter)).toList();
+        ? _courses
+        : _courses.where((c) => c.day.contains(dayFilter)).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -42,14 +71,28 @@ class _CoursesScreenState extends State<CoursesScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addCourse,
+        icon: const Icon(Icons.add),
+        label: const Text('Add course'),
+      ),
       body: Column(
         children: [
           Card(
             margin: const EdgeInsets.all(12),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(
-                  '${sampleCourses.length} courses · ${_ch(totalCh)} credit hours'),
+              child: Column(
+                children: [
+                  Text(
+                      '${_courses.length} courses · ${_ch(totalCh)} credit hours'),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Enrolled: $enrolledCount · ${_ch(enrolledCh)} credit hours',
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                ],
+              ),
             ),
           ),
           SingleChildScrollView(
@@ -89,27 +132,50 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         itemBuilder: (context, index) {
                           final course = shown[index];
                           return Card(
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(course.icon, size: 40),
-                                  const SizedBox(height: 8),
-                                  Text(course.code,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  Text(course.name,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis),
-                                ],
-                              ),
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: Column(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: [
+                                      Icon(course.icon, size: 40),
+                                      const SizedBox(height: 8),
+                                      Text(course.code,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                      Text(course.name,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis),
+                                    ],
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: IconButton(
+                                    tooltip: 'Star',
+                                    icon: Icon(course.starred
+                                        ? Icons.star
+                                        : Icons.star_border),
+                                    color: course.starred
+                                        ? Colors.amber.shade700
+                                        : null,
+                                    onPressed: () => _replace(
+                                      course,
+                                      course.copyWith(
+                                          starred: !course.starred),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         },
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.only(bottom: 88),
                         itemCount: shown.length,
                         itemBuilder: (context, index) {
                           final course = shown[index];
@@ -132,7 +198,40 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 '${course.day} · ${course.time} · ${course.venue}\n'
                                 'Instructor: ${course.instructor ?? 'TBA'}'),
                             isThreeLine: true,
-                            trailing: Text('${_ch(course.creditHours)} CH'),
+                            trailing: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('${_ch(course.creditHours)} CH'),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    InkWell(
+                                      onTap: () => _replace(
+                                        course,
+                                        course.copyWith(
+                                            starred: !course.starred),
+                                      ),
+                                      child: Icon(
+                                        course.starred
+                                            ? Icons.star
+                                            : Icons.star_border,
+                                        color: course.starred
+                                            ? Colors.amber.shade700
+                                            : null,
+                                      ),
+                                    ),
+                                    Checkbox(
+                                      value: course.enrolled,
+                                      visualDensity: VisualDensity.compact,
+                                      onChanged: (v) => _replace(
+                                        course,
+                                        course.copyWith(enrolled: v ?? false),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                             onTap: () =>
                                 ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text('${course.code} tapped')),
