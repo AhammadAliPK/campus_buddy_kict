@@ -12,6 +12,7 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  bool _favoritesOnly = false;
   late List<Course> _courses;
 
   @override
@@ -60,7 +61,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
       .where((c) => c.enrolled)
       .fold<int>(0, (sum, c) => sum + c.creditHours);
     final shown = _courses.asMap().entries
-      .where((entry) => entry.value.day.contains('Tuesday'))
+      .where((entry) => !_favoritesOnly || entry.value.isFavorite)
       .toList();
 
     return Scaffold(
@@ -90,6 +91,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
             ),
           ),
+          if (!_isGrid)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: FilterChip(
+                  selected: _favoritesOnly,
+                  label: const Text('★ Favorites only'),
+                  onSelected: (value) {
+                    setState(() {
+                      _favoritesOnly = value;
+                    });
+                  },
+                ),
+              ),
+            ),
           Expanded(
             child: _isGrid
                 ? GridView.builder(
@@ -140,6 +157,33 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       final course = entry.value;
                       final courseIndex = entry.key;
                       return ListTile(
+                        onLongPress: () async {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Remove Course'),
+                              content: Text(
+                                'Are you sure you want to remove ${course.code}?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Remove'),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirm == true) {
+                            setState(() {
+                              _courses.removeAt(courseIndex);
+                            });
+                          }
+                        },
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
