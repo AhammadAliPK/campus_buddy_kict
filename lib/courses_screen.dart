@@ -39,7 +39,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
   Future<void> _addCourse() async {
     final course = await showDialog<Course>(
       context: context,
-      builder: (_) => const AddCourseDialog(),
+      builder: (_) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).toList(),
+      ),
     );
 
     if (course == null) return;
