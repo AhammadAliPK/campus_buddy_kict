@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class Course {
@@ -8,11 +7,18 @@ class Course {
   final String day;
   final IconData icon;
 
-  const Course(
-    this.code,
-    this.name,
-    this.creditHours,
-    this.day,
-    this.icon,
-  );
+  final String time;
+  final String venue;
+  final String? instructor;
+
+  const Course({
+    required this.code,
+    required this.name,
+    required this.creditHours,
+    required this.day,
+    required this.icon,
+    required this.time,
+    required this.venue,
+    this.instructor,
+  });
 }
