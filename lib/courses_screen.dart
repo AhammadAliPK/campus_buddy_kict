@@ -14,6 +14,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   late List<Course> _courses;
 
+  // Assignment 3: filters
+  bool _favouritesOnly = false;
+  String _dayFilter = 'All';
+  static const _dayOptions = [
+    'All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +54,29 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
+  // Assignment 3: long-press a row -> "Are you sure?" -> remove
+  Future<void> _confirmRemove(Course course) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove course?'),
+        content: Text('Are you sure you want to remove ${course.code}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return; // Cancel, or tapped outside
+    setState(() => _courses.remove(course));
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
@@ -58,10 +88,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
         .where((c) => c.enrolled)
         .fold<int>(0, (sum, c) => sum + c.creditHours);
 
-    // Week 4 exercise: show only Monday's courses
-    // final shown =
-    //     _courses.where((c) => c.day.contains('Monday')).toList();
-    final shown = _courses;
+    // Assignment 3: the day filter and favourites filter both work on
+    // _courses, so added, starred and removed courses are always included.
+    final shown = _courses
+        .where((c) => _dayFilter == 'All' || c.day.contains(_dayFilter))
+        .where((c) => !_favouritesOnly || c.isFavorite)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -91,9 +123,34 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
             ),
           ),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                FilterChip(
+                  label: const Text('★ favourites only'),
+                  selected: _favouritesOnly,
+                  onSelected: (v) => setState(() => _favouritesOnly = v),
+                ),
+                const SizedBox(width: 8),
+                for (final d in _dayOptions) ...[
+                  ChoiceChip(
+                    label: Text(d),
+                    selected: _dayFilter == d,
+                    onSelected: (_) => setState(() => _dayFilter = d),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+              ],
+            ),
+          ),
           Expanded(
             child: shown.isEmpty
-                ? const Center(child: Text('No classes! Alhamdulillah :)'))
+                ? Center(
+                    child: Text(_favouritesOnly
+                        ? 'No starred courses here yet'
+                        : 'No classes! Alhamdulillah :)'))
                 : _isGrid
                     ? GridView.builder(
                         padding: const EdgeInsets.all(8),
@@ -109,6 +166,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           return Card(
                             child: InkWell(
                               onTap: () => _toggleEnrolled(course),
+                              onLongPress: () => _confirmRemove(course),
                               child: Center(
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -176,6 +234,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               onPressed: () => _toggleFavorite(course),
                             ),
                             onTap: () => _toggleEnrolled(course),
+                            onLongPress: () => _confirmRemove(course),
                           );
                         },
                       ),
