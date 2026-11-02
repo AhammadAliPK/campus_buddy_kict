@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -10,27 +12,95 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
-  
-  // 1. NEW: State variable to keep track of the currently selected day
+
   String _selectedDay = 'Monday';
 
-  // List of days to show in the chips bar
+  bool _favOnly = false;   //favourites only filter on/off
+
   final List<String> _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+  late List<Course> _courses;
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses);
+  }
+
+  void _toggleFavorite(int index) {
+    setState(() {
+      _courses[index] =
+          _courses[index].copyWith(isFavorite: !_courses[index].isFavorite);
+    });
+  }
+
+  void _toggleEnrolled(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        enrolled: !_courses[index].enrolled,
+      );
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (_) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).toList(),
+      ),
+    );
+    if (course == null) return;
+    setState(() => _courses.add(course));
+  }
+
+  
+  Future<void> _removeCourse(Course course) async {
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Are you sure?'),
+        content: Text('Remove ${course.code} from your courses?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (sure != true) return; 
+    setState(() => _courses.remove(course));
+  }
 
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
-    for (final c in sampleCourses) {
+    for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
     }
 
-    // 2. NEW: Filter courses dynamically based on _selectedDay instead of hardcoded 'Monday'
-    final shown = sampleCourses.where((c) => c.day == _selectedDay).toList();
+    final enrolledCh = _courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
+
+    
+    final shown = _courses
+        .where((c) => c.day == _selectedDay && (!_favOnly || c.isFavorite))
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Add course',
+            onPressed: _addCourse,
+          ),
           IconButton(
             icon: Icon(_isGrid ? Icons.grid_on : Icons.list),
             tooltip: 'Toggle view',
@@ -49,30 +119,42 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
+                '${_courses.length} courses · $totalCh credit hours\n'
+                'Enrolled: $enrolledCh CH',
               ),
             ),
           ),
-          
-          // 3. NEW: Horizontal row of FilterChips to pick the day by tapping
+
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
-              children: _days.map((day) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: FilterChip(
-                    label: Text(day),
-                    selected: _selectedDay == day,
-                    onSelected: (bool selected) {
-                      setState(() {
-                        _selectedDay = day; // Updates selected day and triggers redraw
-                      });
-                    },
-                  ),
-                );
-              }).toList(),
+              children: [
+                ..._days.map((day) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: FilterChip(
+                      label: Text(day),
+                      selected: _selectedDay == day,
+                      onSelected: (bool selected) {
+                        setState(() {
+                          _selectedDay = day;
+                        });
+                      },
+                    ),
+                  );
+                }),
+                
+                FilterChip(
+                  label: const Text('★ favourites only'),
+                  selected: _favOnly,
+                  onSelected: (bool selected) {
+                    setState(() {
+                      _favOnly = selected;
+                    });
+                  },
+                ),
+              ],
             ),
           ),
           const SizedBox(height: 8),
@@ -128,20 +210,35 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           final course = shown[index];
                           return ListTile(
                             leading: CircleAvatar(
-    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-    child: Icon(course.icon,
-        color: Theme.of(context).colorScheme.onPrimaryContainer),
-  ),
-  title: Text(course.code),
-                            subtitle: Text(
-    '${course.day.substring(0, 3)} ${course.time} · ${course.venue}\nInstructor: ${course.instructor ?? 'TBA'}',
-  ),
-  isThreeLine: true, // Needed so the two-line subtitle fits cleanly
-  
-  trailing: Text('${course.creditHours} CH'),
-  onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('${course.code} tapped')),
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.primaryContainer,
+                              child: Icon(
+                                course.enrolled
+                                    ? Icons.check_circle
+                                    : course.icon,
+                                color: course.enrolled
+                                    ? Colors.green
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                              ),
                             ),
+                            title: Text(course.code),
+                            subtitle: Text(
+                              '${course.day.substring(0, 3)} ${course.time} · ${course.venue}\n'
+                              'Instructor: ${course.instructor ?? 'TBA'} · ${course.creditHours} CH',
+                            ),
+                            isThreeLine: true,
+                            trailing: IconButton(
+                              icon: Icon(
+                                course.isFavorite ? Icons.star : Icons.star_border,
+                                color: course.isFavorite ? Colors.amber : null,
+                              ),
+                              onPressed: () =>
+                                  _toggleFavorite(_courses.indexOf(course)),
+                            ),
+                            onTap: () => _toggleEnrolled(_courses.indexOf(course)),
+                            onLongPress: () => _removeCourse(course),   // NEW (Homework 2)
                           );
                         },
                       ),
