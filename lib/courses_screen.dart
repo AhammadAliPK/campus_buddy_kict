@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -10,23 +12,65 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  late List<Course> _courses;
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses); // our own copy, safe to change
+  }
+
+  // The toggles look the course up in _courses, so they stay correct
+  // even when the screen shows a filtered list.
+  void _toggleFavorite(Course course) {
+    final i = _courses.indexOf(course);
+    setState(() {
+      _courses[i] = _courses[i].copyWith(isFavorite: !_courses[i].isFavorite);
+    });
+  }
+
+  void _toggleEnrolled(Course course) {
+    final i = _courses.indexOf(course);
+    setState(() {
+      _courses[i] = _courses[i].copyWith(enrolled: !_courses[i].enrolled);
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (_) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).toList(),
+      ),
+    );
+    if (course == null) return; // the user cancelled
+    setState(() => _courses.add(course));
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Step 7: total credit hours
     int totalCh = 0;
-    for (final c in sampleCourses) {
+    for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
     }
 
-    // Exercise: show only one day's courses
-    final shown =
-        sampleCourses.where((c) => c.day.contains('Monday')).toList();
+    final enrolledCh = _courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
+
+    // Week 4 exercise: show only Monday's courses
+    // final shown =
+    //     _courses.where((c) => c.day.contains('Monday')).toList();
+    final shown = _courses;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _addCourse,
+          ),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
@@ -41,7 +85,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                  '${sampleCourses.length} courses · $totalCh credit hours'),
+                '${_courses.length} courses · $totalCh credit hours\n'
+                'Enrolled: $enrolledCh CH',
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
           Expanded(
@@ -52,7 +99,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         padding: const EdgeInsets.all(8),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2, // two cards per row
+                          crossAxisCount: 2,
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
@@ -60,20 +107,30 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         itemBuilder: (context, index) {
                           final course = shown[index];
                           return Card(
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(course.icon, size: 40),
-                                  const SizedBox(height: 8),
-                                  Text(course.code,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  Text(course.name,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis),
-                                ],
+                            child: InkWell(
+                              onTap: () => _toggleEnrolled(course),
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      course.enrolled
+                                          ? Icons.check_circle
+                                          : course.icon,
+                                      size: 40,
+                                      color:
+                                          course.enrolled ? Colors.green : null,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(course.code,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    Text(course.name,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis),
+                                  ],
+                                ),
                               ),
                             ),
                           );
@@ -92,21 +149,33 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               backgroundColor: Theme.of(context)
                                   .colorScheme
                                   .primaryContainer,
-                              child: Icon(course.icon,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer),
+                              child: Icon(
+                                course.enrolled
+                                    ? Icons.check_circle
+                                    : course.icon,
+                                color: course.enrolled
+                                    ? Colors.green
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                              ),
                             ),
                             title: Text(course.code),
                             subtitle: Text(
                                 '${course.name} · ${course.creditHours} CH\n'
-                                '${course.day} ${course.time} · ${course.venue}'),
-                                isThreeLine: true,
-                            trailing: Text(course.instructor ?? 'TBA'),
-                            onTap: () =>
-                                ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${course.code} tapped')),
+                                '${course.day} ${course.time} · ${course.venue}\n'
+                                '${course.instructor ?? 'TBA'}'),
+                            isThreeLine: true,
+                            trailing: IconButton(
+                              icon: Icon(
+                                course.isFavorite
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: course.isFavorite ? Colors.amber : null,
+                              ),
+                              onPressed: () => _toggleFavorite(course),
                             ),
+                            onTap: () => _toggleEnrolled(course),
                           );
                         },
                       ),
