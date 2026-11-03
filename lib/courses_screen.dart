@@ -20,6 +20,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
   }
 
   bool _isGrid = false; // ← NEW
+  String? _dayFilter; // ← NEW (homework 1): null = all days
+  bool _favOnly = false; // ← NEW (homework 3): show only starred courses
 
   void _toggleFavorite(int index) {
     setState(() {
@@ -49,6 +51,29 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
+  // ← NEW (homework 2): long-press a row → "Are you sure?" → remove
+  Future<void> _confirmRemove(Course course) async {
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Are you sure?'),
+        content: Text('Remove ${course.code} ${course.name}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (yes != true) return; // Cancel, or tapped outside the popup
+    setState(() => _courses.remove(course));
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0; // ← NEW
@@ -74,7 +99,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
           ..sort(
             (a, b) => (dayOrder[a.day] ?? 8).compareTo(dayOrder[b.day] ?? 8),
           );
-    final shown = sorted; // ← NEW
+    final shown =
+        sorted // ← CHANGED (homework 1 + 3): same _courses, filtered view
+            .where((c) => _dayFilter == null || c.day == _dayFilter)
+            .where((c) => !_favOnly || c.isFavorite)
+            .toList();
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -107,9 +136,37 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
             ),
           ),
+          Padding(
+            // ← NEW: the filter chips (wrap onto a second line if needed)
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Wrap(
+              spacing: 4,
+              runSpacing: 4,
+              children: [
+                FilterChip(
+                  label: const Text('★ Favourites only'),
+                  selected: _favOnly,
+                  onSelected: (v) => setState(() => _favOnly = v),
+                ),
+                for (final d in [null, ...dayOrder.keys.take(5)])
+                  ChoiceChip(
+                    label: Text(d == null ? 'All' : d.substring(0, 3)),
+                    selected: _dayFilter == d,
+                    onSelected: (_) => setState(() => _dayFilter = d),
+                  ),
+              ],
+            ),
+          ),
           Expanded(
-            child:
-                _isGrid // ← CHANGED
+            child: shown.isEmpty
+                ? Center(
+                    child: Text(
+                      _favOnly
+                          ? 'No starred courses yet'
+                          : 'No classes! Alhamdulillah :)',
+                    ),
+                  )
+                : _isGrid // ← CHANGED
                 ? GridView.builder(
                     padding: const EdgeInsets.all(8),
                     gridDelegate:
@@ -118,9 +175,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: sorted.length,
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = sorted[index];
+                      final course = shown[index];
 
                       return Card(
                         child: Center(
@@ -147,9 +204,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       );
                     },
                   )
-                : shown
-                      .isEmpty // ← NEW
-                ? const Center(child: Text('No classes! Alhamdulillah :)'))
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: shown.length, // ← CHANGED
@@ -192,6 +246,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           onPressed: () => _toggleFavorite(i),
                         ),
                         onTap: () => _toggleEnrolled(i), // ← CHANGED
+                        onLongPress: () => _confirmRemove(course), // ← NEW
                       );
                     },
                   ),
