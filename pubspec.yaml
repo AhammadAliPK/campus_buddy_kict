@@ -39,6 +39,10 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  # Generates the launcher icons (Android + iOS) from assets/icon.png.
+  # Run after changing the icon:  dart run flutter_launcher_icons
+  flutter_launcher_icons: ^0.14.4
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
@@ -56,6 +60,14 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+# Launcher icon: the green "K" — distinguishes the in-class build from the
+# finished reference app. Re-run `dart run flutter_launcher_icons` if changed.
+flutter_launcher_icons:
+  image_path: "assets/icon.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
 
   # To add assets to your application, add an assets section, like this:
   # assets:
