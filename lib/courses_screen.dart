@@ -50,6 +50,25 @@ void _toggleEnroll(Course course) {
   });
 }
 
+Future<void> _openCourseDetail(Course course) async {
+  final result = await Navigator.pushNamed(
+    context,
+    '/course-detail',
+    arguments: course,
+  );
+
+  if (!mounted) return;
+
+  if (result != null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(result.toString()),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+}
+
 Future<void> _removeCourse(Course course) async {
   final confirm = await showDialog<bool>(
     context: context,
@@ -278,25 +297,29 @@ Expanded(
             final course = shown[index];
 
             return Card(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(course.icon, size: 36),
-                  const SizedBox(height: 8),
-                  Text(
-                    course.code,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () => _openCourseDetail(course),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(course.icon, size: 36),
+                    const SizedBox(height: 8),
+                    Text(
+                      course.code,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Text(
-                      course.name,
-                      textAlign: TextAlign.center,
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Text(
+                        course.name,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -358,7 +381,7 @@ Expanded(
                 ],
               ),
 
-              onTap: () => _toggleEnroll(course),
+              onTap: () => _openCourseDetail(course),
               onLongPress: () => _removeCourse(course),
             );
             
