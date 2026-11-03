@@ -74,7 +74,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
           ..sort(
             (a, b) => (dayOrder[a.day] ?? 8).compareTo(dayOrder[b.day] ?? 8),
           );
-    final shown = sorted.where((c) => c.day == 'Monday').toList(); // ← NEW
+    final shown = sorted; // ← NEW
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
