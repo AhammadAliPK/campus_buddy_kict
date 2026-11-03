@@ -19,6 +19,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
     'Monday': 1, 'Tuesday': 2, 'Wednesday': 3,
     'Thursday': 4, 'Friday': 5, 'Saturday': 6, 'Sunday': 7,
   };
+  bool _favOnly = false;     // HW3: is the "★ Favourites only" chip on? Starts off
+  String? _dayFilter;        // HW1: which day to show. ? = can be null. null = ALL days
+
 
   @override
   void initState() {                     // runs ONCE, when the screen is first created
@@ -57,6 +60,29 @@ void _toggleFavorite(int index) {
     });
   }
 
+  Future<void> _confirmRemove(Course course) async {  // async = can wait for the popup
+    final yes = await showDialog<bool>(               // open popup, WAIT for true/false
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove course?'),
+        content: Text('Remove ${course.code} from your list?'), // shows which course
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),     // close, answer = NO
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),      // close, answer = YES
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (yes == true) {                                // only if Remove was pressed
+      setState(() => _courses.remove(course));        // take it out of the list → redraw
+    }
+  }  
+
   @override
   Widget build(BuildContext context) {       // build = "draw this screen"
     int totalCh = 0;                        //  "totalCh starts at 0. Walk through every course c in the list. Add its creditHours to totalCh." After the loop, totalCh holds the answer
@@ -66,6 +92,11 @@ void _toggleFavorite(int index) {
     final enrolledCh = _courses
         .where((c) => c.enrolled)                 // keep only enrolled courses
         .fold<int>(0, (sum, c) => sum + c.creditHours); // add their hours, starting at 0
+    final shown = _courses.where((c) {               // keep only the courses that pass:
+      if (_favOnly && !c.isFavorite) return false;   // chip on but not starred → hide
+      if (_dayFilter != null && c.day != _dayFilter) return false; // wrong day → hide
+      return true;                                   // passed both checks → show
+    }).toList();
 
     return Scaffold(                         // ready-made screen: top bar + body
       appBar: AppBar(
@@ -95,6 +126,30 @@ void _toggleFavorite(int index) {
             'Enrolled: $enrolledCh CH'),                            // second line
       ),
     ),
+    SingleChildScrollView(                       // lets the chips scroll sideways if too wide
+      scrollDirection: Axis.horizontal,          // scroll left-right, not up-down
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(                                // chips side by side
+        children: [
+          FilterChip(                            // HW3: an on/off chip
+            label: const Text('★ Favourites only'),
+            selected: _favOnly,                  // looks "on" when _favOnly is true
+            onSelected: (v) => setState(() => _favOnly = v), // tapped → store new value
+          ),
+          const SizedBox(width: 8),              // gap
+          for (final d in const [null, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'])
+            // HW1: make ONE chip per item in this list (null = "All")
+            Padding(
+              padding: const EdgeInsets.only(right: 6), // small gap after each chip
+              child: ChoiceChip(                 // pick-one chip (like a radio button)
+                label: Text(d == null ? 'All' : d.substring(0, 3)), // 'All', 'Mon', 'Tue'...
+                selected: _dayFilter == d,       // highlighted if it's the current choice
+                onSelected: (_) => setState(() => _dayFilter = d), // tap → choose this day
+              ),
+            ),
+        ],
+      ),
+    ),
     Expanded(                                               // "list, take ALL the remaining height"
       child: _isGrid                        // grid mode on?
       ? GridView.builder(               // YES → show a grid
@@ -105,9 +160,9 @@ void _toggleFavorite(int index) {
       mainAxisSpacing: 8,         // gap between rows
       crossAxisSpacing: 8,        // gap between columns
       ),
-      itemCount: _courses.length, // one card per course
+      itemCount: shown.length, // one card per course
       itemBuilder: (context, index) {  // builds each card
-        final course = _courses[index];
+        final course = shown[index];
         return Card(
           child: Center(
             child: Column(
@@ -128,13 +183,13 @@ void _toggleFavorite(int index) {
         );
       },
     )
-     : _courses.isEmpty
+     : shown.isEmpty
          ? const Center(child: Text('No classes! Alhamdulillah :)'))
          : ListView.builder(    // a scrolling list that builds rows on demand
         padding: const EdgeInsets.symmetric(vertical: 8), // space above and below the list
-        itemCount: _courses.length,        // how many rows = how many courses
+        itemCount: shown.length,        // how many rows = how many courses
         itemBuilder: (context, index) {         // runs once per row; index = 0, 1, 2...
-          final course = _courses[index];  // pick the course for this row
+          final course = shown[index];  // pick the course for this row
           return ListTile(                      // a standard row: left icon, texts, right text
             leading: CircleAvatar(              // round circle on the left
               backgroundColor: Theme.of(context).colorScheme.primaryContainer, // light teal
@@ -159,12 +214,14 @@ void _toggleFavorite(int index) {
                       : Icons.star_border,          //   no  → outline only
                   color: course.isFavorite ? Colors.amber : null, // gold if starred
                 ),
-                onPressed: () => _toggleFavorite(index),  // tap → flip the star for THIS row
+                onPressed: () => _toggleFavorite(_courses.indexOf(course)),
+                // indexOf = "find where THIS course sits in the real list"
               ),
             tileColor: index.isOdd
                 ? Colors.black.withValues(alpha: 0.03)
                 : null,            
-            onTap: () => _toggleEnrolled(index),  // tap row → enrol / un-enrol                                 // tap a row → grey message pops up at the bottom
+            onTap: () => _toggleEnrolled(_courses.indexOf(course)),  // tap row → enrol / un-enrol                                 // tap a row → grey message pops up at the bottom
+            onLongPress: () => _confirmRemove(course),   // HW2: hold the row → remove popup
           );
         },
       ),
