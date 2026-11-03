@@ -909,8 +909,8 @@ class _CourseGridCard extends StatelessWidget {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(24),
         child: InkWell(
-          onTap: onTap,
-          onLongPress: onDelete,
+        onTap: onTap,
+        onLongPress: onDelete,
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(13),

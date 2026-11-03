@@ -1,0 +1,7 @@
+To run
+& "C:\Users\jshas\OneDrive\Documents\Nadhira's\Fourth Year\Mobile App\flutter\bin\flutter.bat" run -d chrome
+
+make it be in mobile view
+Press Ctrl + Shift + M.
+Select a phone such as iPhone 14 or Pixel 7 from the device dropdown.
+Refresh the page if needed.
