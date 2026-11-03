@@ -9,8 +9,8 @@ const List<Course> sampleCourses = [
     3,
     'Monday', 
     Icons.engineering,
-    '10:00 - 11:30',
-    'LT 1'
+    // '10:00 - 11:30',
+    // 'LT 1'
     ),
 
   Course(
@@ -19,8 +19,8 @@ const List<Course> sampleCourses = [
     3,
     'Tuesday', 
     Icons.phone_iphone,
-    '14:00 - 15:30',
-    'LR 13'
+    // '14:00 - 15:30',
+    // 'LR 13'
     ),
 
   Course(
@@ -29,8 +29,8 @@ const List<Course> sampleCourses = [
     3,
     'Wednesday', 
     Icons.mosque,
-    '15:30 - 17:00',
-    'LT 1'
+    // '15:30 - 17:00',
+    // 'LT 1'
     ),
 
   Course(
@@ -39,8 +39,8 @@ const List<Course> sampleCourses = [
     3,
     'Thursday', 
     Icons.cases_rounded,
-    '10:00 - 11:30',
-    'LT 1'
+    // '10:00 - 11:30',
+    // 'LT 1'
     ),
 
   Course(
@@ -49,7 +49,7 @@ const List<Course> sampleCourses = [
     3,
     'Friday', 
     Icons.summarize,
-    '8:00 - 10:00',
-    'MPH KICT'
+    // '8:00 - 10:00',
+    // 'MPH KICT'
     ),
 ];
