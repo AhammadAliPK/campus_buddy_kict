@@ -10,6 +10,8 @@ class Course {
   final String venue;
   final String lecturer;
   final IconData icon;
+  final bool isFavorite;
+  final bool enrolled;
 
   const Course(
     this.code,
@@ -19,8 +21,26 @@ class Course {
     this.time,
     this.venue,
     this.lecturer,
-    this.icon,
-  );
+    this.icon, {
+    this.isFavorite = false,
+    this.enrolled = false,
+  });
+
+  /// Copy with one difference (everything is final).
+  Course copyWith({bool? isFavorite, bool? enrolled}) {
+    return Course(
+      code,
+      name,
+      creditHours,
+      days,
+      time,
+      venue,
+      lecturer,
+      icon,
+      isFavorite: isFavorite ?? this.isFavorite,
+      enrolled: enrolled ?? this.enrolled,
+    );
+  }
 
   /// Short text for the row, e.g. "Tue, Thu" or "TBA".
   String get daysLabel =>
