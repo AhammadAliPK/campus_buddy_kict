@@ -21,30 +21,70 @@ void initState() {
 }
 
 bool _isGrid = false; // ← NEW
+bool _favoritesOnly = false;
 
-void _toggleFavorite(int index) {
- setState(() {
- _courses[index] =
- _courses[index].copyWith(isFavorite: !_courses[index].isFavorite);
- });
-}
-
-void _toggleEnrolled(int index) {
+void _toggleFavorite(Course course) {
   setState(() {
-    _courses[index] = _courses[index].copyWith(
-      enrolled: !_courses[index].enrolled,
+    final index = _courses.indexOf(course);
+    if (index == -1) return;
+
+    _courses[index] = course.copyWith(
+      isFavorite: !course.isFavorite,
     );
   });
 }
 
-Future<void> _addCourse() async { // ← CHANGED: was _openAddDialog
- final course = await showDialog<Course>(
- context: context,
- builder: (_) => const AddCourseDialog(),
- );
- if (course == null) return; // the user cancelled, so do nothing
- setState(() => _courses.add(course));
- }
+void _toggleEnrolled(Course course) {
+  setState(() {
+    final index = _courses.indexOf(course);
+    if (index == -1) return;
+
+    _courses[index] = course.copyWith(
+      enrolled: !course.enrolled,
+    );
+  });
+}
+
+Future<void> _removeCourse(Course course) async {
+  final confirm = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Remove course?'),
+      content: Text(
+        'Are you sure you want to remove ${course.code}?',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Remove'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirm == true) {
+    setState(() {
+      _courses.remove(course);
+    });
+  }
+}
+
+Future<void> _addCourse() async {
+  final course = await showDialog<Course>(
+    context: context,
+    builder: (_) => AddCourseDialog(
+      existingCodes: _courses.map((c) => c.code).toList(),
+    ),
+  );
+
+  if (course == null) return;
+
+  setState(() => _courses.add(course));
+}
 
 
 
@@ -59,8 +99,9 @@ Widget build(BuildContext context) {
     .fold<int>(0, (sum, c) => sum + c.creditHours);
 
   final shown = _courses
-      .where((c) => c.day == 'Monday')
-      .toList(); // ← NEW
+    .where((c) => c.day == 'Monday')
+    .where((c) => !_favoritesOnly || c.isFavorite)
+    .toList();
 
   return Scaffold(
     appBar: AppBar(
@@ -95,6 +136,25 @@ actions: [
 ),
       ),
     ),
+
+        // Favourites filter
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        children: [
+          FilterChip(
+            label: const Text('★ favourites only'),
+            selected: _favoritesOnly,
+            onSelected: (value) {
+              setState(() {
+                _favoritesOnly = value;
+              });
+            },
+          ),
+        ],
+      ),
+    ),
+
     Expanded(
       child: shown.isEmpty
           ? const Center(
@@ -110,9 +170,9 @@ actions: [
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
           ),
-          itemCount: _courses.length,
+          itemCount: shown.length,
           itemBuilder: (context, index) {
-            final course = _courses[index];
+            final course = shown[index];
             return Card(
               child: Center(
                 child: Column(
@@ -135,9 +195,9 @@ actions: [
 )
       : ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: _courses.length,
+      itemCount: shown.length,
       itemBuilder: (context, index) {
-        final course = _courses[index];
+        final course = shown[index];
         return ListTile(
           tileColor: index.isOdd // ← NEW
               ? Colors.black.withValues(alpha: 0.03)
@@ -166,10 +226,11 @@ actions: [
  : Icons.star_border,
  color: course.isFavorite ? Colors.amber : null,
  ),
- onPressed: () => _toggleFavorite(index),
+ onPressed: () => _toggleFavorite(course),
  ),
 
-          onTap: () => _toggleEnrolled(index),
+         onTap: () => _toggleEnrolled(course),
+         onLongPress: () => _removeCourse(course), 
         );
         },
       )

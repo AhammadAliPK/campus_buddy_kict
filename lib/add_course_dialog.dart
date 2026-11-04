@@ -4,7 +4,8 @@ import 'package:campus_buddy_kict/models/course.dart'; // ← NEW
 
 
 class AddCourseDialog extends StatefulWidget {
-  const AddCourseDialog({super.key});
+  const AddCourseDialog({super.key, required this.existingCodes,});
+  final List<String> existingCodes;
 
   @override
   State<AddCourseDialog> createState() => _AddCourseDialogState();
@@ -70,18 +71,22 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                   labelText: 'Code (e.g. CSCI 4311)',
                 ),
                 validator: (v) {
-                  final t = v?.trim() ?? '';
+  final t = v?.trim().toUpperCase() ?? '';
 
-                  if (t.isEmpty) {
-                    return 'Code is required';
-                  }
+  if (t.isEmpty) {
+    return 'Code is required';
+  }
 
-                  if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(t)) {
-                    return 'Format: 4 letters + 4 digits';
-                  }
+  if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(t)) {
+    return 'Format: 4 letters + 4 digits';
+  }
 
-                  return null;
-                },
+  if (widget.existingCodes.contains(t)) {
+    return 'Already added';
+  }
+
+  return null;
+},
               ),
 
               // Second field: Course Name
