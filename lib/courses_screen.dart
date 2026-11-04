@@ -13,6 +13,8 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   late List<Course> _courses;
+  bool _showFavoritesOnly = false; 
+  String _selectedDay = 'All';   
 
   @override
   void initState() {
@@ -20,31 +22,65 @@ class _CoursesScreenState extends State<CoursesScreen> {
     _courses = List.of(sampleCourses); 
   }
 
-  void _toggleFavorite(int index) {
-    setState(() {
-      _courses[index] = _courses[index].copyWith(
-        isFavorite: !_courses[index].isFavorite,
-      );
-    });
+  void _toggleFavorite(Course course) {
+    final index = _courses.indexWhere((c) => c.code == course.code);
+    if (index != -1) {
+      setState(() {
+        _courses[index] = _courses[index].copyWith(
+          isFavorite: !_courses[index].isFavorite,
+        );
+      });
+    }
   }
 
-  void _toggleEnrolled(int index) {
-    setState(() {
-      _courses[index] = _courses[index].copyWith(
-        enrolled: !_courses[index].enrolled,
-      );
-    });
+  void _toggleEnrolled(Course course) {
+    final index = _courses.indexWhere((c) => c.code == course.code);
+    if (index != -1) {
+      setState(() {
+        _courses[index] = _courses[index].copyWith(
+          enrolled: !_courses[index].enrolled,
+        );
+      });
+    }
   }
 
   Future<void> addCourse() async {
     final course = await showDialog<Course>(
       context: context,
-      builder: (context) => const AddCourseDialog(),
+      builder: (context) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).toList(),
+      ),
     );
 
     if (course == null) return;
 
     setState(() => _courses.add(course));
+  }
+
+  Future<void> _confirmDeleteCourse(Course course) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Course'),
+        content: Text('Are you sure you want to remove ${course.code}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _courses.removeWhere((c) => c.code == course.code);
+      });
+    }
   }
 
   @override
@@ -58,6 +94,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
     final enrolledCh = _courses
         .where((c) => c.enrolled)
         .fold(0, (sum, c) => sum + c.creditHours);
+
+    List<Course> displayedCourses = _courses;
+
+    if (_selectedDay != 'All') {
+      displayedCourses =
+          displayedCourses.where((c) => c.day == _selectedDay).toList();
+    }
+
+    if (_showFavoritesOnly) {
+      displayedCourses =
+          displayedCourses.where((c) => c.isFavorite).toList();
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -80,48 +128,85 @@ class _CoursesScreenState extends State<CoursesScreen> {
             margin: const EdgeInsets.all(12),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Text('${_courses.length} courses $totalCh credit hours\n''Enrolled: $enrolledCh CH',),
+              child: Text('${_courses.length} courses $totalCh credit hours\n''Enrolled: $enrolledCh CH',
+              ),
             ),
           ),
+
+        Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Row(
+              children: [
+                FilterChip(
+                  label: const Text('★ Favorites only'),
+                  selected: _showFavoritesOnly,
+                  onSelected: (val) =>
+                      setState(() => _showFavoritesOnly = val),
+                ),
+                const SizedBox(width: 8),
+                DropdownButton<String>(
+                  value: _selectedDay,
+                  items: const [
+                    DropdownMenuItem(value: 'All', child: Text('All Days')),
+                    DropdownMenuItem(value: 'Monday', child: Text('Monday')),
+                    DropdownMenuItem(value: 'Tuesday', child: Text('Tuesday')),
+                    DropdownMenuItem(value: 'Wednesday', child: Text('Wednesday')),
+                    DropdownMenuItem(value: 'Thursday', child: Text('Thursday')),
+                    DropdownMenuItem(value: 'Friday', child: Text('Friday')),
+                  ],
+                  onChanged: (val) {
+                    if (val != null) setState(() => _selectedDay = val);
+                  },
+                ),
+              ],
+            ),
+          ),
+
           Expanded(
-            child: _courses.isEmpty
-                ? const Center(child: Text('No classes! Alhamdulillah :)'))
+            child: displayedCourses.isEmpty
+                ? const Center(child: Text('No courses found!'))
                 : (_isGrid
                     ? GridView.builder(
                         padding: const EdgeInsets.all(8),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                        itemCount: _courses.length,
+                        itemCount: displayedCourses.length,
                         itemBuilder: (context, index) {
-                          final course = _courses[index];
-                          return Card(
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(course.icon, size: 40),
-                                  const SizedBox(height: 8),
-                                  Text(course.code,
-                                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                                  Text(course.name,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis),
-                                ],
+                          final course = displayedCourses[index];
+                          return InkWell(
+                            onLongPress: () => _confirmDeleteCourse(course),
+                            child: Card(
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(course.icon, size: 40),
+                                    const SizedBox(height: 8),
+                                    Text(course.code,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    Text(course.name,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis),
+                                  ],
+                                ),
                               ),
                             ),
                           );
                         },
                       )
-                    : ListView.builder(
+                      
+                  : ListView.builder(
                         padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: _courses.length,
+                        itemCount: displayedCourses.length,
                         itemBuilder: (context, index) {
-                          final course = _courses[index];
-                          
+                          final course = displayedCourses[index];
+
                           return ListTile(
                             tileColor: index.isOdd
                                 ? Colors.black.withValues(alpha: 0.03)
@@ -131,19 +216,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               children: [
                                 Checkbox(
                                   value: course.enrolled,
-                                  onChanged: (_) => _toggleEnrolled(index),
+                                  onChanged: (_) => _toggleEnrolled(course),
                                 ),
                                 CircleAvatar(
                                   backgroundColor: Theme.of(context)
                                       .colorScheme
                                       .primaryContainer,
                                   child: Icon(
-                                      course.enrolled 
+                                    course.enrolled
                                         ? Icons.check_circle
                                         : course.icon,
-                                      color: course.enrolled // ← CHANGED
+                                    color: course.enrolled
                                         ? Colors.green
-                                        : Theme.of(context).colorScheme.onPrimaryContainer,
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer,
                                   ),
                                 ),
                               ],
@@ -157,9 +244,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                     : Icons.star_border,
                                 color: course.isFavorite ? Colors.amber : null,
                               ),
-                              onPressed: () => _toggleFavorite(index),
+                              onPressed: () => _toggleFavorite(course),
                             ),
-                            onTap: () => _toggleEnrolled(index),
+                            onTap: () => _toggleEnrolled(course),
+                            onLongPress: () => _confirmDeleteCourse(course),
                           );
                         },
                       )),

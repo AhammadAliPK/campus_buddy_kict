@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 
 class AddCourseDialog extends StatefulWidget {
-  const AddCourseDialog({super.key});
+  final List<String> existingCodes;
+
+  const AddCourseDialog({
+    super.key,
+    required this.existingCodes,
+  });
+  
 
   @override
   State<AddCourseDialog> createState() => _AddCourseDialogState();
@@ -69,7 +75,12 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                   if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(t)) {
                     return 'Format: 4 letters + 4 digits';
                   }
-                  return null; // Input is fine
+
+                  if (widget.existingCodes.contains(t.toUpperCase())) {
+                    return 'Already added';
+                  }
+
+                  return null; 
                 },
               ),
               TextFormField(
