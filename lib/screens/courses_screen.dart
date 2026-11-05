@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -14,13 +15,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
   bool _favoritesOnly = false;
   late List<Course> _courses;
 
-  void _toggleEnrolled(int index) {
+ /*void _toggleEnrolled(int index) {
     setState(() {
       _courses[index] = _courses[index].copyWith(
         enrolled: !_courses[index].enrolled,
       );
     });
-  }
+  }*/
 
   void _toggleFavorite(int index) {
     setState(() {
@@ -211,7 +212,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           '${course.day} ${course.time.split('–')[0]} · ${course.venue}\n'
                           '${course.instructor ?? 'TBA'}',
                         ),
-                        onTap: () => _toggleEnrolled(actualIndex),
+                        onTap: () async {
+                          final removed = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CourseDetailScreen(course: course),
+                            ),
+                          );
+
+                          if (!mounted) return;
+
+                          if (removed == true) {
+                            setState(() {
+                              _courses.remove(course);
+                            });
+                          }
+                        },
                         onLongPress: () => _removeCourse(actualIndex),
                         trailing: IconButton(
                           icon: Icon(
