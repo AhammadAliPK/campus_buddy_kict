@@ -6,7 +6,8 @@ class Course {
   final int creditHours;
   final String day;
   final IconData icon;
-  final bool isEnrolled; // Added for the Checkbox toggle
+  final bool isFavorite; 
+  final bool enrolled;   
 
   const Course(
     this.code,
@@ -14,25 +15,17 @@ class Course {
     this.creditHours,
     this.day,
     this.icon, {
-    this.isEnrolled = false,
-  });
+    this.isFavorite = false,
+    this.enrolled = false,
+  }); 
 
-  // copyWith method to replace the object with a single change
-  Course copyWith({
-    String? code,
-    String? name,
-    int? creditHours,
-    String? day,
-    IconData? icon,
-    bool? isEnrolled,
-  }) {
-    return Course(
-      code ?? this.code,
-      name ?? this.name,
-      creditHours ?? this.creditHours,
-      day ?? this.day,
-      icon ?? this.icon,
-      isEnrolled: isEnrolled ?? this.isEnrolled,
-    );
-  }
+  Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
+        code,
+        name,
+        creditHours,
+        day,
+        icon,
+        isFavorite: isFavorite ?? this.isFavorite,
+        enrolled: enrolled ?? this.enrolled,
+      );
 }
