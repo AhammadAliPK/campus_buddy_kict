@@ -3,6 +3,7 @@ import 'package:campus_buddy_kict/data/courses.dart';  // brings in sampleCourse
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';  // so this file knows AddCourseDialog
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 
 class CoursesScreen extends StatefulWidget {           // a screen that doesn't remember anything (yet)
   const CoursesScreen({super.key});
@@ -76,6 +77,11 @@ void _toggleFavorite(int index) {
             onPressed: () => Navigator.pop(context, true),      // close, answer = YES
             child: const Text('Remove'),
           ),
+          IconButton(
+            icon: const Icon(Icons.star_outline),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavourites,
+          ),
         ],
       ),
     );
@@ -83,6 +89,20 @@ void _toggleFavorite(int index) {
       setState(() => _courses.remove(course));        // take it out of the list → redraw
     }
   }  
+
+    Future<void> _clearFavourites() async {
+      final yes = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+            builder: (_) => const ConfirmScreen(message: 'Clear all favourites?')),
+      );
+      if (yes == true) {
+        setState(() {
+          _courses = _courses.map((c) => c.copyWith(isFavorite: false)).toList();
+          // every course → a copy with the star OFF
+        });
+      }
+    }
 
   @override
   Widget build(BuildContext context) {       // build = "draw this screen"
