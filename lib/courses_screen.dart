@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -9,25 +11,63 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
-  // Step 11: Teach the screen to remember if it is in grid mode
-  bool _isGrid = false; 
+  bool _isGrid = false;
+  late List<Course> _courses;
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses); 
+  }
+
+  void toggleFavorite(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(isFavorite: !_courses[index].isFavorite);
+    });
+  }
+
+  // Step 15: Method to toggle enrolled status
+  void toggleEnrolled(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        enrolled: !_courses[index].enrolled,
+      );
+    });
+  }
+
+  Future<void> addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (context) => const AddCourseDialog(),
+    );
+    if (course == null) return; 
+    setState(() => _courses.add(course));
+  }
 
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
-    for (final c in sampleCourses) {
+    for (final c in _courses) { 
       totalCh = totalCh + c.creditHours;
     }
+
+    // Step 16: Calculate enrolled credit hours
+    final enrolledCh = _courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
           IconButton(
-            // Step 13: Change the icon depending on the view, and toggle it on press
+            icon: const Icon(Icons.add),
+            onPressed: addCourse, 
+          ),
+          IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
-            onPressed: () => setState(() => _isGrid = !_isGrid), 
+            onPressed: () => setState(() => _isGrid = !_isGrid),
           ),
         ],
       ),
@@ -37,21 +77,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
             margin: const EdgeInsets.all(12),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Text('${sampleCourses.length} courses, $totalCh credit hours'),
+              // Step 16: Add the second line to the card text
+              child: Text('${_courses.length} courses, $totalCh credit hours\n'
+                  'Enrolled: $enrolledCh CH'), 
             ),
           ),
           Expanded(
-            child: _isGrid // Step 12: Ask the question - Grid or List?
+            child: _isGrid
                 ? GridView.builder(
                     padding: const EdgeInsets.all(8),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, 
+                      crossAxisCount: 2,
                       mainAxisSpacing: 8,
                       crossAxisSpacing: 8,
                     ),
-                    itemCount: sampleCourses.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = _courses[index]; 
                       return Card(
                         child: Center(
                           child: Column(
@@ -74,24 +116,36 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = _courses[index]; 
                       return ListTile(
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
                         leading: CircleAvatar(
                           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                          child: Icon(course.icon,
-                              color: Theme.of(context).colorScheme.onPrimaryContainer),
+                          // Step 17: Show green checkmark if enrolled
+                          child: Icon(
+                            course.enrolled ? Icons.check_circle : course.icon,
+                            color: course.enrolled 
+                                ? Colors.green 
+                                : Theme.of(context).colorScheme.onPrimaryContainer,
+                          ),
                         ),
                         title: Text(course.code),
-                        subtitle: Text('${course.name} ${course.creditHours} CH'),
-                        trailing: Text(course.day),
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${course.code} tapped')),
+                        subtitle: Text('${course.name}\n${course.day}'),
+                        trailing: IconButton(
+                          icon: Icon(
+                            course.isFavorite
+                                ? Icons.star
+                                : Icons.star_border,
+                            color: course.isFavorite ? Colors.amber : null,
+                          ),
+                          onPressed: () => toggleFavorite(index),
                         ),
+                        // Step 15: Call toggleEnrolled on tap instead of showing a snackbar
+                        onTap: () => toggleEnrolled(index), 
                       );
                     },
                   ),
