@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';  // brings in sampleCourses(actual data) from data/courses.dart
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';  // so this file knows AddCourseDialog
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {           // a screen that doesn't remember anything (yet)
   const CoursesScreen({super.key});
@@ -220,7 +221,17 @@ void _toggleFavorite(int index) {
             tileColor: index.isOdd
                 ? Colors.black.withValues(alpha: 0.03)
                 : null,            
-            onTap: () => _toggleEnrolled(_courses.indexOf(course)),  // tap row → enrol / un-enrol                                 // tap a row → grey message pops up at the bottom
+            onTap: () async {
+              final removed = await Navigator.push<bool>(   // open page, WAIT for answer
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CourseDetailScreen(course: _courses[index]),
+                ),
+              );
+              if (removed == true) {                        // only when Remove was pressed
+                setState(() => _courses.removeAt(index));   // remove that row → redraw
+              }
+            },                              // tap a row → grey message pops up at the bottom
             onLongPress: () => _confirmRemove(course),   // HW2: hold the row → remove popup
           );
         },

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/courses_screen.dart'; // tells main.dart where CoursesScreen is
+import 'package:campus_buddy_kict/shell_screen.dart';   // so main.dart knows ShellScreen
+import 'package:campus_buddy_kict/screens/about_screen.dart';
 void main() => runApp(const CampusBuddyKictApp());
 
 class CampusBuddyKictApp extends StatelessWidget {
@@ -13,7 +14,10 @@ class CampusBuddyKictApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
       ),
-      home: const CoursesScreen(),  // the first screen the app opens on
+      home: const ShellScreen(),  // the app now opens on the shell (with the bottom bar)
+      routes: {                                       // the app's address book
+        '/about': (context) => const AboutScreen(),   // name '/about' → this screen
+      },
     );
   }
 }
