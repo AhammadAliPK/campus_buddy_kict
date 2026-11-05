@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
 import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
+//import 'package:campus_buddy_kict/screens/confirm_clear_favorites_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -60,8 +61,44 @@ class HomeScreen extends StatelessWidget {
               onTap: () => Navigator.pushNamed(context, '/about'),
             ),
           ),
+
+         /*const SizedBox(height: 16),
+
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            icon: const Icon(Icons.star_border_clear),
+            label: const Text('Clear All Favorites'),
+            onPressed: () async {
+              final confirmed = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const ConfirmClearFavoritesScreen(),
+                ),
+              );
+
+              if (confirmed == true) {
+                // cannot do anything here because _courses lives inside CoursesScreen
+              }
+              
+            }, 
+          ), */
         ],
       ),
     );
   }
 }
+      
+/*
+Why Home cannot clear the favourites:
+
+We cannot clear the favourites from the Home Screen because the 
+_courses list is private state stored inside CoursesScreen. Since 
+HomeScreen and CoursesScreen are separate sibling screens, Home 
+doesn't have direct access to modify _courses or trigger setState on
+it. Normal StatefulWidget state can't pass data across different screen 
+trees like this. To olve this problem and share app state across screens, 
+we need to use state management
+*/

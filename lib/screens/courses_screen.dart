@@ -3,6 +3,7 @@ import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/confirm_clear_favorites_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -84,6 +85,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }
   }
 
+  Future<void> _clearAllFavorites() async {
+  final confirmed = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const ConfirmClearFavoritesScreen(),
+    ),
+  );
+
+  if (confirmed == true) {
+    setState(() {
+      _courses = _courses.map((c) => c.copyWith(isFavorite: false)).toList();
+    });
+  }
+}
+
   @override
   Widget build(BuildContext context) {
 
@@ -112,6 +128,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.star_border),
+            tooltip: 'Clear all favorites',
+            onPressed: _clearAllFavorites,
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: addCourse,
@@ -182,16 +203,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             onLongPress: () => _confirmDeleteCourse(course),
 
                             onTap: () async {
-                              final removed = await Navigator.push<bool>(
+                              final result = await Navigator.push<dynamic>(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => CourseDetailScreen(course: course),
                                 ),
                               );
 
-                              if (removed == true) {
+                              if (result == 'delete') {
                                 setState(() {
                                   _courses.removeWhere((c) => c.code == course.code);
+                                });
+                              } else if (result is Course) {
+                                setState(() {
+                                  final index = _courses.indexWhere((c) => c.code == course.code);
+                                  if (index != -1) {
+                                    _courses[index] = result;
+                                  }
                                 });
                               }
                             },
@@ -264,16 +292,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               onPressed: () => _toggleFavorite(course),
                             ),
                             onTap: () async {
-                              final removed = await Navigator.push<bool>(
-                              context,
+                              final result = await Navigator.push<dynamic>(
+                                context,
                                 MaterialPageRoute(
                                   builder: (context) => CourseDetailScreen(course: course),
                                 ),
                               );
 
-                              if (removed == true) {
+                              if (result == 'delete') {
                                 setState(() {
                                   _courses.removeWhere((c) => c.code == course.code);
+                                });
+                              } else if (result is Course) {
+                                setState(() {
+                                  final index = _courses.indexWhere((c) => c.code == course.code);
+                                  if (index != -1) {
+                                    _courses[index] = result;
+                                  }
                                 });
                               }
                             },
