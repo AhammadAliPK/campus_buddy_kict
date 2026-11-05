@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -63,7 +64,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
       ),
     );
     if (ok != true) return; // NEW: null = tapped outside, treat as cancel
-    setState(() => _courses.remove(course)); // NEW: remove by object, safe with filtered/sorted view
+    setState(
+      () => _courses.remove(course),
+    ); // NEW: remove by object, safe with filtered/sorted view
   }
 
   void _toggleEnrolled(int index) {
@@ -95,7 +98,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
             // FIX: was sampleCourses, so added/toggled courses ignored
             (a, b) => _days.indexOf(a.days.first) - _days.indexOf(b.days.first),
           ))
-        : base.where((c) => c.days.contains(_day)).toList(); // CHANGED: _courses -> base
+        : base
+              .where((c) => c.days.contains(_day))
+              .toList(); // CHANGED: _courses -> base
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -179,10 +184,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       final realIndex = _courses.indexOf(course); // FIX: shown is sorted/filtered, find position in _courses
                       return Card(
                         child: InkWell(
-                          onTap: () => _toggleEnrolled(
-                            realIndex,
-                          ), // FIX: use realIndex, not shown index
-                          onLongPress: () => _removeCourse(course), // NEW: long-press card to remove
+                          onTap: () async {
+                            final removed = await Navigator.push<bool>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    CourseDetailScreen(course: course),
+                              ),
+                            );
+                            if (removed == true) {
+                              setState(() => _courses.remove(course));
+                            }
+                          }, // FIX: use realIndex, not shown index
+                          onLongPress: () => _removeCourse(
+                            course,
+                          ), // NEW: long-press card to remove
                           child: Padding(
                             padding: const EdgeInsets.all(12),
                             child: Column(
@@ -274,9 +290,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           onPressed: () => _toggleFavourite(realIndex), // FIX: moved inside IconButton (ListTile has no onPressed), pass index not IndexError
                         ),
-                        onTap: () =>
-                            _toggleEnrolled(realIndex), // FIX: use realIndex
-                        onLongPress: () => _removeCourse(course), // NEW: long-press row to remove
+                        onTap: () async {
+                          final removed = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CourseDetailScreen(course: course),
+                            ),
+                          );
+                          if (removed == true) {
+                            setState(() => _courses.remove(course));
+                          }
+                        }, // FIX: use realIndex
+                        onLongPress: () => _removeCourse(
+                          course,
+                        ), // NEW: long-press row to remove
                       );
                     },
                   ),
