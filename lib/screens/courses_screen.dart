@@ -276,7 +276,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         ),
                         onTap: () async {
                           // ← CHANGED: opens the detail page
-                          final removed = await Navigator.push<bool>(
+                          // the answer is true (removed), an edited Course
+                          // (homework 2), or null (back button)
+                          final answer = await Navigator.push<Object>(
                             context,
                             MaterialPageRoute(
                               // course, not _courses[index]: the list is
@@ -285,8 +287,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   CourseDetailScreen(course: course),
                             ),
                           );
-                          if (removed == true) {
+                          if (answer == true) {
                             setState(() => _courses.remove(course));
+                          } else if (answer is Course) {
+                            // ← NEW (homework 2): replace that row
+                            setState(() {
+                              _courses[_courses.indexOf(course)] = answer;
+                            });
                           }
                         },
                         onLongPress: () => _confirmRemove(course), // ← NEW
