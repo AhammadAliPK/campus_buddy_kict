@@ -8,9 +8,6 @@ const List<Course> courses = [
     3,
     'Tuesday',
     Icons.computer,
-    '14:00 - 15:20',
-    'LR 13',
-    'Dr. POYILIKANDIYIL',
   ),
   Course(
     'CSCI 4300',
@@ -18,9 +15,6 @@ const List<Course> courses = [
     3,
     'Tuesday',
     Icons.calculate,
-    '11:30 - 12:50',
-    'LR 11',
-    'Dr. Yasir',
   ),
   Course(
     'CSCI 4347',
@@ -28,9 +22,50 @@ const List<Course> courses = [
     3,
     'Wednesday',
     Icons.science,
-    '11:30 - 12:50',
-    'LR 14',
-    'Dr. Hamwira',
+  ),
+  Course(
+    'CSCI 4312',
+    'Blockchain and Application',
+    3,
+    'Thursday',
+    Icons.history_edu,
+  ),
+  Course('CSCI 4402', 'Final Year Project II', 4, 'Friday', Icons.book),
+];
+
+/*import 'package:flutter/material.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+
+const List<Course> courses = [
+  Course(
+    'CSCI 4311',
+    'Mobile Application Development',
+    3,
+    'Tuesday',
+    Icons.computer,
+    //'14:00 - 15:20',
+    //'LR 13',
+    // 'Dr. POYILIKANDIYIL',
+  ),
+  Course(
+    'CSCI 4300',
+    'Computation and Complexity',
+    3,
+    'Tuesday',
+    Icons.calculate,
+    //'11:30 - 12:50',
+    //'LR 11',
+    // 'Dr. Yasir',
+  ),
+  Course(
+    'CSCI 4347',
+    'Brain Computational Analytics',
+    3,
+    'Wednesday',
+    Icons.science,
+    //'11:30 - 12:50',
+    //'LR 14',
+    // 'Dr. Hamwira',
   ),
   Course(
     'CSCI 4312',
@@ -38,9 +73,9 @@ const List<Course> courses = [
     3,
     'Thursday',
     Icons.security,
-    '15:30 - 16:50',
-    'TL-E5-01',
-    null,
+    //'15:30 - 16:50',
+    //'TL-E5-01',
+    // null,
   ),
   Course(
     'CSCI 4402',
@@ -48,8 +83,8 @@ const List<Course> courses = [
     4,
     'Friday',
     Icons.book,
-    '09:00 - 10:20',
-    'TBD',
-    null,
+    //'09:00 - 10:20',
+    //'TBD',
+    // null,
   ),
-];
+];*/
