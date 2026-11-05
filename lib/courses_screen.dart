@@ -1,4 +1,3 @@
-
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -56,13 +55,33 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }).toList();
   }
 
-  void _openCourse(Course course) {
-    Navigator.push(
+  // WEEK 6: Navigator.push + MaterialPageRoute + passing data
+  // The Course object is passed to CourseDetailsScreen.
+  // The returned bool tells this screen whether the course was deleted.
+  Future<void> _openCourse(Course course) async {
+    final bool? deleted = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => CourseDetailsScreen(course: course),
       ),
     );
+
+    // WEEK 6: Receiving data returned through Navigator.pop().
+    if (deleted == true && mounted) {
+      setState(() {
+        _courses.removeWhere(
+          (item) => item.code == course.code,
+        );
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${course.code} deleted successfully.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: _darkTurquoise,
+        ),
+      );
+    }
   }
 
   void _toggleFavorite(Course course) {
@@ -781,7 +800,8 @@ class _CourseListCard extends StatelessWidget {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(23),
         child: InkWell(
-          onTap: onEnrollmentTap,
+          // IMPORTANT: Tapping the card opens Course Details.
+          onTap: onTap,
           onLongPress: onDelete,
           borderRadius: BorderRadius.circular(23),
           splashColor: _turquoise.withValues(alpha: 0.08),
@@ -854,23 +874,37 @@ class _CourseListCard extends StatelessWidget {
                     size: 25,
                   ),
                 ),
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: course.enrolled
-                        ? Colors.green.withValues(alpha: 0.12)
-                        : _turquoise.withValues(alpha: 0.09),
-                    shape: BoxShape.circle,
+
+                // Enrollment is a separate button.
+                IconButton(
+                  tooltip: course.enrolled
+                      ? 'Remove enrollment'
+                      : 'Enroll in course',
+                  onPressed: onEnrollmentTap,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(
+                    minWidth: 36,
+                    minHeight: 36,
                   ),
-                  child: Icon(
-                    course.enrolled
-                        ? Icons.check_rounded
-                        : Icons.arrow_forward_ios_rounded,
-                    color: course.enrolled
-                        ? Colors.green
-                        : _darkTurquoise,
-                    size: 17,
+                  padding: EdgeInsets.zero,
+                  icon: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: course.enrolled
+                          ? Colors.green.withValues(alpha: 0.12)
+                          : _turquoise.withValues(alpha: 0.09),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      course.enrolled
+                          ? Icons.check_rounded
+                          : Icons.add_rounded,
+                      color: course.enrolled
+                          ? Colors.green
+                          : _darkTurquoise,
+                      size: 19,
+                    ),
                   ),
                 ),
               ],
@@ -909,8 +943,8 @@ class _CourseGridCard extends StatelessWidget {
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(24),
         child: InkWell(
-        onTap: onTap,
-        onLongPress: onDelete,
+          onTap: onTap,
+          onLongPress: onDelete,
           borderRadius: BorderRadius.circular(24),
           child: Padding(
             padding: const EdgeInsets.all(13),
@@ -974,7 +1008,7 @@ class _CourseGridCard extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 9,
-                    vertical: 8,
+                    vertical: 5,
                   ),
                   decoration: BoxDecoration(
                     color: _paleAqua,
@@ -997,12 +1031,27 @@ class _CourseGridCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      if (course.enrolled)
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          size: 16,
-                          color: Colors.green,
+                      IconButton(
+                        tooltip: course.enrolled
+                            ? 'Remove enrollment'
+                            : 'Enroll in course',
+                        onPressed: onEnrollmentTap,
+                        visualDensity: VisualDensity.compact,
+                        constraints: const BoxConstraints(
+                          minWidth: 30,
+                          minHeight: 30,
                         ),
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          course.enrolled
+                              ? Icons.check_circle_rounded
+                              : Icons.add_circle_outline_rounded,
+                          size: 19,
+                          color: course.enrolled
+                              ? Colors.green
+                              : _darkTurquoise,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -1119,6 +1168,39 @@ class CourseDetailsScreen extends StatelessWidget {
     required this.course,
   });
 
+  Future<void> _confirmDelete(BuildContext context) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Delete Course?'),
+        content: Text(
+          'Are you sure you want to delete '
+          '${course.code} - ${course.name}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      // WEEK 6: Return data to the previous screen.
+      Navigator.pop(context, true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1172,6 +1254,8 @@ class CourseDetailsScreen extends StatelessWidget {
                     value: course.lecturer,
                   ),
                   const SizedBox(height: 18),
+
+                  // WEEK 6: Navigator.pop()
                   SizedBox(
                     height: 53,
                     child: FilledButton.icon(
@@ -1190,6 +1274,89 @@ class CourseDetailsScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(18),
                         ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // WEEK 6: Named route navigation.
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(
+                        context,
+                        '/profile-page',
+                      );
+                    },
+                    icon: const Icon(Icons.person_outline_rounded),
+                    label: const Text('Open Profile (Named Route)'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _darkTurquoise,
+                      side: const BorderSide(color: _turquoise),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // WEEK 6: Navigator.pushReplacement.
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(
+                        context,
+                        '/profile-page',
+                      );
+                    },
+                    icon: const Icon(Icons.swap_horiz_rounded),
+                    label: const Text('Replace with Profile'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _darkTurquoise,
+                      side: const BorderSide(color: _turquoise),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // WEEK 6: Navigator.popUntil.
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.popUntil(
+                        context,
+                        ModalRoute.withName('/'),
+                      );
+                    },
+                    icon: const Icon(Icons.home_rounded),
+                    label: const Text('Back to Home'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _darkTurquoise,
+                      side: const BorderSide(color: _turquoise),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // WEEK 6: Return true to the previous screen after deletion.
+                  OutlinedButton.icon(
+                    onPressed: () => _confirmDelete(context),
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    label: const Text('Delete This Course'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.red.shade700,
+                      side: BorderSide(color: Colors.red.shade200),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18),
                       ),
                     ),
                   ),

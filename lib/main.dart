@@ -18,6 +18,7 @@ class CampusBuddyKictApp extends StatelessWidget {
     return MaterialApp(
       title: 'Campus Buddy KICT',
       debugShowCheckedModeBanner: false,
+
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -70,10 +71,21 @@ class CampusBuddyKictApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const CampusHomeScreen(),
+
+      // WEEK 6: Named Routes
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const CampusHomeScreen(),
+
+        '/profile-page': (context) => const ProfileScreen(),
+      },
     );
   }
 }
+
+// ============================================================
+// CAMPUS HOME SCREEN
+// ============================================================
 
 class CampusHomeScreen extends StatefulWidget {
   const CampusHomeScreen({super.key});
@@ -97,6 +109,8 @@ class _CampusHomeScreenState extends State<CampusHomeScreen> {
         index: _selectedIndex,
         children: _screens,
       ),
+
+      // WEEK 6: Bottom Navigation Bar
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
