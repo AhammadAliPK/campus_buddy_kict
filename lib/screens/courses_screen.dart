@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart'; // ← NEW this week
 import 'package:campus_buddy_kict/add_course_dialog.dart'; // ← NEW
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart'; // ← NEW
+import 'package:campus_buddy_kict/screens/confirm_screen.dart'; // ← NEW (exercise)
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -74,6 +76,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.remove(course));
   }
 
+  // ← NEW (exercise): works here because this screen owns _courses
+  Future<void> _clearFavourites() async {
+    final yes = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ConfirmScreen(
+          message: 'This removes the star from every course.',
+        ),
+      ),
+    );
+    if (yes != true) return; // No, or the back button (null)
+    setState(() {
+      _courses = [for (final c in _courses) c.copyWith(isFavorite: false)];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0; // ← NEW
@@ -108,6 +126,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            // ← NEW (exercise)
+            icon: const Icon(Icons.star_border),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavourites,
+          ),
           IconButton(
             // ← NEW: opens the Add popup
             icon: const Icon(Icons.add),
@@ -213,22 +237,27 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       // real position in _courses before changing it
                       final i = _courses.indexOf(course);
                       return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer,
-                          child: Icon(
-                            course
-                                    .enrolled // ← CHANGED: was course.icon
-                                ? Icons.check_circle
-                                : course.icon,
-                            color:
-                                course
-                                    .enrolled // ← CHANGED
-                                ? Colors.green
-                                : Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer,
+                        leading: GestureDetector(
+                          // ← CHANGED: row tap now opens details, so
+                          // tapping the round icon enrolls instead
+                          onTap: () => _toggleEnrolled(i),
+                          child: CircleAvatar(
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer,
+                            child: Icon(
+                              course
+                                      .enrolled // ← CHANGED: was course.icon
+                                  ? Icons.check_circle
+                                  : course.icon,
+                              color:
+                                  course
+                                      .enrolled // ← CHANGED
+                                  ? Colors.green
+                                  : Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                            ),
                           ),
                         ),
                         title: Text(course.code),
@@ -245,7 +274,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           onPressed: () => _toggleFavorite(i),
                         ),
-                        onTap: () => _toggleEnrolled(i), // ← CHANGED
+                        onTap: () async {
+                          // ← CHANGED: opens the detail page
+                          final removed = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              // course, not _courses[index]: the list is
+                              // sorted + filtered, so index != position in _courses
+                              builder: (_) =>
+                                  CourseDetailScreen(course: course),
+                            ),
+                          );
+                          if (removed == true) {
+                            setState(() => _courses.remove(course));
+                          }
+                        },
                         onLongPress: () => _confirmRemove(course), // ← NEW
                       );
                     },
