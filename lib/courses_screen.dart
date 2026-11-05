@@ -1,3 +1,4 @@
+// Muhammad Luqman Hakim bin Isman · 2310795
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 
@@ -9,23 +10,29 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
-  bool isGrid = false;
+  bool _isGrid = false;
 
   @override
   Widget build(BuildContext context) {
+    // C. total credit hours (all courses)
     int totalCh = 0;
     for (final c in sampleCourses) {
-      totalCh += c.creditHours;
+      totalCh = totalCh + c.creditHours;
     }
+
+    // Exercise: only show one day's courses
+    final shown =
+        sampleCourses.where((c) => c.day == 'Monday').toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
           IconButton(
-            icon: Icon(isGrid ? Icons.list : Icons.grid_on),
-            tooltip: 'Toggle view',
-            onPressed: () => setState(() => isGrid = !isGrid),
+            // shows what tapping will switch TO
+            icon: _isGrid ? const Icon(Icons.list) : const Icon(Icons.grid_on),
+            tooltip: _isGrid ? 'List view' : 'Grid view',
+            onPressed: () => setState(() => _isGrid = !_isGrid),
           ),
         ],
       ),
@@ -35,62 +42,74 @@ class _CoursesScreenState extends State<CoursesScreen> {
             margin: const EdgeInsets.all(12),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Text('${sampleCourses.length} courses | $totalCh credit hours'),
+              child: Text(
+                  '${sampleCourses.length} courses · $totalCh credit hours'),
             ),
           ),
           Expanded(
-            child: isGrid
-                ? GridView.builder(
-                    padding: const EdgeInsets.all(8),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      childAspectRatio: 1.2,
-                    ),
-                    itemCount: sampleCourses.length,
-                    itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
-                      return Card(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(course.icon, size: 40),
-                              const SizedBox(height: 8),
-                              Text(course.code, style: const TextStyle(fontWeight: FontWeight.bold)),
-                              Text(
-                                course.name,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+            child: shown.isEmpty
+                ? const Center(child: Text('No classes! Alhamdulillah :)'))
+                : _isGrid
+                    ? GridView.builder(
+                        padding: const EdgeInsets.all(8),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2, // two cards per row
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                        ),
+                        itemCount: shown.length,
+                        itemBuilder: (context, index) {
+                          final course = shown[index];
+                          return Card(
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(course.icon, size: 40),
+                                  const SizedBox(height: 8),
+                                  Text(course.code,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold)),
+                                  Text(course.name,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sampleCourses.length,
-                    itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
-                      return ListTile(
-                        tileColor: index.isOdd ? Colors.black.withValues(alpha: 0.03) : null,
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                          child: Icon(course.icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
-                        ),
-                        title: Text(course.code),
-                        subtitle: Text('${course.name} • ${course.creditHours} CH'),
-                        trailing: Text(course.day),
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${course.code} tapped')),
-                        ),
-                      );
-                    },
-                  ),
+                            ),
+                          );
+                        },
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: shown.length,
+                        itemBuilder: (context, index) {
+                          final course = shown[index];
+                          return ListTile(
+                            tileColor: index.isOdd
+                                ? Colors.black.withValues(alpha: 0.03)
+                                : null,
+                            leading: CircleAvatar(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
+                              child: Icon(course.icon,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer),
+                            ),
+                            title: Text(course.code),
+                            subtitle: Text(
+                                '${course.name} · ${course.creditHours} CH'),
+                            trailing: Text(course.day),
+                            onTap: () =>
+                                ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('${course.code} tapped')),
+                            ),
+                          );
+                        },
+                      ),
           ),
         ],
       ),
