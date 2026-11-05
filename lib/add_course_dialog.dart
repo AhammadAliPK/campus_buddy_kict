@@ -2,19 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 
 class AddCourseDialog extends StatefulWidget {
-  const AddCourseDialog({super.key});
+
+  final List<String> existingCodes;
+
+  const AddCourseDialog({super.key, required this.existingCodes});
   @override
   State<AddCourseDialog> createState() => _AddCourseDialogState();
 }
 
 class _AddCourseDialogState extends State<AddCourseDialog> {
-  final _formKey = GlobalKey<FormState>(); // ← NEW: the form's name tag
-  final _codeCtrl = TextEditingController(); // ← NEW: remembers the typing
+  final _formKey = GlobalKey<FormState>();
+  final _codeCtrl = TextEditingController(); 
   final _nameCtrl = TextEditingController();
 
   String _day = 'Monday';
   static const _days = [
-    // ← NEW: the options
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
   ];
 
@@ -64,6 +66,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                   if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(t)) {
                     return 'Format: 4 letters + 4 digits';
                   }
+                  if(widget.existingCodes.contains(t)) return 'Already added.';
                   return null;
                 },
               ),
