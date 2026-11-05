@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart' as course_data;
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -50,6 +51,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() {
       _courses.add(course);
     });
+  }
+
+  Future<void> _openCourseDetail(int index) async {
+    final course = _courses[index];
+
+    final removed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => CourseDetailScreen(course: course)),
+    );
+
+    if (removed == true && mounted) {
+      setState(() {
+        final currentIndex = _courses.indexOf(course);
+
+        if (currentIndex != -1) {
+          _courses.removeAt(currentIndex);
+        }
+      });
+    }
   }
 
   @override
@@ -111,7 +131,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       final course = _courses[index];
 
                       return GestureDetector(
-                        onTap: () => _toggleEnrolled(index),
+                        onTap: () => _openCourseDetail(index),
                         child: Card(
                           child: Center(
                             child: Column(
@@ -176,7 +196,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           onPressed: () => _toggleFavorite(index),
                         ),
-                        onTap: () => _toggleEnrolled(index),
+                        onTap: () => _openCourseDetail(index),
                       );
                     },
                   ),
