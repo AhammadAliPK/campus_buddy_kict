@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -179,6 +180,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           final course = displayedCourses[index];
                           return InkWell(
                             onLongPress: () => _confirmDeleteCourse(course),
+
+                            onTap: () async {
+                              final removed = await Navigator.push<bool>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CourseDetailScreen(course: course),
+                                ),
+                              );
+
+                              if (removed == true) {
+                                setState(() {
+                                  _courses.removeWhere((c) => c.code == course.code);
+                                });
+                              }
+                            },
+                
                             child: Card(
                               child: Center(
                                 child: Column(
@@ -246,7 +263,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               ),
                               onPressed: () => _toggleFavorite(course),
                             ),
-                            onTap: () => _toggleEnrolled(course),
+                            onTap: () async {
+                              final removed = await Navigator.push<bool>(
+                              context,
+                                MaterialPageRoute(
+                                  builder: (context) => CourseDetailScreen(course: course),
+                                ),
+                              );
+
+                              if (removed == true) {
+                                setState(() {
+                                  _courses.removeWhere((c) => c.code == course.code);
+                                });
+                              }
+                            },
                             onLongPress: () => _confirmDeleteCourse(course),
                           );
                         },
