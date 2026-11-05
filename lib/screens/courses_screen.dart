@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'clear_favourites_screen.dart';
+import 'course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -23,8 +24,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
     super.initState();
     _courses = List.of(sampleCourses);
   }
-
-  void _toggleFavorite(Course course) {
+  
+void _toggleFavorite(Course course) {
   setState(() {
     final index = _courses.indexWhere(
       (c) => c.code == course.code,
@@ -36,6 +37,32 @@ class _CoursesScreenState extends State<CoursesScreen> {
       );
     }
   });
+}
+
+Future<void> _clearAllFavourites() async {
+  final confirmed = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const ClearFavouritesScreen(),
+    ),
+  );
+
+  if (!mounted || confirmed != true) return;
+
+  setState(() {
+    for (int i = 0; i < _courses.length; i++) {
+      _courses[i] = _courses[i].copyWith(
+        isFavorite: false,
+      );
+    }
+  });
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text('All favourites cleared successfully!'),
+      duration: Duration(seconds: 2),
+    ),
+  );
 }
 
 void _toggleEnroll(Course course) {
@@ -50,22 +77,52 @@ void _toggleEnroll(Course course) {
   });
 }
 
+
+
 Future<void> _openCourseDetail(Course course) async {
-  final result = await Navigator.pushNamed(
+  final result = await Navigator.push<Object?>(
     context,
-    '/course-detail',
-    arguments: course,
+    MaterialPageRoute(
+      builder: (context) => CourseDetailScreen(course: course),
+    ),
   );
 
   if (!mounted) return;
 
-  if (result != null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(result.toString()),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  // Remove Course
+  if (result == true) {
+    final index = _courses.indexOf(course);
+
+    if (index != -1) {
+      setState(() {
+        _courses.removeAt(index);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${course.code} removed successfully'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  // Edit Course
+  else if (result is Course) {
+    final index = _courses.indexOf(course);
+
+    if (index != -1) {
+      setState(() {
+        _courses[index] = result;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${result.code} updated successfully!'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 }
 
@@ -180,15 +237,27 @@ Widget build(BuildContext context) {
         .where((course) => course.enrolled)
         .fold<int>(0, (total, course) => total + course.creditHours);
 
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
+        scrolledUnderElevation: 0,
         actions: [
+          // Clear All Favourites
+          IconButton(
+            icon: const Icon(Icons.star_outline),
+            tooltip: 'Clear All Favourites',
+            onPressed: _clearAllFavourites,
+          ),
+
+          // Add Course
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add course',
             onPressed: _openAddDialog,
           ),
+
+          // Grid / List View
           IconButton(
             icon: Icon(_isGrid ? Icons.view_list : Icons.grid_on),
             tooltip: _isGrid ? 'List view' : 'Grid view',
@@ -200,59 +269,10 @@ Widget build(BuildContext context) {
           ),
         ],
       ),
+
       
 body: Column(
   children: [
-    Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
-      ),
-      child: DropdownButtonFormField<String>(
-        value: _selectedDay,
-        decoration: const InputDecoration(
-          labelText: 'Filter by Day',
-          border: OutlineInputBorder(),
-        ),
-        items: [
-          'All',
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-        ].map((day) {
-          return DropdownMenuItem(
-            value: day,
-            child: Text(day),
-          );
-        }).toList(),
-        onChanged: (value) {
-          if (value != null) {
-            setState(() {
-              _selectedDay = value;
-            });
-          }
-        },
-      ),
-    ),
-    Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: FilterChip(
-          label: const Text('Favourites Only'),
-          avatar: const Icon(Icons.star, size: 18),
-          selected: _favoritesOnly,
-          onSelected: (selected) {
-            setState(() {
-              _favoritesOnly = selected;
-            });
-          },
-        ),
-      ),
-    ),
-
     Card(
       margin: const EdgeInsets.all(12),
       child: Padding(
@@ -277,6 +297,60 @@ body: Column(
       ),
     ),
     
+    SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 8,
+      ),
+      child: Row(
+        children: [
+          'All',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+        ].map((day) {
+          final isSelected = _selectedDay == day;
+
+          final label = day == 'All'
+              ? 'All'
+              : day.substring(0, 3);
+
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: Text(label),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  _selectedDay = day;
+                });
+              },
+            ),
+          );
+        }).toList(),
+      ),
+    ),
+
+    Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: FilterChip(
+          label: const Text('Favourites Only'),
+          avatar: const Icon(Icons.star, size: 18),
+          selected: _favoritesOnly,
+          onSelected: (selected) {
+            setState(() {
+              _favoritesOnly = selected;
+            });
+          },
+        ),
+      ),
+    ),
+
 Expanded(
   child: shown.isEmpty
       ? const Center(
