@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_favourites_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -11,11 +13,8 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
-
-  // Work on a mutable copy of the const sampleCourses list (Handout Page 6)
   final List<Course> _courses = List.of(sampleCourses);
 
-  // Flip the favorite star using copyWith inside setState (Section 5 & 7)
   void _toggleFavorite(int index) {
     setState(() {
       _courses[index] = _courses[index].copyWith(
@@ -24,7 +23,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  // Flip the enrolled tick using copyWith inside setState (Section 1, 2, 5 & 7)
   void _toggleEnrolled(int index, bool? v) {
     setState(() {
       _courses[index] = _courses[index].copyWith(
@@ -33,7 +31,43 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  // Open the "Add a course" popup dialog holding a validated Form (Section 3, 4 & 7)
+  // Open detail page; handle both Remove (true) and Edit (Course) results
+  Future<void> _openCourseDetail(Course course) async {
+    final result = await Navigator.push<Object?>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(course: course),
+      ),
+    );
+
+    final targetIndex = _courses.indexOf(course);
+    if (targetIndex == -1) return;
+
+    if (result == true) {
+      setState(() => _courses.removeAt(targetIndex));
+    } else if (result is Course) {
+      setState(() => _courses[targetIndex] = result);
+    }
+  }
+
+  // In-Class Exercise: Clear all favourites from Courses tab
+  Future<void> _confirmAndClearFavourites() async {
+    final confirmed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ClearFavouritesScreen(),
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        for (int i = 0; i < _courses.length; i++) {
+          _courses[i] = _courses[i].copyWith(isFavorite: false);
+        }
+      });
+    }
+  }
+
   Future<void> _showAddCourseDialog() async {
     final formKey = GlobalKey<FormState>();
     final codeController = TextEditingController();
@@ -57,7 +91,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Course code with 4-capital-letter RegExp check (Section 4)
                   TextFormField(
                     controller: codeController,
                     textCapitalization: TextCapitalization.characters,
@@ -76,13 +109,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     },
                   ),
                   const SizedBox(height: 8),
-
-                  // Course name with required check
                   TextFormField(
                     controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Course name',
-                    ),
+                    decoration: const InputDecoration(labelText: 'Course name'),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Course name is required';
@@ -91,8 +120,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     },
                   ),
                   const SizedBox(height: 8),
-
-                  // Venue & Time (optional defaults pre-filled)
                   TextFormField(
                     controller: timeController,
                     decoration: const InputDecoration(labelText: 'Time'),
@@ -110,12 +137,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Day selection using RadioListTile (Section 2)
-                  const Text(
-                    'Day',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  const Text('Day', style: TextStyle(fontWeight: FontWeight.bold)),
                   for (final day in [
                     'Monday',
                     'Tuesday',
@@ -132,8 +154,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       onChanged: (v) => setDialogState(() => selectedDay = v!),
                     ),
                   const SizedBox(height: 8),
-
-                  // Credit hours using Slider (Section 2)
                   Text(
                     'Credit hours: ${creditHours.round()} CH',
                     style: const TextStyle(fontWeight: FontWeight.bold),
@@ -174,8 +194,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ? 'TBA'
                           : venueController.text.trim(),
                       instructorText.isEmpty ? null : instructorText,
-                      false, // isFavorite
-                      true, // isEnrolled by default when added
+                      false,
+                      true,
                     ),
                   );
                 }
@@ -196,7 +216,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Live enrolled count and credit-hour total (Section 7)
     int enrolledCount = 0;
     int enrolledCh = 0;
     for (final c in _courses) {
@@ -211,6 +230,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
         title: const Text('My Courses'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.star_border),
+            tooltip: 'Clear all favourites',
+            onPressed: _confirmAndClearFavourites,
+          ),
+          IconButton(
             icon: Icon(_isGrid ? Icons.list : Icons.grid_on),
             tooltip: _isGrid ? 'List view' : 'Grid view',
             onPressed: () => setState(() => _isGrid = !_isGrid),
@@ -219,7 +243,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
       ),
       body: Column(
         children: [
-          // Summary Card showing live enrolled credit hours
           Card(
             margin: const EdgeInsets.all(12),
             child: Padding(
@@ -237,7 +260,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
             ),
           ),
-          // Toggle between Grid and List
           Expanded(
             child: _isGrid
                 ? GridView.builder(
@@ -253,65 +275,67 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     itemBuilder: (context, index) {
                       final course = _courses[index];
                       return Card(
-                        child: Stack(
-                          children: [
-                            // Top-left Checkbox for enrollment
-                            Positioned(
-                              top: 4,
-                              left: 4,
-                              child: Checkbox(
-                                value: course.isEnrolled,
-                                onChanged: (v) => _toggleEnrolled(index, v),
-                              ),
-                            ),
-                            // Top-right Star for favorite
-                            Positioned(
-                              top: 4,
-                              right: 4,
-                              child: IconButton(
-                                icon: Icon(
-                                  course.isFavorite
-                                      ? Icons.star
-                                      : Icons.star_border,
-                                  color:
-                                      course.isFavorite ? Colors.amber : null,
+                        child: InkWell(
+                          onTap: () => _openCourseDetail(course),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                top: 4,
+                                left: 4,
+                                child: Checkbox(
+                                  value: course.isEnrolled,
+                                  onChanged: (v) => _toggleEnrolled(index, v),
                                 ),
-                                onPressed: () => _toggleFavorite(index),
                               ),
-                            ),
-                            Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const SizedBox(height: 16),
-                                  Icon(course.icon, size: 36),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    course.code,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: IconButton(
+                                  icon: Icon(
+                                    course.isFavorite
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                    color:
+                                        course.isFavorite ? Colors.amber : null,
                                   ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                    ),
-                                    child: Text(
-                                      course.name,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '${course.creditHours} CH',
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                ],
+                                  onPressed: () => _toggleFavorite(index),
+                                ),
                               ),
-                            ),
-                          ],
+                              Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const SizedBox(height: 16),
+                                    Icon(course.icon, size: 36),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      course.code,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                      ),
+                                      child: Text(
+                                        course.name,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${course.creditHours} CH',
+                                      style:
+                                          Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -344,8 +368,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           onPressed: () => _toggleFavorite(index),
                         ),
-                        onTap: () =>
-                            _toggleEnrolled(index, !course.isEnrolled),
+                        onTap: () => _openCourseDetail(course),
                       );
                     },
                   ),
