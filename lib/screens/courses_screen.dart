@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/clear_favourite.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -87,6 +88,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
     _courses = List.of(sampleCourses);
   }
 
+  Future<void> _confirmClearFavourites(BuildContext context) async {
+    final confirmed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const ClearFavouritesConfirmScreen()),
+    );
+
+    if (!mounted) return;
+
+    if (confirmed == true) {
+      setState(() {
+        _courses = _courses.map((course) {
+          return course.copyWith(isFavourite: false);
+        }).toList();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final courses = _filteredCourses;
@@ -101,6 +119,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            onPressed: () => _confirmClearFavourites(context),
+            icon: const Icon(Icons.delete_outline),
+            tooltip: 'Clear All Favourites',
+          ),
+
           IconButton(
             onPressed: _addCourse,
             icon: const Icon(Icons.add),
@@ -269,16 +293,37 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         ),
 
                         onTap: () async {
-                          final removed = await Navigator.push<bool>(
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  CourseDetailScreen(course: _courses[index]),
+                              builder: (_) => CourseDetailScreen(
+                                course: course,
+                                existingCodes: _courses
+                                    .map((c) => c.code)
+                                    .toList(),
+                              ),
                             ),
                           );
-                          if (removed == true) {
-                            setState(() => _courses.removeAt(index));
-                          }
+
+                          if (!mounted || result == null) return;
+
+                          setState(() {
+                            if (result is Course) {
+                              // Update the existing course.
+                              final index = _courses.indexWhere(
+                                (c) => c.code == course.code,
+                              );
+
+                              if (index != -1) {
+                                _courses[index] = result;
+                              }
+                            } else if (result == true) {
+                              // Remove the course.
+                              _courses.removeWhere(
+                                (c) => c.code == course.code,
+                              );
+                            }
+                          });
                         },
                       );
                     },
