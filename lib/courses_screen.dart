@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -9,21 +11,96 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
+  bool _favoritesOnly = false;
+  late List<Course> _courses;
+
+  void _toggleEnrolled(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        enrolled: !_courses[index].enrolled,
+      );
+    });
+  }
+
+  void _toggleFavorite(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        isFavorite: !_courses[index].isFavorite,
+      );
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (_) =>
+          AddCourseDialog(existingCodes: _courses.map((c) => c.code).toList()),
+    );
+    if (course == null) return;
+    setState(() => _courses.add(course));
+  }
+
+  Future<void> _removeCourse(int index) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove course?'),
+        content: const Text('Are you sure you want to remove this course?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _courses.removeAt(index);
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses);
+  }
+
   bool _isGrid = false;
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
 
-    for (final c in sampleCourses) {
+    for (final c in _courses) {
       totalCh += c.creditHours;
     }
-final shown = sampleCourses.toList();
 
+    final enrolledCh = _courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
+
+    //final shown = _courses.toList();
+    //final shown = sampleCourses.where((c) => c.day == 'Monday').toList();
+
+    final shown = _courses.where((course) {
+      if (_favoritesOnly && !course.isFavorite) {
+        return false;
+      }
+
+      return true;
+    }).toList();
     shown.sort((a, b) => dayOrder[a.day]!.compareTo(dayOrder[b.day]!));
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(icon: const Icon(Icons.add), onPressed: _addCourse),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
@@ -38,8 +115,24 @@ final shown = sampleCourses.toList();
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
+                '${_courses.length} courses · $totalCh credit hours\n Enrolled: $enrolledCh CH',
               ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                FilterChip(
+                  label: const Text('★ favourites only'),
+                  selected: _favoritesOnly,
+                  onSelected: (value) {
+                    setState(() {
+                      _favoritesOnly = value;
+                    });
+                  },
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -52,9 +145,9 @@ final shown = sampleCourses.toList();
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: sampleCourses.length,
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = shown[index];
 
                       return Card(
                         child: Center(
@@ -86,13 +179,14 @@ final shown = sampleCourses.toList();
                       );
                     },
                   )
-               : shown.isEmpty
+                : shown.isEmpty
                 ? const Center(child: Text('No classes! Alhamdulillah :)'))
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: shown.length,
                     itemBuilder: (context, index) {
                       final course = shown[index];
+                      final actualIndex = _courses.indexOf(course);
 
                       return ListTile(
                         tileColor: index.isOdd
@@ -103,22 +197,28 @@ final shown = sampleCourses.toList();
                               .colorScheme
                               .primaryContainer,
                           child: Icon(
-                            course.icon,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
+                            course.enrolled ? Icons.check_circle : course.icon,
+                            color: course.enrolled
+                                ? Colors.green
+                                : Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
                           ),
                         ),
                         title: Text(course.code),
-                       subtitle: Text(
+                        subtitle: Text(
                           '${course.name} · ${course.creditHours} CH\n'
                           '${course.day} ${course.time.split('–')[0]} · ${course.venue}\n'
                           '${course.instructor ?? 'TBA'}',
-                          
                         ),
-                        trailing: Text(course.day),
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${course.code} tapped')),
+                        onTap: () => _toggleEnrolled(actualIndex),
+                        onLongPress: () => _removeCourse(actualIndex),
+                        trailing: IconButton(
+                          icon: Icon(
+                            course.isFavorite ? Icons.star : Icons.star_border,
+                            color: course.isFavorite ? Colors.amber : null,
+                          ),
+                          onPressed: () => _toggleFavorite(actualIndex),
                         ),
                       );
                     },
