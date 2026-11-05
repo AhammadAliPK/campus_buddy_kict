@@ -1,4 +1,4 @@
-import 'package:campus_buddy_kict/courses_screen.dart';
+import 'package:campus_buddy_kict/screens/courses_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

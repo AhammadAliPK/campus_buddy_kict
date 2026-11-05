@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -69,7 +70,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                // Step 16: Updated summary text with enrolled CH count
                 '${_courses.length} courses · $totalCh credit hours\nEnrolled: $enrolledCh CH',
                 style: const TextStyle(
                   fontSize: 16,
@@ -122,7 +122,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     itemBuilder: (context, index) {
                       final course = _courses[index];
                       return ListTile(
-                        // Step 17: Leading icon toggles to green checkmark when enrolled
                         leading: CircleAvatar(
                           backgroundColor: Theme.of(context)
                               .colorScheme
@@ -149,8 +148,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           onPressed: () => _toggleFavorite(index),
                         ),
-                        // Step 15: Tapping row toggles enrolled status
-                        onTap: () => _toggleEnrolled(index),
+                        // Step 5: Open CourseDetailScreen on row tap
+                        onTap: () async {
+                          final removed = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  CourseDetailScreen(course: _courses[index]),
+                            ),
+                          );
+
+                          if (removed == true) {
+                            setState(() => _courses.removeAt(index));
+                          }
+                        },
                       );
                     },
                   ),
