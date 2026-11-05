@@ -9,13 +9,13 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
-  bool _isGrid = false;
+  bool isGrid = false;
 
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
     for (final c in sampleCourses) {
-      totalCh = totalCh + c.creditHours;
+      totalCh += c.creditHours;
     }
 
     return Scaffold(
@@ -23,9 +23,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
         title: const Text('My Courses'),
         actions: [
           IconButton(
-            icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
-            tooltip: 'Grid view',
-            onPressed: () => setState(() => _isGrid = !_isGrid),
+            icon: Icon(isGrid ? Icons.list : Icons.grid_on),
+            tooltip: 'Toggle view',
+            onPressed: () => setState(() => isGrid = !isGrid),
           ),
         ],
       ),
@@ -35,19 +35,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
             margin: const EdgeInsets.all(12),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(
-                  '${sampleCourses.length} courses · $totalCh credit hours'),
+              child: Text('${sampleCourses.length} courses | $totalCh credit hours'),
             ),
           ),
           Expanded(
-            child: _isGrid
+            child: isGrid
                 ? GridView.builder(
                     padding: const EdgeInsets.all(8),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 8,
                       crossAxisSpacing: 8,
+                      childAspectRatio: 1.2,
                     ),
                     itemCount: sampleCourses.length,
                     itemBuilder: (context, index) {
@@ -59,13 +58,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             children: [
                               Icon(course.icon, size: 40),
                               const SizedBox(height: 8),
-                              Text(course.code,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold)),
-                              Text(course.name,
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis),
+                              Text(course.code, style: const TextStyle(fontWeight: FontWeight.bold)),
+                              Text(
+                                course.name,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ],
                           ),
                         ),
@@ -78,20 +77,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     itemBuilder: (context, index) {
                       final course = sampleCourses[index];
                       return ListTile(
-                        tileColor: index.isOdd
-                            ? Colors.black.withValues(alpha: 0.03)
-                            : null,
+                        tileColor: index.isOdd ? Colors.black.withValues(alpha: 0.03) : null,
                         leading: CircleAvatar(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primaryContainer,
-                          child: Icon(course.icon,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer),
+                          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                          child: Icon(course.icon, color: Theme.of(context).colorScheme.onPrimaryContainer),
                         ),
                         title: Text(course.code),
-                        subtitle:
-                            Text('${course.name} · ${course.creditHours} CH'),
+                        subtitle: Text('${course.name} • ${course.creditHours} CH'),
                         trailing: Text(course.day),
                         onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('${course.code} tapped')),
