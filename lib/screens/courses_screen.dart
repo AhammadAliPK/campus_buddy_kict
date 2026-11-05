@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
-
+import 'package:campus_buddy_kict/screens/confirm_clear_screen.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/data/sample_courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 
-class TimetableScreen extends StatefulWidget {
-  const TimetableScreen({super.key});
+class CoursesScreen extends StatefulWidget {
+  const CoursesScreen({super.key});
 
   @override
-  State<TimetableScreen> createState() => _TimetableScreenState();
+  State<CoursesScreen> createState() => _CoursesScreenState();
 }
 
-class _TimetableScreenState extends State<TimetableScreen> {
+class _CoursesScreenState extends State<CoursesScreen> {
   bool _showGrid = false;
 
   late List<Course> _courses;
@@ -121,6 +122,21 @@ class _TimetableScreenState extends State<TimetableScreen> {
               });
             },
           ),
+          IconButton(
+            tooltip: 'Clear favourites',
+            icon: const Icon(Icons.star_outline),
+            onPressed: () async {
+              final yes = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(builder: (_) => const ConfirmClearScreen()),
+              );
+              if (yes == true) {
+                setState(() {
+                  _courses = [for (final c in _courses) c.copyWith(isFavorite: false)];
+                });
+              }
+            },
+          ),
         ],
       ),
       body: Column(
@@ -215,7 +231,21 @@ class _TimetableScreenState extends State<TimetableScreen> {
             ),
             onPressed: () => _toggleFavorite(course),
           ),
-          onTap: () => _toggleEnrolled(course),
+          onTap: () async {
+            final tapped = course;
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CourseDetailScreen(course: tapped),
+              ),
+            );
+            if (result == true) {
+              setState(() => _courses.removeWhere((c) => c.code == tapped.code));
+            } else if (result is Course) {
+              final i = _courses.indexWhere((c) => c.code == tapped.code);
+              if (i != -1) setState(() => _courses[i] = result);
+            }
+          },
           onLongPress: () => _confirmRemove(course),
         );
       },
@@ -241,8 +271,22 @@ class _TimetableScreenState extends State<TimetableScreen> {
           margin: EdgeInsets.zero,
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: () => _toggleEnrolled(course),
-          onLongPress: () => _confirmRemove(course),
+            onTap: () async {
+              final tapped = course;
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CourseDetailScreen(course: tapped),
+                ),
+              );
+              if (result == true) {
+                setState(() => _courses.removeWhere((c) => c.code == tapped.code));
+              } else if (result is Course) {
+                final i = _courses.indexWhere((c) => c.code == tapped.code);
+                if (i != -1) setState(() => _courses[i] = result);
+              }
+            },
+            onLongPress: () => _confirmRemove(course),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
