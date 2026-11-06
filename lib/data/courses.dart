@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 
-const List<Course> sampleCourses = [
+final  List<Course> sampleCourses = [
   Course(
     'CSCI 4311',
     'Mobile Application Development',
