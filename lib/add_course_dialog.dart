@@ -63,7 +63,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                   }
 
                   // Check for duplicates
-                  if (widget.existingCodes.contains(t)) {
+                  if (widget.existingCodes.contains(t.toUpperCase())) {
                     return 'Already added';
                   }
                   return null;

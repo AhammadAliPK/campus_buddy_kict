@@ -14,6 +14,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   late List<Course> _courses;
 
   bool _isGrid = false;
+  bool _favouritesOnly = false; // tracks fav filter is switched on or off
 
   void _toggleFavourite(int index) {
     setState(() {
@@ -43,6 +44,32 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
+  Future<void> _removeCourse(Course course) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove course?'),
+        content: Text('Are you sure you want to remove ${course.code}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _courses.removeWhere((c) => c.code == course.code);
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -53,7 +80,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
   Widget build(BuildContext context) {
     final dayValues = {'M-W': 1, 'T-TH': 2, 'FRI': 5};
 
-    final sortedCourses = sampleCourses.toList();
+    final sortedCourses = _courses.where((c) {
+      if (_favouritesOnly) return c.isFavourite;
+      return true;
+    }).toList();
+
     sortedCourses.sort(
       (a, b) => (dayValues[a.day] ?? 8).compareTo(dayValues[b.day] ?? 8),
     );
@@ -98,10 +129,29 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
           ),
 
+          // FilterChip row
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Row(
+              children: [
+                FilterChip(
+                  label: const Text('★ favourites only'),
+                  selected: _favouritesOnly,
+                  onSelected: (value) {
+                    setState(() {
+                      _favouritesOnly = value;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+
           Expanded(
             child: sortedCourses.isEmpty
                 ? const Center(child: Text('No classes! Alhamdulillah :)'))
                 : _isGrid
+                // GridView
                 ? GridView.builder(
                     padding: const EdgeInsets.all(8),
                     gridDelegate:
@@ -110,9 +160,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: _courses.length,
+                    itemCount: sortedCourses.length,
                     itemBuilder: (context, index) {
-                      final course = _courses[index];
+                      final course = sortedCourses[index];
 
                       return Card(
                         child: Center(
@@ -141,9 +191,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: _courses.length,
+                    itemCount: sortedCourses.length,
                     itemBuilder: (context, index) {
-                      final course = _courses[index];
+                      final course = sortedCourses[index];
+                      final courseIndex = _courses.indexWhere(
+                        (c) => c.code == course.code,
+                      );
 
                       return ListTile(
                         tileColor: index.isOdd
@@ -171,9 +224,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             course.isFavourite ? Icons.star : Icons.star_border,
                             color: course.isFavourite ? Colors.amber : null,
                           ),
-                          onPressed: () => _toggleFavourite(index),
+                          onPressed: () => _toggleFavourite(courseIndex),
                         ),
-                        onTap: () => _toggleEnrolled(index),
+                        onTap: () => _toggleEnrolled(courseIndex),
+                        onLongPress: () => _removeCourse(course),
                       );
                     },
                   ),
