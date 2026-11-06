@@ -1,0 +1,4 @@
+The favourite course states are stored inside the private _courses list in CoursesScreen. 
+Since HomeScreen is a separate widget, it cannot directly access or modify that list. 
+Therefore, even if Home receives true from the confirmation screen, it cannot update the favourite statuses. 
+This problem can be solved using state management, which allows multiple screens to access and update shared application data.

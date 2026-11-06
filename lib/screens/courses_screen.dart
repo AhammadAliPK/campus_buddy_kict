@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_favorites_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -29,6 +31,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
       _courses[index] = _courses[index].copyWith(
         isFavorite: !_courses[index].isFavorite,
       );
+    });
+  }
+
+  Future<void> _clearAllFavorites() async {
+    final confirmed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const ClearFavoritesScreen()),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      for (int i = 0; i < _courses.length; i++) {
+        _courses[i] = _courses[i].copyWith(isFavorite: false);
+      }
     });
   }
 
@@ -112,6 +129,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 _isGrid = !_isGrid;
               });
             },
+          ),
+          IconButton(
+            icon: const Icon(Icons.star_outline),
+            tooltip: 'Clear All Favourites',
+            onPressed: _clearAllFavorites,
           ),
         ],
       ),
@@ -264,7 +286,35 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           onPressed: () => _toggleFavorite(originalIndex),
                         ),
 
-                        onTap: () => _toggleEnrolled(originalIndex),
+                        onTap: () async {
+                          final selectedCourse = course;
+
+                          final result = await Navigator.push<Object>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CourseDetailScreen(course: selectedCourse),
+                            ),
+                          );
+
+                          if (!mounted) return;
+
+                          final originalIndex = _courses.indexOf(
+                            selectedCourse,
+                          );
+
+                          if (originalIndex == -1) return;
+
+                          if (result == true) {
+                            setState(() {
+                              _courses.removeAt(originalIndex);
+                            });
+                          } else if (result is Course) {
+                            setState(() {
+                              _courses[originalIndex] = result;
+                            });
+                          }
+                        },
                         onLongPress: () => _removeCourse(course),
                       );
                     },

@@ -94,9 +94,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Profile photo
-            const CircleAvatar(
-              radius: 48,
-              backgroundImage: AssetImage('assets/me.jpg'),
+            CircleAvatar(
+              radius: 60,
+              backgroundColor: Colors.grey.shade200,
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/me.jpg',
+                  width: 110,
+                  height: 110,
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
 
             const SizedBox(height: 12),
