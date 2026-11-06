@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
 import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_fav_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -59,6 +60,22 @@ class HomeScreen extends StatelessWidget {
                 trailing: Icon(Icons.chevron_right),
                 onTap: () => Navigator.pushNamed(context, '/about'),
               ),
+            ),
+
+            OutlinedButton(
+              onPressed: () async {
+                final confirmed = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute<bool>(
+                    builder: (_) => const ClearFavouritesScreen(),
+                  ),
+                );
+
+                if (confirmed == true) {
+                  debugPrint('Home received Yes.');
+                }
+              },
+              child: const Text('Clear all favourites'),
             ),
           ],
         ),

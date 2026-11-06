@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/clear_fav_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -27,6 +28,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
       _courses[index] = _courses[index].copyWith(
         isFavorite: !_courses[index].isFavorite,
       );
+    });
+  }
+
+  Future<void> _clearFavourites() async {
+    final confirmed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute<bool>(builder: (_) => const ClearFavouritesScreen()),
+    );
+
+    if (!mounted || confirmed != true) return;
+
+    setState(() {
+      for (var i = 0; i < _courses.length; i++) {
+        if (_courses[i].isFavorite) {
+          _courses[i] = _courses[i].copyWith(isFavorite: false);
+        }
+      }
     });
   }
 
@@ -153,6 +171,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
             onSelected: (selected) {
               setState(() => _favoritesOnly = selected);
             },
+          ),
+
+          OutlinedButton(
+            onPressed: _clearFavourites,
+            child: const Text('Clear all favourites'),
           ),
 
           Expanded(
