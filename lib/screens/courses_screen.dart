@@ -91,21 +91,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
         .toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Courses'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            tooltip: 'Add course',
-            onPressed: _addCourse,
-          ),
-          IconButton(
-            icon: Icon(_isGrid ? Icons.list : Icons.grid_on),
-            tooltip: _isGrid ? 'List view' : 'Grid view',
-            onPressed: () => setState(() => _isGrid = !_isGrid),
-          ),
-        ],
-      ),
+        appBar: AppBar(
+          title: const Text('My Courses'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: _addCourse,
+            ),
+            IconButton(
+              icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
+              tooltip: 'Grid view',
+              onPressed: () => setState(() => _isGrid = !_isGrid),
+            ),
+          ],
+        ),
       body: Column(
         children: [
           Card(
@@ -214,14 +213,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           onPressed: () => _toggleFavorite(realIndex),
                         ),
                         onTap: () async {
-                          final removed = await Navigator.push<bool>(
+                          final result = await Navigator.push(      // ← drop the <bool>: could be bool OR Course
                             context,
                             MaterialPageRoute(
-                              builder: (_) => CourseDetailScreen(course: course),  // ← was _courses[index]
+                              builder: (_) => CourseDetailScreen(course: course),
                             ),
                           );
-                          if (removed == true) {
-                            setState(() => _courses.remove(course));               // ← was _courses.removeAt(index)
+                          if (result == true) {
+                            setState(() => _courses.remove(course));          // removed
+                          } else if (result is Course) {
+                            setState(() {
+                              final i = _courses.indexOf(course);
+                              _courses[i] = result;                            // edited → swap the row
+                            });
                           }
                         },
                         onLongPress: () => _confirmRemove(realIndex),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/screens/edit_course_screen.dart';
 
 class CourseDetailScreen extends StatelessWidget {
   const CourseDetailScreen({super.key, required this.course});
@@ -8,7 +9,24 @@ class CourseDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(course.code)),
+      appBar: AppBar(
+        title: Text(course.code),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final navigator = Navigator.of(context);
+              final edited = await Navigator.push<Course>(
+                context,
+                MaterialPageRoute(builder: (_) => EditCourseScreen(course: course)),
+              );
+              if (edited != null) {
+                navigator.pop(edited);
+              }
+            },
+          ),
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
