@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 
 class AddCourseDialog extends StatefulWidget {
-  const AddCourseDialog({super.key});
+  const AddCourseDialog({super.key, required this.existingCodes});
+
+  final List<String> existingCodes;
 
   @override
   State<AddCourseDialog> createState() => _AddCourseDialogState();
@@ -36,7 +38,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       'TBA', // Placeholder time
       venue: 'TBA', // Placeholder venue
     );
-    Navigator.pop(context);
+    Navigator.pop(context, course);
   }
 
   @override

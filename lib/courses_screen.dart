@@ -16,6 +16,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
       .fold<double>(0, (sum, c) => sum + c.creditHours);
 
   bool _isGrid = false;
+  String _selectedDay = 'All';
+  bool _favoritesOnly = false;
 
   late List<Course> _courses;
 
@@ -38,10 +40,35 @@ class _CoursesScreenState extends State<CoursesScreen> {
   Future<void> _addCourse() async {
     final course = await showDialog<Course>(
       context: context,
-      builder: (_) => const AddCourseDialog(),
+      builder: (_) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).whereType<String>().toList(),
+      ),
     );
     if (course == null) return; // the user cancelled, so do nothing
     setState(() => _courses.add(course));
+  }
+
+  Future<void> _removeCourse(Course course) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Are you sure?'),
+        content: Text('Remove ${course.code}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || confirmed != true) return;
+    setState(() => _courses.remove(course));
   }
 
   @override
@@ -69,7 +96,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
       'Sunday': 7,
     };
 
-    final shown = sampleCourses.toList();
+    final shown = _courses.where((course) {
+      final matchesDay = _selectedDay == 'All' || course.day == _selectedDay;
+      final matchesFavorite = !_favoritesOnly || course.isFavorite;
+
+      return matchesDay && matchesFavorite;
+    }).toList();
 
     shown.sort(
       (a, b) => (dayOrder[a.day] ?? 8).compareTo(dayOrder[b.day] ?? 8),
@@ -104,6 +136,24 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
           ),
 
+          DropdownButton<String>(
+            value: _selectedDay,
+            items: ['All', ...dayOrder.keys]
+                .map((day) => DropdownMenuItem(value: day, child: Text(day)))
+                .toList(),
+            onChanged: (day) {
+              if (day == null) return;
+              setState(() => _selectedDay = day);
+            },
+          ),
+          FilterChip(
+            label: const Text('★ favourites only'),
+            selected: _favoritesOnly,
+            onSelected: (selected) {
+              setState(() => _favoritesOnly = selected);
+            },
+          ),
+
           Expanded(
             child: shown.isEmpty
                 ? const Center(child: Text('No courses available'))
@@ -116,9 +166,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           crossAxisSpacing: 8,
                           mainAxisSpacing: 8,
                         ),
-                    itemCount: _courses.length,
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = _courses[index];
+                      final course = shown[index];
                       return Card(
                         child: Center(
                           child: Column(
@@ -166,10 +216,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
 
-                    itemCount: _courses.length,
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
                       //print('Building row $index');
-                      final course = _courses[index];
+                      final course = shown[index];
+                      final sourceIndex = _courses.indexOf(course);
                       return ListTile(
                         leading: CircleAvatar(
                           backgroundColor: Theme.of(
@@ -196,7 +247,15 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           '${course.day.substring(0, 3)} · ${course.time} · ${course.venue}\n · ${course.instructor ?? 'TBA'}',
                         ),
                         isThreeLine: true,
-                        onTap: () => _toggleEnrolled(index),
+                        onTap: () => _toggleEnrolled(sourceIndex),
+                        onLongPress: () => _removeCourse(course),
+                        trailing: IconButton(
+                          icon: Icon(
+                            course.isFavorite ? Icons.star : Icons.star_border,
+                            color: course.isFavorite ? Colors.amber : null,
+                          ),
+                          onPressed: () => _toggleFavorite(sourceIndex),
+                        ),
                       );
                     },
                   ),
