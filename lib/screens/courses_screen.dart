@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_favourites_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -13,6 +14,35 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+
+  
+Future<void> _clearFavourites() async {
+  final confirmed = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const ClearFavouritesScreen(),
+    ),
+  );
+
+  if (!mounted) return;
+
+  if (confirmed == true) {
+    setState(() {
+      for (int i = 0; i < sampleCourses.length; i++) {
+        sampleCourses[i] = sampleCourses[i].copyWith(
+          isFavorite: false,
+        );
+      }
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('All favourites cleared!'),
+      ),
+    );
+  }
+}
+
 
   void _showAddCourseDialog() {
     final codeController = TextEditingController();
@@ -141,6 +171,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          
+IconButton(
+  icon: const Icon(Icons.star_outline),
+  tooltip: 'Clear All Favourites',
+  onPressed: _clearFavourites,
+),
+
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add Course',
