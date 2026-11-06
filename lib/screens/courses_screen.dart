@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/confirm_clear_screen.dart';
+
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -24,6 +27,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
       _courses[index] =
       _courses[index].copyWith(isFavorite: !_courses[index].isFavorite);
     });
+  }
+
+  Future<void> _clearAllFavorites() async {
+    final confirm = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const ConfirmClearScreen()),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _courses = _courses.map((c) => c.copyWith(isFavorite: false)).toList();
+      });
+    }
   }
 
   void _toggleEnrolled(int index){
@@ -113,6 +129,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.star_half_outlined),
+            tooltip: 'Clear All Favourites',
+            onPressed: _clearAllFavorites,
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: _addCourse,
@@ -263,7 +284,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               ),
                               onPressed: () => _toggleFavorite(index),
                             ),
-                            onTap: () => _toggleEnrolled(index),
+                            //onTap: () => _toggleEnrolled(index),
+                            onTap: () async {
+                              final result = await Navigator.push<Object?>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => CourseDetailScreen(course: _courses[index], existingCodes: _courses.map((c) => c.code).toList()),
+                                ),
+                              );
+                              if (!mounted) return;
+                              if (result == true) {
+                                setState(() => _courses.removeAt(index));
+                              } else if (result is Course) {
+                                setState(() => _courses[index] = result);
+                              }
+                            },
                             onLongPress: () => _confirmDelete(course),
                           );
                         },
@@ -274,3 +309,4 @@ class _CoursesScreenState extends State<CoursesScreen> {
     );
   }
 }
+
