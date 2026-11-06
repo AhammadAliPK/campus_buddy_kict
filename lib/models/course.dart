@@ -25,9 +25,14 @@ class Course {
     this.enrolled = false, // ADD: Default value.
   });
 
-  Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
-    code,
-    name,
+  Course copyWith({
+    String? code,
+    String? name,
+    bool? isFavorite,
+    bool? enrolled,
+  }) => Course(
+    code ?? this.code,
+    name ?? this.name,
     creditHours,
     day,
     icon,

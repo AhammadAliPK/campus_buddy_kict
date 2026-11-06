@@ -272,15 +272,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         ),
                         isThreeLine: true,
                         onTap: () async {
-                          final removed = await Navigator.push<bool>(
+                          final result = await Navigator.push<Object>(
                             context,
-                            MaterialPageRoute(
+                            MaterialPageRoute<Object>(
                               builder: (_) =>
-                                  CourseDetailScreen(course: _courses[index]),
+                                  CourseDetailScreen(course: course),
                             ),
                           );
-                          if (removed == true) {
-                            setState(() => _courses.removeAt(index));
+
+                          if (!mounted || result == null) return;
+
+                          final row = _courses.indexOf(course);
+                          if (row == -1) return;
+
+                          if (result is Course) {
+                            setState(() => _courses[row] = result);
+                          } else if (result == true) {
+                            setState(() => _courses.removeAt(row));
                           }
                         },
                         onLongPress: () => _removeCourse(course),
