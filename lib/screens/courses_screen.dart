@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -284,15 +285,24 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             ),
                           ],
                         ),
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'You tapped ${course.code}',
-                              ),
-                            ),
-                          );
-                        },
+                        onTap: () async {
+  final selectedCourse = course;
+
+  final removed = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CourseDetailScreen(
+        course: selectedCourse,
+      ),
+    ),
+  );
+
+  if (removed == true) {
+    setState(() {
+      sampleCourses.remove(selectedCourse);
+    });
+  }
+},
                       );
                     },
                   ),
