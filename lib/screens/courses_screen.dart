@@ -241,16 +241,28 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           onPressed: () => _toggleFavorite(courseIndex),
                         ),
                         onTap: () async {
-                          final removed = await Navigator.push<bool>(
+                          final selectedCourse = _courses[index];
+
+                          final result = await Navigator.push<Object?>(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => CourseDetailScreen(course: _courses[index]),
+                              builder: (_) => CourseDetailScreen(course: selectedCourse),
                             ),
                           );
                           if (!mounted) return;
 
-                          if (removed == true) {
-                            setState(() => _courses.removeAt(index));
+                          final currentIndex = _courses.indexOf(selectedCourse);
+
+                          if (currentIndex == -1) return;
+
+                          if (result ==true) {
+                            setState(() {
+                              _courses.removeAt(currentIndex);
+                            });
+                          } else if (result is Course) {
+                            setState(() {
+                              _courses[currentIndex] = result;
+                            });
                           }
                         },
                       );
