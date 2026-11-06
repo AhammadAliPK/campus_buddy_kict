@@ -322,10 +322,11 @@ IconButton(
                             ),
                           ],
                         ),
-                        onTap: () async {
+                        
+onTap: () async {
   final selectedCourse = course;
 
-  final removed = await Navigator.push<bool>(
+  final result = await Navigator.push<Object?>(
     context,
     MaterialPageRoute(
       builder: (_) => CourseDetailScreen(
@@ -334,12 +335,23 @@ IconButton(
     ),
   );
 
-  if (removed == true) {
+  if (!mounted) return;
+
+  if (result == true) {
     setState(() {
       sampleCourses.remove(selectedCourse);
     });
+  } else if (result is Course) {
+    setState(() {
+      final index = sampleCourses.indexOf(selectedCourse);
+
+      if (index != -1) {
+        sampleCourses[index] = result;
+      }
+    });
   }
 },
+
                       );
                     },
                   ),
