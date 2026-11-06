@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -131,10 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
               ),
-              TextButton(
-                onPressed: _resetProfile,
-                child: const Text('Reset'),
-              ),
+              TextButton(onPressed: _resetProfile, child: const Text('Reset')),
             ] else ...[
               Text(
                 _nickname,
