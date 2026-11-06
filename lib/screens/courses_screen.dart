@@ -1,3 +1,4 @@
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
@@ -226,7 +227,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           onPressed: () => _toggleFavourite(courseIndex),
                         ),
-                        onTap: () => _toggleEnrolled(courseIndex),
+                        onTap: () async {
+                          final removed = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CourseDetailScreen(course: _courses[index]),
+                            ),
+                          );
+                          if (removed == true) {
+                            setState(() => _courses.removeAt(index));
+                          }
+                        },
                         onLongPress: () => _removeCourse(course),
                       );
                     },
