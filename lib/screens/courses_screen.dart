@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_favorites_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -12,7 +14,6 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
-  
   
   bool _favoritesOnly = false;
   String _selectedDay = 'All';
@@ -54,7 +55,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  
   Future<void> _removeCourse(Course course) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -99,7 +99,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
     final shown = _courses.where((c) {
       final matchesFav = !_favoritesOnly || c.isFavorite;
       final matchesDay = _selectedDay == 'All' || c.day == _selectedDay;
@@ -131,6 +130,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
         title: const Text('My Courses'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.star_border),
+            tooltip: 'Clear Favorites',
+            onPressed: () async {
+              final confirm = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(builder: (context) => const ClearFavoritesScreen()),
+              );
+              if (confirm == true) {
+                setState(() {
+                  for (int i = 0; i < _courses.length; i++) {
+                    _courses[i] = _courses[i].copyWith(isFavorite: false);
+                  }
+                });
+              }
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add Course',
             onPressed: _addCourse,
@@ -158,8 +174,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
             ),
           ),
-          
-          
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -202,7 +216,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          
           Expanded(
             child: shown.isEmpty
                 ? const Center(child: Text('No classes! Alhamdulillah :)'))
@@ -220,7 +233,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           final course = shown[index];
                           return Card(
                             child: InkWell(
-                              onTap: () => _toggleEnrolled(course),
+                              onTap: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CourseDetailScreen(course: course),
+                                  ),
+                                );
+                                if (result == true) {
+                                  setState(() => _courses.remove(course));
+                                } else if (result is Course) {
+                                  setState(() {
+                                    final idx = _courses.indexOf(course);
+                                    if (idx != -1) _courses[idx] = result;
+                                  });
+                                }
+                              },
                               onLongPress: () => _removeCourse(course),
                               child: Center(
                                 child: Column(
@@ -292,7 +320,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               color: course.isFavorite ? Colors.amber : null,
                               onPressed: () => _toggleFavorite(course),
                             ),
-                            onTap: () => _toggleEnrolled(course),
+                            onTap: () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => CourseDetailScreen(course: course),
+                                ),
+                              );
+                              if (result == true) {
+                                setState(() => _courses.remove(course));
+                              } else if (result is Course) {
+                                setState(() {
+                                  final idx = _courses.indexOf(course);
+                                  if (idx != -1) _courses[idx] = result;
+                                });
+                              }
+                            },
                             onLongPress: () => _removeCourse(course),
                           );
                         },
