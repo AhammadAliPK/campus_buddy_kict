@@ -15,7 +15,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   @override
   void initState() {
     super.initState();
-    _courses = List.of(sampleCourses); // our own copy, safe to change
+    _courses = List.of(sampleCourses);
   }
 
   void _toggleFavorite(int index) {
@@ -34,10 +34,37 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
+  Future<void> _deleteCourse(Course course) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Course'),
+        content: Text('Are you sure you want to delete ${course.code}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || confirmed != true) return;
+
+    setState(() {
+      _courses.remove(course);
+    });
+  }
+
   Future<void> _addCourse() async {
     final course = await showDialog<Course>(
       context: context,
-      builder: (_) => const AddCourseDialog(),
+      builder: (_) =>
+          AddCourseDialog(existingCodes: _courses.map((c) => c.code).toList()),
     );
 
     if (!mounted || course == null) return;
@@ -47,13 +74,15 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  bool _isGrid = false; // ← NEW
+  bool _isGrid = false;
+  String _selectedDay = 'All';
+  bool _favoritesOnly = false;
+
   @override
   Widget build(BuildContext context) {
-    int totalCh = 0; // ← NEW
+    int totalCh = 0;
     for (final c in _courses) {
-      // ← NEW
-      totalCh = totalCh + c.creditHours; // ← NEW
+      totalCh = totalCh + c.creditHours;
     }
 
     final enrolledCh = _courses
@@ -70,23 +99,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
       'Sunday': 7,
     };
 
-    final sortedCourses = [..._courses];
-    sortedCourses.sort((a, b) {
-      return dayOrder[a.day]!.compareTo(dayOrder[b.day]!);
+    final filteredCourses = _courses.where((course) {
+      // First filter: selected day
+      final matchesDay = _selectedDay == 'All' || course.day == _selectedDay;
+
+      // Second filter: favourites only
+      final matchesFavorite = !_favoritesOnly || course.isFavorite;
+
+      // Both conditions must be satisfied
+      return matchesDay && matchesFavorite;
+    }).toList();
+
+    // Sort the filtered courses by day
+    filteredCourses.sort((a, b) {
+      return (dayOrder[a.day] ?? 8).compareTo(dayOrder[b.day] ?? 8);
     });
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
-        // actions: [
-        //   IconButton(
-        //     icon: _isGrid
-        //         ? const Icon(Icons.grid_on)
-        //         : const Icon(Icons.list), // ← CHANGED
-        //     tooltip: 'Grid view',
-        //     onPressed: () => setState(() => _isGrid = !_isGrid), // ← CHANGED
-        //   ),
-        // ],
         actions: [
           IconButton(icon: const Icon(Icons.add), onPressed: _addCourse),
           IconButton(
@@ -98,7 +129,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
       ),
       body: Column(
         children: [
-          // NEW: Display total courses and credit hours
+          // to display total courses and credit hours
           Card(
             margin: const EdgeInsets.all(12),
             child: Padding(
@@ -110,9 +141,55 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
           ),
 
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: DropdownButtonFormField<String>(
+              initialValue: _selectedDay,
+              decoration: const InputDecoration(
+                labelText: 'Filter by day',
+                border: OutlineInputBorder(),
+              ),
+              items:
+                  [
+                    'All',
+                    'Monday',
+                    'Tuesday',
+                    'Wednesday',
+                    'Thursday',
+                    'Friday',
+                  ].map((day) {
+                    return DropdownMenuItem(value: day, child: Text(day));
+                  }).toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _selectedDay = value;
+                  });
+                }
+              },
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FilterChip(
+                label: const Text('★ Favourites only'),
+                selected: _favoritesOnly,
+                onSelected: (selected) {
+                  setState(() {
+                    _favoritesOnly = selected;
+                  });
+                },
+              ),
+            ),
+          ),
+
           Expanded(
-            // child: sortedCourses.isEmpty
-            child: _courses.isEmpty
+            child: filteredCourses.isEmpty
                 ? const Center(child: Text('No classes! Alhamdulillah :)'))
                 : _isGrid
                 ? GridView.builder(
@@ -124,10 +201,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           crossAxisSpacing: 8,
                         ),
                     // itemCount: sortedCourses.length,
-                    itemCount: _courses.length,
+                    itemCount: filteredCourses.length, //to filter courses based on day
                     itemBuilder: (context, index) {
-                      // final course = sortedCourses[index];
-                      final course = _courses[index];
+                      final course = filteredCourses[index];
 
                       return Card(
                         child: Center(
@@ -156,12 +232,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    // itemCount: sampleCourses.length,
-                    // itemBuilder: (context, index) {
-                    //   final course = sampleCourses[index];
-                    itemCount: sortedCourses.length,
+                    itemCount: filteredCourses.length,
                     itemBuilder: (context, index) {
-                      final course = sortedCourses[index];
+                      final course = filteredCourses[index];
 
                       return ListTile(
                         leading: CircleAvatar(
@@ -195,9 +268,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             course.isFavorite ? Icons.star : Icons.star_border,
                             color: course.isFavorite ? Colors.amber : null,
                           ),
-                          onPressed: () => _toggleFavorite(index),
+                          onPressed: () =>
+                              _toggleFavorite(_courses.indexOf(course)),
                         ),
-                        onTap: () => _toggleEnrolled(index),
+                        onTap: () => _toggleEnrolled(_courses.indexOf(course)),
+
+                        //Long press action to delete a course
+                        onLongPress: () => _deleteCourse(course),
+
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
