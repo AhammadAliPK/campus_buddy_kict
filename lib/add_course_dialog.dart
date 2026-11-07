@@ -2,16 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 
 class AddCourseDialog extends StatefulWidget{
-    const AddCourseDialog({super.key});
+  final List<String> existingCodes;
+  const AddCourseDialog({super.key, required this.existingCodes});
 
-    @override
-    State<AddCourseDialog> createState() => _AddCourseDialogState();
+  @override
+  State<AddCourseDialog> createState() => _AddCourseDialogState();
 }
 
 class _AddCourseDialogState extends State<AddCourseDialog>{
 final _formkey = GlobalKey<FormState>();
 final _codeCtrl = TextEditingController();
 final _nameCtrl = TextEditingController();
+final _timeCtrl = TextEditingController();
+final _venueCtrl = TextEditingController();
 
 String _day = 'Monday';
 static const _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -22,6 +25,8 @@ int _creditHours = 3;
 void dispose(){
     _codeCtrl.dispose();
     _nameCtrl.dispose();
+    _timeCtrl.dispose();
+    _venueCtrl.dispose();
     super.dispose();
 }
 
@@ -32,7 +37,10 @@ void _submit(){
         _nameCtrl.text.trim(),
         _creditHours,
         _day,
+        _timeCtrl.text.trim(),
+        _venueCtrl.text.trim(),
         Icons.auto_stories,
+        instructor: 'TBA',
     );
     Navigator.pop(context, course);
 }
@@ -55,6 +63,9 @@ void _submit(){
                                 if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(t)){
                                     return 'Format: 4 letters + 4 digits';
                                 }
+                                if (widget.existingCodes.contains(t)){
+                                  return 'This course is already added';
+                                }
                                 return null;
                             },
                          ),
@@ -63,10 +74,28 @@ void _submit(){
                             decoration: const InputDecoration(labelText: 'Course name'),
                             validator: (v) => (v?.trim().isEmpty ?? true) ? 'Name is required' : null,
                          ),
+                         TextFormField(
+                          controller: _timeCtrl,
+                          decoration: const InputDecoration(labelText: 'Time (e.g. 0900 - 1030)'),
+                          validator: (v){
+                                final t = v?.trim() ?? '';
+                                if (t.isEmpty) return 'Time is required';
+                                if (!RegExp(r'^\d{4}\s-\s\d{4}$').hasMatch(t)){
+                                    return 'Format: startTime - endTime ';
+                                }
+                                return null;
+                          }
+                         ),
+                         TextFormField(
+                          controller: _venueCtrl,
+                          decoration: const InputDecoration(labelText: 'Venue (e.g. LT A)'),
+                          validator: (v) => (v?.trim().isEmpty ?? true) ? 'Venue is required' : null,
+                         ),
                          DropdownButtonFormField<String>(
                             initialValue: _day,
                             items: _days.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
                             onChanged: (v) => setState(() => _day = v!),
+                            decoration: const InputDecoration(labelText: 'Day'),
                          ),
                          const SizedBox(height: 8),
                          Row(

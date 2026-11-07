@@ -12,6 +12,7 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  bool _favoritesOnly = false;
 
   late List<Course> _courses;
   @override
@@ -35,7 +36,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
   Future<void> _addCourse() async{
     final course = await showDialog<Course>(
       context: context,
-      builder: (_) => const AddCourseDialog(),
+      builder: (_) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).toList(),
+      ),
     );
     if (course == null) return;
     setState(() => _courses.add(course));
@@ -48,6 +51,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
       totalCh += c.creditHours;
     }
     final enrolledCh = _courses.where((c) => c.enrolled).fold<int>(0, (sum, c) => sum + c.creditHours);
+
+    final displayedCourses = _favoritesOnly? _courses.where((c) => c.isFavourite).toList(): _courses;
 
     return Scaffold(
       appBar: AppBar(
@@ -79,6 +84,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: Row(
+              children: [
+                FilterChip(label: const Text('Favourites only'),
+                selected: _favoritesOnly,
+                onSelected: (bool selected){
+                  setState(() {
+                    _favoritesOnly = selected;
+                  });
+                },
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: _isGrid
                 ? GridView.builder(
@@ -89,9 +109,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       crossAxisSpacing: 8,
                       childAspectRatio: 1.2,
                     ),
-                    itemCount: _courses.length,
+                    itemCount: displayedCourses.length,
                     itemBuilder: (context, index) {
-                      final course = _courses[index];
+                      final course = displayedCourses[index];
                       return Card(
                         child: Center(
                           child: Padding(
@@ -120,9 +140,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: _courses.length,
+                    itemCount: displayedCourses.length,
                     itemBuilder: (context, index) {
-                      final course = _courses[index];
+                      final course = displayedCourses[index];
+                      final originalIndex = _courses.indexOf(course);
+                      final dayShort = course.day.substring(0,3);
+                      final instructorName = course.instructor ?? 'TBA';
+                      final subtitleText = '$dayShort ${course.time} • ${course.venue} • $instructorName';
                       return ListTile(
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
@@ -135,15 +159,40 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                         ),
                         title: Text(course.code),
-                        subtitle: Text('${course.name} • ${course.day}'),
+                        subtitle: Text(subtitleText),
                         trailing: IconButton(
                           icon: Icon(
                             course.isFavourite ? Icons.star : Icons.star_border,
                             color: course.isFavourite ? Colors.amber : null,
                           ),
-                          onPressed: () => _toggleFavorite(index),
+                          onPressed: () => _toggleFavorite(originalIndex),
                         ),
-                        onTap: () => _toggleEnrolled(index),
+                        onTap: () => _toggleEnrolled(originalIndex),
+                        onLongPress: () async {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete course?'),
+                              content: Text('Are you sure you want to remove ${course.code}?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                FilledButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Delete'),
+                                ),
+                              ],
+                            ),
+                          );
+
+                          if (confirmed == true) {
+                            setState(() {
+                              _courses.removeAt(originalIndex);
+                            });
+                          }
+                        },
                       );
                     },
                   ),
