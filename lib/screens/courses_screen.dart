@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
-import 'package:campus_buddy_kict/models/course.dart'; //NEW this week
+import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -72,6 +73,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() {
       _courses.add(course);
     });
+  }
+
+  Future<void> _openCourseDetails(Course course) async {
+    final removed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CourseDetailScreen(course: course),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (removed == true) {
+      setState(() {
+        _courses.remove(course);
+      });
+    }
   }
 
   bool _isGrid = false;
@@ -201,30 +219,34 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           crossAxisSpacing: 8,
                         ),
                     // itemCount: sortedCourses.length,
-                    itemCount: filteredCourses.length, //to filter courses based on day
+                    itemCount:
+                        filteredCourses.length, //to filter courses based on day
                     itemBuilder: (context, index) {
                       final course = filteredCourses[index];
 
                       return Card(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(course.icon, size: 40),
-                              const SizedBox(height: 8),
-                              Text(
-                                course.code,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                        child: InkWell(
+                          onTap: () => _openCourseDetails(course),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(course.icon, size: 40),
+                                const SizedBox(height: 8),
+                                Text(
+                                  course.code,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                course.name,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                                Text(
+                                  course.name,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -263,15 +285,37 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             Text('Instructor: ${course.instructor ?? 'TBA'}'),
                           ],
                         ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            course.isFavorite ? Icons.star : Icons.star_border,
-                            color: course.isFavorite ? Colors.amber : null,
-                          ),
-                          onPressed: () =>
-                              _toggleFavorite(_courses.indexOf(course)),
+
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: course.enrolled ? 'Unenroll' : 'Enroll',
+                              icon: Icon(
+                                course.enrolled
+                                    ? Icons.check_circle
+                                    : Icons.check_circle_outline,
+                                color: course.enrolled ? Colors.green : null,
+                              ),
+                              onPressed: () =>
+                                  _toggleEnrolled(_courses.indexOf(course)),
+                            ),
+                            IconButton(
+                              tooltip: 'Favourite',
+                              icon: Icon(
+                                course.isFavorite
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: course.isFavorite ? Colors.amber : null,
+                              ),
+                              onPressed: () =>
+                                  _toggleFavorite(_courses.indexOf(course)),
+                            ),
+                          ],
                         ),
-                        onTap: () => _toggleEnrolled(_courses.indexOf(course)),
+
+                        // onTap: () => _toggleEnrolled(_courses.indexOf(course)),
+                        onTap: () => _openCourseDetails(course),
 
                         //Long press action to delete a course
                         onLongPress: () => _deleteCourse(course),
