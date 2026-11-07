@@ -3,7 +3,7 @@ import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
-import 'package:campus_buddy_kict/widgets/add_course_dialog.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -14,7 +14,7 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   static const _days = [
-    'All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
+    'All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'
   ];
 
   late List<Course> _courses;
@@ -57,8 +57,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     final yes = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) =>
-            const ConfirmScreen(question: 'Clear all favourites?'),
+        builder: (_) => const ConfirmScreen(),
       ),
     );
     if (yes != true) return;

@@ -15,18 +15,11 @@ class HomeScreen extends StatelessWidget {
   Future<void> _clearFavourites(BuildContext context) async {
     final yes = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (_) =>
-            const ConfirmScreen(question: 'Clear all favourites?'),
-      ),
+      MaterialPageRoute(builder: (_) => const ConfirmScreen()),
     );
-    if (yes != true || !context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Home can't reach the favourites — "
-            'use the button on the Courses tab'),
-      ),
-    );
+    if (yes == true) {
+      // nothing to clear from here: Home can't reach the favourites
+    }
   }
 
   @override

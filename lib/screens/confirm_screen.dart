@@ -2,19 +2,16 @@ import 'package:flutter/material.dart';
 
 // a whole screen (not a popup) that answers true or false
 class ConfirmScreen extends StatelessWidget {
-  const ConfirmScreen({super.key, required this.question});
-
-  final String question;
+  const ConfirmScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Are you sure?')),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(question, style: Theme.of(context).textTheme.titleMedium),
+            const Text('Are you sure?'),
             const SizedBox(height: 24),
             Row(
               mainAxisSize: MainAxisSize.min,

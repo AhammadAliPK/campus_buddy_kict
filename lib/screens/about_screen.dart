@@ -6,14 +6,10 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('About')),
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Campus Buddy KICT',
-                style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 8),
             const Text('CSCI 4311 · Mobile Application Development'),
             const SizedBox(height: 8),
             const Text('Developer: ansimrn_ (2317243)'),

@@ -139,7 +139,7 @@ void main() {
     await tester.tap(find.text('About Campus Buddy KICT'));
     await tester.pumpAndSettle();
     expect(find.text('1.0.0 · Week 6'), findsOneWidget);
-    await tester.tap(find.byType(BackButton));
+    await tester.tap(find.text('Close'));
     await tester.pumpAndSettle();
 
     // stubs
@@ -160,7 +160,7 @@ void main() {
     expect(find.text('Are you sure?'), findsOneWidget);
     await tester.tap(find.text('Yes'));
     await tester.pumpAndSettle();
-    expect(find.textContaining("Home can't reach"), findsOneWidget);
+    expect(find.text('Are you sure?'), findsNothing); // back on Home
   });
 
   testWidgets('Clear favourites from Courses tab', (tester) async {
