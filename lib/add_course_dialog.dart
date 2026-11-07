@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 
 class AddCourseDialog extends StatefulWidget {
-  const AddCourseDialog({super.key});
+  
+  final List<String> existingCodes;
+  const AddCourseDialog({super.key, required this.existingCodes});
 
   @override
   State<AddCourseDialog> createState() => _AddCourseDialogState();
@@ -33,13 +35,23 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                 controller: _codeCtrl,
                 decoration: const InputDecoration(labelText: 'Course Code (e.g. CSCI 4311)'),
                 validator: (value) {
-                  final t = value?.trim() ?? '';
+                  // Force uppercase to prevent "csci 4311" from bypassing "CSCI 4311"
+                  final t = value?.trim().toUpperCase() ?? '';
+                  
                   if (t.isEmpty) return 'Code is required';
-                  // This pattern means: exactly 4 letters, optional space, exactly 4 numbers
+                  
                   if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(t)) {
                     return 'Format must be like CSCI 4311';
                   }
-                  return null; // Null means it passed validation!
+                  
+                  // NEW: If the user forgot the space, artificially add it so it matches your master list
+                  final formattedCode = t.length == 8 ? '${t.substring(0, 4)} ${t.substring(4)}' : t;
+                  
+                  if (widget.existingCodes.contains(formattedCode)) {
+                    return 'Already added'; 
+                  }
+                  
+                  return null;
                 },
               ),
               TextFormField(

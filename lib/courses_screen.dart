@@ -13,6 +13,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     bool _isGrid = false; // ← NEW
     String _selectedDay = 'All'; 
   final List<String> _days = ['All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  bool _showFavoritesOnly = false; // <-- NEW
 
   late List<Course> _courses;
   @override
@@ -40,16 +41,26 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
 @override
 Widget build(BuildContext context) {
-    final shown = _selectedDay == 'All' 
-    ? _courses
-    : _courses.where((c) => c.days.contains(_selectedDay)).toList();
-    int totalCh = 0; // ← NEW
-    for (final c in shown) {
-    totalCh = totalCh + c.creditHours;
+    // 1. First, filter by day (Notice we use 'var' instead of 'final' now!)
+    var shown = _selectedDay == 'All' 
+        ? _courses
+        : _courses.where((c) => c.days.contains(_selectedDay)).toList();
+
+    // 2. Then, filter by favorites if the toggle is turned on
+    if (_showFavoritesOnly) {
+      shown = shown.where((c) => c.isFavorite).toList();
     }
+
+    // 3. Calculate total credit hours for the items currently on screen
+    int totalCh = 0;
+    for (final c in shown) {
+      totalCh = totalCh + c.creditHours;
+    }
+
+    // 4. Calculate total enrolled hours from the master list
     final enrolledCh = _courses
-    .where((c) => c.enrolled)
-    .fold<int>(0, (sum, c) => sum + c.creditHours);
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
     
 return Scaffold(
   floatingActionButton: FloatingActionButton(
@@ -57,7 +68,7 @@ return Scaffold(
     // 'await' pauses this code until the dialog closes
     final newCourse = await showDialog<Course>(
       context: context,
-      builder: (context) => const AddCourseDialog(),
+      builder: (context) => AddCourseDialog(existingCodes: _courses.map((c) => c.code).toList()),
     );
 
     // If they pressed 'Add' (and didn't just hit Cancel), add it to the list!
@@ -95,22 +106,38 @@ SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
-        children: _days.map((day) {
+      children: [
+        // --- NEW: FAVORITES CHIP ---
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: FilterChip(
+            label: const Text('⭐ Favourites only'),
+            selected: _showFavoritesOnly,
+            onSelected: (bool selected) {
+              setState(() {
+                _showFavoritesOnly = selected;
+              });
+            },
+          ),
+        ),
+        
+        // --- EXISTING DAYS CHIPS ---
+        ..._days.map((day) {
           return Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: FilterChip(
               label: Text(day),
               selected: _selectedDay == day,
               onSelected: (bool selected) {
-                // This forces the screen to rebuild with the new day!
                 setState(() {
                   _selectedDay = day;
                 });
               },
             ),
           );
-        }).toList(),
-      ),
+        }),
+      ],
+    ),
     ),
 Expanded(
 child: shown.isEmpty // ← CHANGED
@@ -195,6 +222,34 @@ trailing: Row(
 onTap: () {
   final realIndex = _courses.indexWhere((c) => c.code == course.code);
   _toggleEnrolled(realIndex);
+},
+
+onLongPress: () async {
+  // 1. Show the confirmation dialog and wait for a true/false answer
+  final shouldDelete = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Remove Course'),
+      content: Text('Are you sure you want to remove ${course.code}?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false), // Answers false
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true), // Answers true
+          child: const Text('Remove', style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    ),
+  );
+
+  // 2. If the user tapped 'Remove', delete it from the list
+  if (shouldDelete == true) {
+    setState(() {
+      _courses.remove(course);
+    });
+  }
 },
 );
 },
