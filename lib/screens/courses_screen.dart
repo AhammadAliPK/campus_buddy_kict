@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_favorites_screen.dart'; 
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -12,7 +14,7 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
-  bool _showFavoritesOnly = false; // HOMEWORK: track toggle state
+  bool _showFavoritesOnly = false;
   late List<Course> _courses;
 
   @override
@@ -40,7 +42,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  // HOMEWORK: Long-press remove method
   Future<void> _removeCourse(int index) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -78,9 +79,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course)); 
   }
 
+  Future<void> _clearFavorites() async {
+    final confirm = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (context) => const ClearFavoritesScreen()),
+    );
+
+    if (confirm == true) {
+      setState(() {
+        for (int i = 0; i < _courses.length; i++) {
+          _courses[i] = _courses[i].copyWith(isFavorite: false);
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // 1. Calculate totals based on the FULL list
     int totalCh = 0;
     for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
@@ -90,7 +105,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
         .where((c) => c.enrolled)
         .fold<int>(0, (sum, c) => sum + c.creditHours);
 
-    // 2. HOMEWORK: Filter the display list without losing data
     Iterable<Course> displayCourses = _courses;
     
     if (_showFavoritesOnly) {
@@ -103,6 +117,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.star_outline),
+            tooltip: 'Clear Favourites',
+            onPressed: _clearFavorites,
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: _addCourse,
@@ -121,7 +140,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
             margin: const EdgeInsets.all(12),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              // Ensure summary card expands to fit text
               child: SizedBox(
                 width: double.infinity,
                 child: Text(
@@ -130,7 +148,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
             ),
           ),
-          // HOMEWORK: FilterChip Row
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12.0),
             child: FilterChip(
@@ -178,7 +195,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     itemCount: displayList.length,
                     itemBuilder: (context, index) {
                       final course = displayList[index];
-                      // Find the actual index in _courses to update the correct item
                       final originalIndex = _courses.indexOf(course);
                       
                       return ListTile(
@@ -210,8 +226,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           onPressed: () => _toggleFavorite(originalIndex),
                         ),
-                        onTap: () => _toggleEnrolled(originalIndex),
-                        onLongPress: () => _removeCourse(originalIndex), // HOMEWORK: Long press action
+                        onTap: () async {
+                          final result = await Navigator.push<dynamic>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CourseDetailScreen(course: _courses[originalIndex]),
+                            ),
+                          );
+
+                          if (result == true) { 
+                            setState(() => _courses.removeAt(originalIndex));
+                          } else if (result is Course) { 
+                            setState(() => _courses[originalIndex] = result);
+                          }
+                        },
+                        onLongPress: () => _removeCourse(originalIndex), 
                       );
                     },
                   ),
