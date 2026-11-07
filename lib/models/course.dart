@@ -6,6 +6,20 @@ class Course{
   final int creditHours;
   final String day;
   final IconData icon;
+  final bool isFavourite;
+  final bool enrolled;
 
-  const Course(this.code, this.name, this.creditHours, this.day, this.icon);
+  const Course(
+    this.code,
+    this.name,
+    this.creditHours,
+    this.day,
+    this.icon,
+    {this.isFavourite = false, this.enrolled = false}
+  );
+  Course copyWith({bool? isFavourite, bool? enrolled}) => Course(
+    code, name, creditHours, day, icon,
+    isFavourite: isFavourite ?? this.isFavourite,
+    enrolled: enrolled ?? this.enrolled,
+  );
 }
