@@ -8,17 +8,28 @@ class Course {
   final IconData icon;
   final String venue; 
   final String? instructor; 
-  final bool isFavorite; // NEW
-  final bool enrolled;   // NEW
+  final bool isFavorite;
+  final bool enrolled;
 
   const Course(
       this.code, this.name, this.creditHours, this.day, this.icon, this.venue, this.instructor,
-      {this.isFavorite = false, this.enrolled = false}); // CHANGED
+      {this.isFavorite = false, this.enrolled = false}
+  );
 
-  // NEW method to duplicate a course and change its status
-  Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
-        code, name, creditHours, day, icon, venue, instructor,
-        isFavorite: isFavorite ?? this.isFavorite,
-        enrolled: enrolled ?? this.enrolled,
-      );
+  Course copyWith({
+    String? name,
+    String? venue,
+    bool? isFavorite, 
+    bool? enrolled,
+  }) => Course(
+    code, 
+    name ?? this.name, 
+    creditHours, 
+    day, 
+    icon, 
+    venue ?? this.venue, 
+    instructor,
+    isFavorite: isFavorite ?? this.isFavorite,
+    enrolled: enrolled ?? this.enrolled,
+  );
 }

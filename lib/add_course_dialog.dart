@@ -106,7 +106,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Cancle'),
+          child: const Text('Cancel'),
         ),
         FilledButton(
           onPressed: _submit, // the check-and-add button
