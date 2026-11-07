@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/home_screen.dart';
 import 'package:campus_buddy_kict/courses_screen.dart';
 import 'package:campus_buddy_kict/profile_screen.dart';
+import 'package:campus_buddy_kict/notes_screen.dart';
 
 class AppShell extends StatefulWidget {
   const AppShell({super.key});
@@ -21,6 +22,7 @@ class _AppShellState extends State<AppShell> {
         children: const [
           HomeScreen(),
           CoursesScreen(),
+          NotesScreen(),
           ProfileScreen(),
         ],
       ),
@@ -30,6 +32,7 @@ class _AppShellState extends State<AppShell> {
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
           NavigationDestination(icon: Icon(Icons.list), label: 'Courses'),
+          NavigationDestination(icon: Icon(Icons.note_outlined), label: 'Notes'),
           NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),

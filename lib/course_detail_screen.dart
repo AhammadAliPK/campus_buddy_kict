@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/edit_course_screen.dart';
 
 class CourseDetailResult {
   final Course course;
@@ -32,6 +33,18 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
 
   void _toggleEnrolled() {
     setState(() => _course = _course.copyWith(enrolled: !_course.enrolled));
+  }
+
+  Future<void> _edit() async {
+    final edited = await Navigator.push<Course>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditCourseScreen(course: _course),
+      ),
+    );
+    // back without saving gives null -> leave the course as it was
+    if (edited == null || !mounted) return;
+    setState(() => _course = edited);
   }
 
   Future<void> _confirmRemove() async {
@@ -86,6 +99,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
               ),
               tooltip: 'Favourite',
               onPressed: _toggleFavorite,
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit),
+              tooltip: 'Edit course',
+              onPressed: _edit,
             ),
             IconButton(
               icon: const Icon(Icons.delete_outline),

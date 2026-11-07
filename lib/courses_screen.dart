@@ -3,6 +3,7 @@ import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/course_detail_screen.dart';
+import 'package:campus_buddy_kict/confirm_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -102,6 +103,26 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
+  // Clearing favourites works here because the course list lives in this screen.
+  Future<void> _clearFavourites() async {
+    final yes = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ConfirmScreen(
+          message: 'Clear all favourite courses?',
+        ),
+      ),
+    );
+    if (yes != true || !mounted) return;
+    setState(() {
+      for (var i = 0; i < _courses.length; i++) {
+        if (_courses[i].isFavorite) {
+          _courses[i] = _courses[i].copyWith(isFavorite: false);
+        }
+      }
+    });
+  }
+
   Future<void> _confirmRemove(Course course) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -148,6 +169,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
             icon: const Icon(Icons.add),
             tooltip: 'Add course',
             onPressed: _addCourse,
+          ),
+          IconButton(
+            icon: const Icon(Icons.star_border),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavourites,
           ),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),

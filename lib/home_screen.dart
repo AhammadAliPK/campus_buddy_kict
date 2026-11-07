@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/prayer_times_screen.dart';
 import 'package:campus_buddy_kict/campus_links_screen.dart';
+import 'package:campus_buddy_kict/confirm_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -52,6 +53,31 @@ class HomeScreen extends StatelessWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.pushNamed(context, '/about'),
             ),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.star_border),
+            label: const Text('Clear all favourites'),
+            onPressed: () async {
+              final yes = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ConfirmScreen(
+                    message: 'Clear all favourite courses?',
+                  ),
+                ),
+              );
+              if (yes != true || !context.mounted) return;
+              // Home can't actually touch the favourites (see week6_exercise.txt).
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    "Can't clear from Home — favourites live in the "
+                    "Courses tab. Use the button there instead.",
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
