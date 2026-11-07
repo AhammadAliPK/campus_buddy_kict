@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
   @override
@@ -38,8 +38,32 @@ class HomeScreen extends StatelessWidget {
             trailing: Icon(Icons.chevron_right),
             onTap: () => Navigator.pushNamed(context, '/about'),
           )),
+          Card(child: ListTile(
+            leading: const Icon(Icons.star_outline),
+            title: const Text('Clear all favourites'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              final ok = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ConfirmScreen(
+                    message: 'Clear all favourites?',
+                  ),
+                ),
+              );
+
+              if (ok == true) {
+               // Clear favourites logic here
+               ScaffoldMessenger.of(context).showSnackBar(
+                 const SnackBar(
+                  content: Text("Can't clear from Home. Use the Courses tab.")
+                  ),
+                );
+              }
+            },
+          )),
         ],
       ),
-      );
+    );
   }
 }
