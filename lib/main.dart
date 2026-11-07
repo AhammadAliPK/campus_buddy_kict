@@ -16,3 +16,4 @@ class CampusBuddyKictApp extends StatelessWidget {
     );
   }
 }
+
