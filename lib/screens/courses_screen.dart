@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_favourites_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -20,8 +22,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
   @override
   void initState() {
     super.initState();
-
-    // Create our own editable copy of sampleCourses
     _courses = List.of(sampleCourses);
   }
 
@@ -43,7 +43,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  // Open Add Course popup and receive the new course
+  // Add a new course
   Future<void> _addCourse() async {
     final course = await showDialog<Course>(
       context: context,
@@ -59,14 +59,42 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  // Remove course after confirmation
+  // Open course detail page
+  Future<void> _openCourseDetail(Course course) async {
+    final result = await Navigator.push<Object?>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(course: course),
+      ),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      final index = _courses.indexOf(course);
+
+      if (index == -1) return;
+
+      // true means remove the course
+      if (result == true) {
+        _courses.removeAt(index);
+      }
+
+      // A Course object means the course was edited
+      else if (result is Course) {
+        _courses[index] = result;
+      }
+    });
+  }
+
+  // Remove course using long press
   Future<void> _removeCourse(Course course) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Remove course?'),
         content: Text(
-          'Are you sure you want to remove ${course.code} - ${course.name}?',
+          'Are you sure you want to remove ${course.code}?',
         ),
         actions: [
           TextButton(
@@ -88,6 +116,24 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }
   }
 
+  // Clear all favourites from Courses tab
+  Future<void> _clearFavourites() async {
+    final confirmed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ClearFavouritesScreen(),
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      setState(() {
+        _courses = _courses.map((course) {
+          return course.copyWith(isFavorite: false);
+        }).toList();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
@@ -101,7 +147,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
         .where((c) => c.enrolled)
         .fold<int>(0, (sum, c) => sum + c.creditHours);
 
-    // Monday filter works on the editable _courses list
+    // Monday filter works on the editable list
     final dayFiltered = _courses
         .where((c) => c.day == 'Monday')
         .toList();
@@ -115,20 +161,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
-          // Add course button
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add course',
             onPressed: _addCourse,
           ),
 
-          // Grid/List toggle
           IconButton(
             icon: _isGrid
                 ? const Icon(Icons.grid_on)
                 : const Icon(Icons.list),
             tooltip: 'Grid view',
-            onPressed: () => setState(() => _isGrid = !_isGrid),
+            onPressed: () {
+              setState(() {
+                _isGrid = !_isGrid;
+              });
+            },
           ),
         ],
       ),
@@ -153,17 +201,26 @@ class _CoursesScreenState extends State<CoursesScreen> {
           // Favourite filter
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: FilterChip(
-                label: const Text('★ favourites only'),
-                selected: _favoritesOnly,
-                onSelected: (value) {
-                  setState(() {
-                    _favoritesOnly = value;
-                  });
-                },
-              ),
+            child: Wrap(
+              spacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                FilterChip(
+                  label: const Text('★ favourites only'),
+                  selected: _favoritesOnly,
+                  onSelected: (value) {
+                    setState(() {
+                      _favoritesOnly = value;
+                    });
+                  },
+                ),
+
+                TextButton.icon(
+                  onPressed: _clearFavourites,
+                  icon: const Icon(Icons.star_border),
+                  label: const Text('Clear favourites'),
+                ),
+              ],
             ),
           ),
 
@@ -189,7 +246,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                           return Card(
                             child: InkWell(
-                              onTap: () => _toggleEnrolled(courseIndex),
+                              onTap: () => _openCourseDetail(course),
                               onLongPress: () => _removeCourse(course),
                               child: Stack(
                                 children: [
@@ -228,7 +285,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                                         Text(
                                           '${course.day} · ${course.time}',
-                                          textAlign: TextAlign.center,
                                           style: const TextStyle(
                                             fontSize: 11,
                                           ),
@@ -237,7 +293,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                     ),
                                   ),
 
-                                  // Favourite star
                                   Positioned(
                                     top: 0,
                                     right: 0,
@@ -250,8 +305,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                             ? Colors.amber
                                             : null,
                                       ),
-                                      onPressed: () =>
-                                          _toggleFavorite(courseIndex),
+                                      onPressed: () {
+                                        _toggleFavorite(courseIndex);
+                                      },
                                     ),
                                   ),
                                 ],
@@ -272,10 +328,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 ? Colors.black.withValues(alpha: 0.03)
                                 : null,
 
-                            // Green tick when enrolled
                             leading: CircleAvatar(
-                              backgroundColor:
-                                  Theme.of(context).colorScheme.primaryContainer,
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
                               child: Icon(
                                 course.enrolled
                                     ? Icons.check_circle
@@ -290,7 +346,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                             title: Text(course.code),
 
-                            // Course details
                             subtitle: Text(
                               '${course.name} · ${course.day}\n'
                               '${course.time} · ${course.venue} · '
@@ -299,7 +354,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                             isThreeLine: true,
 
-                            // Favourite star
                             trailing: IconButton(
                               icon: Icon(
                                 course.isFavorite
@@ -309,14 +363,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                     ? Colors.amber
                                     : null,
                               ),
-                              onPressed: () =>
-                                  _toggleFavorite(courseIndex),
+                              onPressed: () {
+                                _toggleFavorite(courseIndex);
+                              },
                             ),
 
-                            // Tap to enroll/unenroll
-                            onTap: () => _toggleEnrolled(courseIndex),
+                            onTap: () => _openCourseDetail(course),
 
-                            // Long press to remove
                             onLongPress: () => _removeCourse(course),
                           );
                         },
