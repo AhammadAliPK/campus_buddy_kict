@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -31,6 +33,39 @@ class _CoursesScreenState extends State<CoursesScreen> {
   void _setEnrolled(Course course, bool? value) {
     final index = _courses.indexOf(course);
     setState(() => _courses[index] = course.copyWith(enrolled: value ?? false));
+  }
+
+  // Detail answers: true = remove, a Course = edited, null = back pressed.
+  // Works with the course, not the row index: the list view shows a filtered
+  // copy, so its index doesn't match a position in _courses.
+  Future<void> _openDetail(Course course) async {
+    final result = await Navigator.push<Object>(
+      context,
+      MaterialPageRoute(builder: (_) => CourseDetailScreen(course: course)),
+    );
+    if (result == true) {
+      setState(() => _courses.remove(course));
+    } else if (result is Course) {
+      setState(() {
+        _courses[_courses.indexOf(course)] = result;
+        _courses.sort(_byDayThenTime);
+      });
+    }
+  }
+
+  Future<void> _clearFavourites() async {
+    final sure = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ConfirmScreen(question: 'Clear all favourites?'),
+      ),
+    );
+    if (sure != true) return;
+    setState(() {
+      for (var i = 0; i < _courses.length; i++) {
+        _courses[i] = _courses[i].copyWith(favorite: false);
+      }
+    });
   }
 
   Future<void> _addCourse() async {
@@ -66,6 +101,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.star_outline),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavourites,
+          ),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
@@ -109,34 +149,38 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     itemBuilder: (context, index) {
                       final course = _courses[index];
                       return Card(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(course.icon, size: 40),
-                              const SizedBox(height: 8),
-                              Text(
-                                course.code,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () => _openDetail(course),
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(course.icon, size: 40),
+                                const SizedBox(height: 8),
+                                Text(
+                                  course.code,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                course.name,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              IconButton(
-                                icon: Icon(
-                                  course.favorite
-                                      ? Icons.star
-                                      : Icons.star_border,
+                                Text(
+                                  course.name,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                color: Colors.amber,
-                                onPressed: () => _toggleFavorite(course),
-                              ),
-                            ],
+                                IconButton(
+                                  icon: Icon(
+                                    course.favorite
+                                        ? Icons.star
+                                        : Icons.star_border,
+                                  ),
+                                  color: Colors.amber,
+                                  onPressed: () => _toggleFavorite(course),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -194,9 +238,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${course.code} tapped')),
-                        ),
+                        onTap: () => _openDetail(course),
                       );
                     },
                   ),

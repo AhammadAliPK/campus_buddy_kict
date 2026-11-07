@@ -25,15 +25,25 @@ class Course {
     this.enrolled = false,
   ]);
 
-  Course copyWith({bool? favorite, bool? enrolled}) => Course(
-    code,
-    name,
-    creditHours,
-    day,
+  Course copyWith({
+    String? code,
+    String? name,
+    num? creditHours,
+    String? day,
+    String? time,
+    String? venue,
+    String? instructor,
+    bool? favorite,
+    bool? enrolled,
+  }) => Course(
+    code ?? this.code,
+    name ?? this.name,
+    creditHours ?? this.creditHours,
+    day ?? this.day,
     icon,
-    time,
-    venue,
-    instructor,
+    time ?? this.time,
+    venue ?? this.venue,
+    instructor ?? this.instructor,
     favorite ?? this.favorite,
     enrolled ?? this.enrolled,
   );
