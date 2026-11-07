@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class Course{
+class Course {
   final String code;
   final String name;
   final int creditHours;
@@ -20,12 +20,25 @@ class Course{
     this.time,
     this.venue,
     this.icon,
-    {this.instructor,this.isFavourite = false, this.enrolled = false}
+    {this.instructor, this.isFavourite = false, this.enrolled = false}
   );
-  Course copyWith({bool? isFavourite, bool? enrolled}) => Course(
-    code, name, creditHours, day, time, venue, icon,
-    instructor: instructor,
-    isFavourite: isFavourite ?? this.isFavourite,
-    enrolled: enrolled ?? this.enrolled,
-  );
+
+  Course copyWith({
+    String? name,
+    int? creditHours,
+    bool? isFavourite,
+    bool? enrolled,
+  }) =>
+      Course(
+        code,
+        name ?? this.name,
+        creditHours ?? this.creditHours,
+        day,
+        time,
+        venue,
+        icon,
+        instructor: instructor,
+        isFavourite: isFavourite ?? this.isFavourite,
+        enrolled: enrolled ?? this.enrolled,
+      );
 }
