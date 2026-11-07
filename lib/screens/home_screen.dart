@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
-import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -19,26 +17,6 @@ class HomeScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Card(child: ListTile(
-            leading: const Icon(Icons.wb_twilight),
-            title: const Text('Prayer times'),
-            subtitle: const Text('Arrives in Week 8'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const PrayerTimesScreen()),
-            ),
-          )),
-          Card(child: ListTile(
-            leading: const Icon(Icons.link),
-            title: const Text('Campus links'),
-            subtitle: const Text('Arrives in Week 7'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CampusLinksScreen()),
-            ),
-          )),
           Card(child: ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('About Campus Buddy KICT'),
