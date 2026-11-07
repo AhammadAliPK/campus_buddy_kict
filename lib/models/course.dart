@@ -9,6 +9,8 @@ class Course {
   final String time;
   final String venue;
   final String? instructor;
+  final bool favorite;
+  final bool enrolled;
 
   const Course(
     this.code,
@@ -19,5 +21,20 @@ class Course {
     this.time,
     this.venue, [
     this.instructor,
+    this.favorite = false,
+    this.enrolled = false,
   ]);
+
+  Course copyWith({bool? favorite, bool? enrolled}) => Course(
+    code,
+    name,
+    creditHours,
+    day,
+    icon,
+    time,
+    venue,
+    instructor,
+    favorite ?? this.favorite,
+    enrolled ?? this.enrolled,
+  );
 }

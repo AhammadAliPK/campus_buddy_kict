@@ -1,6 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 
+const List<String> weekDays = [
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+  'Sunday',
+];
+
 const List<Course> sampleCourses = [
   Course('CSCI 4311', 'Mobile Application Development', 3,
       'Tuesday & Thursday', Icons.phone_iphone, '15:30–16:50', 'LR13 LEVEL 2D', 'Poyilikandiyil'),

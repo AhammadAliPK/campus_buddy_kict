@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -10,29 +12,55 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  final List<Course> _courses = List.of(sampleCourses)..sort(_byDayThenTime);
+
+  static int _byDayThenTime(Course a, Course b) {
+    final byDay = weekDays
+        .indexOf(a.day.split(' & ').first)
+        .compareTo(weekDays.indexOf(b.day.split(' & ').first));
+    return byDay != 0 ? byDay : a.time.compareTo(b.time);
+  }
+
+  void _toggleFavorite(Course course) {
+    final index = _courses.indexOf(course);
+    setState(
+      () => _courses[index] = course.copyWith(favorite: !course.favorite),
+    );
+  }
+
+  void _setEnrolled(Course course, bool? value) {
+    final index = _courses.indexOf(course);
+    setState(() => _courses[index] = course.copyWith(enrolled: value ?? false));
+  }
+
+  Future<void> _addCourse() async {
+    final newCourse = await showDialog<Course>(
+      context: context,
+      builder: (context) => const AddCourseDialog(),
+    );
+    if (newCourse == null) return;
+    setState(() {
+      _courses.add(newCourse);
+      _courses.sort(_byDayThenTime);
+    });
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('${newCourse.code} added')));
+  }
 
   @override
   Widget build(BuildContext context) {
     num totalCh = 0;
-    for (final c in sampleCourses) {
+    num enrolledCh = 0;
+    int enrolledCount = 0;
+    for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
+      if (c.enrolled) {
+        enrolledCh = enrolledCh + c.creditHours;
+        enrolledCount++;
+      }
     }
-    const dayNumber = {
-      'Monday': 1,
-      'Tuesday': 2,
-      'Wednesday': 3,
-      'Thursday': 4,
-      'Friday': 5,
-      'Saturday': 6,
-      'Sunday': 7,
-    };
-    final sorted = [...sampleCourses];
-    sorted.sort((a, b) {
-      final byDay = dayNumber[a.day.split(' & ').first]!
-          .compareTo(dayNumber[b.day.split(' & ').first]!);
-      return byDay != 0 ? byDay : a.time.compareTo(b.time);
-    });
-    final shown = sorted.where((c) => c.day.contains('Tuesday')).toList();
+    final shown = _courses.where((c) => c.day.contains('Tuesday')).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -45,14 +73,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _addCourse,
+        icon: const Icon(Icons.add),
+        label: const Text('Add course'),
+      ),
       body: Column(
         children: [
           Card(
             margin: const EdgeInsets.all(12),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
+              child: Column(
+                children: [
+                  Text('${_courses.length} courses · $totalCh credit hours'),
+                  Text(
+                    'Enrolled: $enrolledCount courses · $enrolledCh credit hours',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
             ),
           ),
@@ -66,9 +105,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: sorted.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = sorted[index];
+                      final course = _courses[index];
                       return Card(
                         child: Center(
                           child: Column(
@@ -88,6 +127,15 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
+                              IconButton(
+                                icon: Icon(
+                                  course.favorite
+                                      ? Icons.star
+                                      : Icons.star_border,
+                                ),
+                                color: Colors.amber,
+                                onPressed: () => _toggleFavorite(course),
+                              ),
                             ],
                           ),
                         ),
@@ -97,7 +145,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 : shown.isEmpty
                 ? const Center(child: Text('No classes! Alhamdulillah :)'))
                 : ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.only(top: 8, bottom: 88),
                     itemCount: shown.length,
                     itemBuilder: (context, index) {
                       final course = shown[index];
@@ -120,10 +168,29 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         title: Text(course.code),
                         subtitle: Text(
                           '${course.name} · ${course.creditHours} CH\n'
-                          '$shortDay ${course.time} · ${course.venue}',
+                          '$shortDay ${course.time} · ${course.venue}\n'
+                          '${course.instructor ?? 'TBA'}',
                         ),
                         isThreeLine: true,
-                        trailing: Text(course.instructor ?? 'TBA'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                course.favorite
+                                    ? Icons.star
+                                    : Icons.star_border,
+                              ),
+                              color: Colors.amber,
+                              tooltip: 'Favourite',
+                              onPressed: () => _toggleFavorite(course),
+                            ),
+                            Checkbox(
+                              value: course.enrolled,
+                              onChanged: (v) => _setEnrolled(course, v),
+                            ),
+                          ],
+                        ),
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
