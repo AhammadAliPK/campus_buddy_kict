@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -77,6 +79,39 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.remove(course));
   }
 
+  // Week 6 Step 5: open the detail page and wait for its answer.
+  // The course is captured before await, then found again by indexOf,
+  // so the right row is removed even when the list is filtered.
+  Future<void> _openDetail(Course course) async {
+    final removed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(course: course),
+      ),
+    );
+    if (removed == true) {
+      setState(() => _courses.removeAt(_courses.indexOf(course)));
+    }
+  }
+
+  // Week 6 exercise: works here because this screen owns _courses.
+  Future<void> _clearFavourites() async {
+    final yes = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ConfirmScreen(
+          message: 'Clear all favourites?',
+        ),
+      ),
+    );
+    if (yes != true) return; // No, or the back button
+    setState(() {
+      for (int i = 0; i < _courses.length; i++) {
+        _courses[i] = _courses[i].copyWith(isFavorite: false);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
@@ -102,6 +137,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: _addCourse,
+          ),
+          IconButton(
+            icon: const Icon(Icons.star_half),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavourites,
           ),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
@@ -165,7 +205,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           final course = shown[index];
                           return Card(
                             child: InkWell(
-                              onTap: () => _toggleEnrolled(course),
+                              onTap: () => _openDetail(course),
                               onLongPress: () => _confirmRemove(course),
                               child: Center(
                                 child: Column(
@@ -203,19 +243,24 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             tileColor: index.isOdd
                                 ? Colors.black.withValues(alpha: 0.03)
                                 : null,
-                            leading: CircleAvatar(
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer,
-                              child: Icon(
-                                course.enrolled
-                                    ? Icons.check_circle
-                                    : course.icon,
-                                color: course.enrolled
-                                    ? Colors.green
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer,
+                            // Week 6: a row tap opens the detail page,
+                            // so enrolling moved to tapping this icon.
+                            leading: GestureDetector(
+                              onTap: () => _toggleEnrolled(course),
+                              child: CircleAvatar(
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                                child: Icon(
+                                  course.enrolled
+                                      ? Icons.check_circle
+                                      : course.icon,
+                                  color: course.enrolled
+                                      ? Colors.green
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                ),
                               ),
                             ),
                             title: Text(course.code),
@@ -233,7 +278,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               ),
                               onPressed: () => _toggleFavorite(course),
                             ),
-                            onTap: () => _toggleEnrolled(course),
+                            onTap: () => _openDetail(course),
                             onLongPress: () => _confirmRemove(course),
                           );
                         },
