@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 // Day filter from Week 4: show only this day. null = show every day.
 const String? _filterDay = null;
@@ -72,7 +74,40 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
-  // Homework 2: long-press a row -> "Are you sure?" -> remove
+  // Step 5 + Homework 2: tap a row -> detail page -> it may answer.
+  // Capture the course (not the row number) before await, because the list
+  // on screen is filtered and sorted.
+  Future<void> _openDetail(Course course) async {
+    final result = await Navigator.push<Object>(
+      context,
+      MaterialPageRoute(builder: (_) => CourseDetailScreen(course: course)),
+    );
+    final i = _indexOf(course);
+    if (i == -1) return; // course is gone already
+    if (result == true) {
+      setState(() => _courses.removeAt(i)); // "Remove this course"
+    } else if (result is Course) {
+      setState(() => _courses[i] = result); // edited copy replaces the row
+    }
+    // null = back button = nothing changes
+  }
+
+  // Exercise: this button works here because this State owns _courses.
+  Future<void> _clearFavourites() async {
+    final yes = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            const ConfirmScreen(question: 'Clear all favourites?'),
+      ),
+    );
+    if (yes != true) return;
+    setState(() {
+      _courses = _courses.map((c) => c.copyWith(isFavorite: false)).toList();
+    });
+  }
+
+  // Homework 2 (Week 5): long-press a row -> "Are you sure?" -> remove
   Future<void> _confirmRemove(Course course) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -122,6 +157,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
             onPressed: _addCourse,
           ),
           IconButton(
+            icon: const Icon(Icons.star_outline),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavourites,
+          ),
+          IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
             onPressed: () => setState(() => _isGrid = !_isGrid),
@@ -167,7 +207,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         itemBuilder: (context, index) {
                           final course = shown[index];
                           return Card(
-                            child: Center(
+                            clipBehavior: Clip.antiAlias,
+                            child: InkWell(
+                              onTap: () => _openDetail(course),
+                              child: Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -183,6 +226,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 ],
                               ),
                             ),
+                            ),
                           );
                         },
                       )
@@ -195,7 +239,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             tileColor: index.isOdd
                                 ? Colors.black.withValues(alpha: 0.03)
                                 : null,
-                            leading: CircleAvatar(
+                            // Tap the circle to enrol (the row tap now opens details)
+                            leading: GestureDetector(
+                              onTap: () => _toggleEnrolled(course),
+                              child: CircleAvatar(
                               backgroundColor: Theme.of(context)
                                   .colorScheme
                                   .primaryContainer,
@@ -209,6 +256,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                         .colorScheme
                                         .onPrimaryContainer,
                               ),
+                            ),
                             ),
                             title: Text(course.code),
                             isThreeLine: true,
@@ -226,7 +274,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               ),
                               onPressed: () => _toggleFavorite(course),
                             ),
-                            onTap: () => _toggleEnrolled(course),
+                            onTap: () => _openDetail(course),
                             onLongPress: () => _confirmRemove(course),
                           );
                         },

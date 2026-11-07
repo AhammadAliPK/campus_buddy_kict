@@ -25,16 +25,28 @@ class Course {
     this.enrolled = false,
   });
 
-  // A Course can't change, so "change" it = make a copy with one difference
-  Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
-        code,
-        name,
-        creditHours,
-        day,
-        time,
-        venue,
+  // A Course can't change, so "change" it = make a copy with differences.
+  // Week 6 homework: the edit screen needs every field, not just the two flags.
+  Course copyWith({
+    String? code,
+    String? name,
+    int? creditHours,
+    String? day,
+    String? time,
+    String? venue,
+    String? instructor,
+    bool? isFavorite,
+    bool? enrolled,
+  }) =>
+      Course(
+        code ?? this.code,
+        name ?? this.name,
+        creditHours ?? this.creditHours,
+        day ?? this.day,
+        time ?? this.time,
+        venue ?? this.venue,
         icon,
-        instructor: instructor,
+        instructor: instructor ?? this.instructor,
         isFavorite: isFavorite ?? this.isFavorite,
         enrolled: enrolled ?? this.enrolled,
       );
