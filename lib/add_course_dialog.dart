@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campus_buddy_kict/models/course.dart';
 
 class AddCourseDialog extends StatefulWidget {
   const AddCourseDialog({super.key});
@@ -17,7 +18,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday',
   ];
 
-  // 👉 1. ADD THE CREDIT HOURS VARIABLE HERE AT THE TOP:
+  
   int _creditHours = 3;
 
   @override
@@ -29,6 +30,13 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    final course = Course( 
+      _codeCtrl.text.trim().toUpperCase(),
+      _nameCtrl.text.trim(),
+      _creditHours,
+      _day,
+      Icons.auto_stories,
+    );
     Navigator.pop(context);
   }
 
@@ -74,7 +82,6 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                 onChanged: (v) => setState(() => _day = v!),
               ),
               const SizedBox(height: 8),
-              // 👉 2. ADD THE SLIDER ROW HERE AS THE FOURTH CHILD:
               Row(
                 children: [
                   const Text('Credit hours'),
