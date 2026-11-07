@@ -1,4 +1,4 @@
-import 'package:campus_buddy_kict/course.dart';
+import 'package:campus_buddy_kict/models/course.dart';
 import 'package:flutter/material.dart';
 
 class AddCourseDialog extends StatefulWidget {

@@ -1,5 +1,7 @@
 import 'package:campus_buddy_kict/add_course_dialog.dart';
-import 'package:campus_buddy_kict/course.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class CoursesScreen extends StatefulWidget {
@@ -68,6 +70,31 @@ class _CoursesScreenState extends State<CoursesScreen> {
     if (ok == true) setState(() => _courses.remove(course));
   }
 
+  Future<void> _openDetail(Course course) async {
+    // Capture the course (not the position) before awaiting.
+    final removed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => CourseDetailScreen(course: course)),
+    );
+    if (removed == true) {
+      setState(() => _courses.remove(course));
+    }
+  }
+
+  Future<void> _clearFavourites() async {
+    final ok = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ConfirmScreen(
+            message: 'This will clear all your favourite courses.'),
+      ),
+    );
+    if (ok != true) return; // false or null (system back) = cancelled
+    setState(() {
+      _courses = [for (final c in _courses) c.copyWith(isFavorite: false)];
+    });
+  }
+
   Widget _starButton(Course course) => IconButton(
         icon: Icon(
           course.isFavorite ? Icons.star : Icons.star_border,
@@ -83,16 +110,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
         final course = items[index];
         return ListTile(
           isThreeLine: true,
-          leading: Icon(
-            course.enrolled ? Icons.check_circle : course.icon,
-            color: course.enrolled ? Colors.green : null,
+          // Tap the icon to enrol; tap the row to open the detail page.
+          leading: IconButton(
+            tooltip: course.enrolled ? 'Unenrol' : 'Enrol',
+            icon: Icon(
+              course.enrolled ? Icons.check_circle : course.icon,
+              color: course.enrolled ? Colors.green : null,
+            ),
+            onPressed: () => _toggleEnrolled(course),
           ),
           title: Text('${course.code} · ${course.name}'),
           subtitle: Text(
             '${course.daysLabel} · ${course.time}\n${course.venue}\n${course.lecturer}',
           ),
           trailing: _starButton(course),
-          onTap: () => _toggleEnrolled(course),
+          onTap: () => _openDetail(course),
           onLongPress: () => _confirmRemove(course),
         );
       },
@@ -114,7 +146,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
         final course = items[index];
         return Card(
           child: InkWell(
-            onTap: () => _toggleEnrolled(course),
+            onTap: () => _openDetail(course),
             onLongPress: () => _confirmRemove(course),
             child: Stack(
               children: [
@@ -123,10 +155,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        course.enrolled ? Icons.check_circle : course.icon,
-                        size: 32,
-                        color: course.enrolled ? Colors.green : null,
+                      IconButton(
+                        tooltip: course.enrolled ? 'Unenrol' : 'Enrol',
+                        iconSize: 32,
+                        icon: Icon(
+                          course.enrolled ? Icons.check_circle : course.icon,
+                          color: course.enrolled ? Colors.green : null,
+                        ),
+                        onPressed: () => _toggleEnrolled(course),
                       ),
                       const SizedBox(height: 6),
                       Text(course.code,
@@ -175,6 +211,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            tooltip: 'Clear all favourites',
+            icon: const Icon(Icons.star_border),
+            onPressed: _clearFavourites,
+          ),
           IconButton(
             tooltip: 'Add course',
             icon: const Icon(Icons.add),
