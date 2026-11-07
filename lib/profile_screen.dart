@@ -1,4 +1,3 @@
-import 'package:campus_buddy_kict/profile_screen.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatefulWidget {
