@@ -3,6 +3,7 @@ import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_favourites_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -25,6 +26,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
         isFavorite: !_courses[index].isFavorite,
       );
     });
+  }
+
+  Future<void> _clearAllFavourites() async {
+    final confirmed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (context) => const ClearFavouritesScreen()),
+    );
+
+    if (!mounted) return;
+
+    if (confirmed == true) {
+      setState(() {
+        for (int i = 0; i < _courses.length; i++) {
+          _courses[i] = _courses[i].copyWith(isFavorite: false);
+        }
+      });
+    }
   }
 
   void _toggleEnrolled(int index) {
@@ -76,7 +94,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   }
 
   Future<void> _openCourseDetails(Course course) async {
-    final removed = await Navigator.push<bool>(
+    final result = await Navigator.push<Object?>(
       context,
       MaterialPageRoute(
         builder: (context) => CourseDetailScreen(course: course),
@@ -85,9 +103,17 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
     if (!mounted) return;
 
-    if (removed == true) {
+    if (result == true) {
       setState(() {
         _courses.remove(course);
+      });
+    } else if (result is Course) {
+      setState(() {
+        final index = _courses.indexOf(course);
+
+        if (index != -1) {
+          _courses[index] = result;
+        }
       });
     }
   }
@@ -142,6 +168,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
             icon: Icon(_isGrid ? Icons.view_list : Icons.grid_on),
             tooltip: _isGrid ? 'List view' : 'Grid view',
             onPressed: () => setState(() => _isGrid = !_isGrid),
+          ),
+
+          IconButton(
+            icon: const Icon(Icons.star_outline),
+            tooltip: 'Clear All Favourites',
+            onPressed: _clearAllFavourites,
           ),
         ],
       ),
@@ -263,13 +295,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           backgroundColor: Theme.of(context)
                               .colorScheme
                               .primaryContainer,
+                          // child: Icon(
+                          //   course.enrolled ? Icons.check_circle : course.icon,
+                          //   color: course.enrolled
+                          //       ? Colors.green
+                          //       : Theme.of(context)
+                          //             .colorScheme
+                          //             .onPrimaryContainer,
+                          // ),
+
                           child: Icon(
-                            course.enrolled ? Icons.check_circle : course.icon,
-                            color: course.enrolled
-                                ? Colors.green
-                                : Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer,
+                            course.icon,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
                           ),
                         ),
 
@@ -286,32 +325,41 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ],
                         ),
 
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              tooltip: course.enrolled ? 'Unenroll' : 'Enroll',
-                              icon: Icon(
-                                course.enrolled
-                                    ? Icons.check_circle
-                                    : Icons.check_circle_outline,
-                                color: course.enrolled ? Colors.green : null,
-                              ),
-                              onPressed: () =>
-                                  _toggleEnrolled(_courses.indexOf(course)),
-                            ),
-                            IconButton(
-                              tooltip: 'Favourite',
-                              icon: Icon(
-                                course.isFavorite
-                                    ? Icons.star
-                                    : Icons.star_border,
-                                color: course.isFavorite ? Colors.amber : null,
-                              ),
-                              onPressed: () =>
-                                  _toggleFavorite(_courses.indexOf(course)),
-                            ),
-                          ],
+                        // trailing: Row(
+                        //   mainAxisSize: MainAxisSize.min,
+                        //   children: [
+                        //     IconButton(
+                        //       tooltip: course.enrolled ? 'Unenroll' : 'Enroll',
+                        //       icon: Icon(
+                        //         course.enrolled
+                        //             ? Icons.check_circle
+                        //             : Icons.check_circle_outline,
+                        //         color: course.enrolled ? Colors.green : null,
+                        //       ),
+                        //       onPressed: () =>
+                        //           _toggleEnrolled(_courses.indexOf(course)),
+                        //     ),
+                        //     IconButton(
+                        //       tooltip: 'Favourite',
+                        //       icon: Icon(
+                        //         course.isFavorite
+                        //             ? Icons.star
+                        //             : Icons.star_border,
+                        //         color: course.isFavorite ? Colors.amber : null,
+                        //       ),
+                        //       onPressed: () =>
+                        //           _toggleFavorite(_courses.indexOf(course)),
+                        //     ),
+                        //   ],
+                        // ),
+                        trailing: IconButton(
+                          tooltip: 'Favourite',
+                          icon: Icon(
+                            course.isFavorite ? Icons.star : Icons.star_border,
+                            color: course.isFavorite ? Colors.amber : null,
+                          ),
+                          onPressed: () =>
+                              _toggleFavorite(_courses.indexOf(course)),
                         ),
 
                         // onTap: () => _toggleEnrolled(_courses.indexOf(course)),

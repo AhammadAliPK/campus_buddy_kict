@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campus_buddy_kict/screens/clear_favourites_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -67,6 +68,30 @@ class HomeScreen extends StatelessWidget {
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.pushNamed(context, '/about'),
             ),
+          ),
+
+          const SizedBox(height: 16),
+
+          ElevatedButton(
+            onPressed: () async {
+              final confirmed = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ClearFavouritesScreen(),
+                ),
+              );
+
+              if (!context.mounted) return;
+
+              if (confirmed == true) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Confirmed! Favourites are not cleared yet.'),
+                  ),
+                );
+              }
+            },
+            child: const Text('Clear All Favourites'),
           ),
         ],
       ),
