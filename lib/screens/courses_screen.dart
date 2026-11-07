@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 class CoursesScreen extends StatefulWidget {
 const CoursesScreen({super.key});
 
@@ -97,7 +98,7 @@ margin: const EdgeInsets.all(12),
 child: Padding(
 padding: const EdgeInsets.all(12),
 child: Text(
-  '${_courses.length} courses · $totalCh credit hours\n' // \n starts a new line
+  '${shown.length} courses · $totalCh credit hours\n' // \n starts a new line
   'Enrolled: $enrolledCh CH', 
 ),
 ),
@@ -219,9 +220,21 @@ trailing: Row(
     ),
   ],
 ),
-onTap: () {
-  final realIndex = _courses.indexWhere((c) => c.code == course.code);
-  _toggleEnrolled(realIndex);
+onTap: () async {
+  // Navigator.push slides the new page on top and waits for it to pop back
+  final removed = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (context) => CourseDetailScreen(course: course),
+    ),
+  );
+
+  // If the detail page popped back 'true' (Remove button was pressed)
+  if (removed == true) {
+    setState(() {
+      _courses.remove(course); // Deletes the exact course cleanly
+    });
+  }
 },
 
 onLongPress: () async {
