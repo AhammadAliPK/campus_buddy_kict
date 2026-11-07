@@ -15,6 +15,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   late List<Course> _courses;
 
+  static const _dayOrder = {
+    'Monday': 1,
+    'Tuesday': 2,
+    'Wednesday': 3,
+    'Thursday': 4,
+    'Friday': 5,
+  };
+
+  void _sortByDay() {
+    _courses.sort((a, b) {
+      final dayA = _dayOrder[a.day] ?? 99;
+      final dayB = _dayOrder[b.day] ?? 99;
+      if (dayA != dayB) return dayA.compareTo(dayB);
+      return a.time.compareTo(b.time);
+    });
+  }
+
   void _toggleFavorite(int index) {
     setState(() {
       _courses[index] =
@@ -28,13 +45,17 @@ class _CoursesScreenState extends State<CoursesScreen> {
       builder: (_) => const AddCourseDialog(),
     );
     if (course == null) return;
-    setState(() => _courses.add(course));
+    setState(() {
+      _courses.add(course);
+      _sortByDay();
+    });
   }
 
   @override
   void initState() {
     super.initState();
     _courses = List.of(sampleCourses);
+    _sortByDay();
   }
 
   @override
@@ -43,6 +64,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
     for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
     }
+
+    final shown = sampleCourses.where((c) => c.day == 'Tuesday').toList();
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -118,8 +141,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         ),
                         title: Text(course.code),
                         subtitle: Text(
-                          '${course.name} · ${course.day}',
+                          '${course.day.substring(0, 3)} ${course.time}\n ${course.instructor ?? 'TBA'}',
                         ),
+                        isThreeLine: true,
                         trailing: IconButton(
                           icon: Icon(
                             course.isFavorite
