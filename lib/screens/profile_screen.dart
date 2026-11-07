@@ -8,61 +8,35 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  static const _guestNickname = 'Guest Student';
-  static const _defaultNickname = 'ansimrn_';
-  static const _defaultBio =
+  String _nickname = 'ansimrn_';
+  String _bio =
       'Kuliyyah of ICT · Year 4 · Loves nasi ayam and clean code.';
-  static const _defaultMatric = '2317243';
-
-  String _nickname = _defaultNickname;
-  String _bio = _defaultBio;
-  String _matric = _defaultMatric;
 
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
-  final _matricCtrl = TextEditingController();
   bool _editing = false;
 
   @override
   void initState() {
     super.initState();
-    _nicknameCtrl.text = _nickname; // pre-fill from current state
+    _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
-    _matricCtrl.text = _matric;
   }
 
   @override
   void dispose() {
     _nicknameCtrl.dispose();
     _bioCtrl.dispose();
-    _matricCtrl.dispose();
     super.dispose();
   }
 
   void _toggleEdit() {
     setState(() {
       if (_editing) {
-        // leaving edit mode: copy controller values into state
-        final nickname = _nicknameCtrl.text.trim();
-        // empty or spaces-only nickname -> keep the default
-        _nickname = nickname.isEmpty ? _guestNickname : nickname;
-        _nicknameCtrl.text = _nickname;
+        _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
-        _matric = _matricCtrl.text.trim();
       }
       _editing = !_editing;
-    });
-  }
-
-  void _reset() {
-    setState(() {
-      _nickname = _defaultNickname;
-      _bio = _defaultBio;
-      _matric = _defaultMatric;
-      // fix the boxes too, so the next edit starts clean
-      _nicknameCtrl.text = _nickname;
-      _bioCtrl.text = _bio;
-      _matricCtrl.text = _matric;
     });
   }
 
@@ -108,24 +82,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _matricCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Matric number',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.badge),
-                ),
-              ),
-              const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: _toggleEdit,
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
-              ),
-              TextButton(
-                onPressed: _reset,
-                child: const Text('Reset'),
               ),
             ] else ...[
               Text(_nickname,
@@ -135,10 +95,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text(_bio,
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.black54)),
-              const SizedBox(height: 4),
-              Text(_matric,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
             ],
           ],
         ),

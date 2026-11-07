@@ -33,7 +33,7 @@ class CourseDetailScreen extends StatelessWidget {
               child: OutlinedButton.icon(
                 icon: const Icon(Icons.delete_outline),
                 label: const Text('Remove this course'),
-                onPressed: () => Navigator.pop(context, true), // the answer
+                onPressed: () => Navigator.pop(context, true),
               ),
             ),
           ],

@@ -16,7 +16,6 @@ class _ShellScreenState extends State<ShellScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // IndexedStack keeps all three screens alive, shows one at a time
       body: IndexedStack(
         index: _tab,
         children: const [

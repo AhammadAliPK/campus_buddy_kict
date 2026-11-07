@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
 import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
+import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

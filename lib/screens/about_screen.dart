@@ -11,11 +11,8 @@ class AboutScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('CSCI 4311 · Mobile Application Development'),
-            const SizedBox(height: 8),
-            const Text('Developer: ansimrn_ (2317243)'),
-            const SizedBox(height: 8),
+            const Text('Developer: ansimrn_'),
             const Text('1.0.0 · Week 6'),
-            const SizedBox(height: 16),
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text('Close'),
