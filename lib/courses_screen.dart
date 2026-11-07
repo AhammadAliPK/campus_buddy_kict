@@ -14,6 +14,7 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   String _selectedDay = 'All days';
+  bool _favoritesOnly = false;
   late List<Course> _courses;
 
   Future<void> _addCourse() async {
@@ -58,6 +59,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   }
 
   @override
+  //#buildd
   Widget build(BuildContext context) {
     int totalCh = 0;
     int enrolledCh = 0;
@@ -71,13 +73,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
       }
     }
 
-    // Filter courses by selected day
-    final shown = _courses.where((course) {
-      if (_selectedDay == 'All days') {
-        return true;
-      }
+    List<Course> shown = _courses.where((course) {
+      bool matchesDay =
+          _selectedDay == 'All days' || course.day == _selectedDay;
 
-      return course.day == _selectedDay;
+      bool matchesFavorite =
+          !_favoritesOnly || course.isFavorite;
+
+      return matchesDay && matchesFavorite;
     }).toList();
 
     return Scaffold(
@@ -142,6 +145,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   value: 'Tuesday',
                   child: Text('Tuesday'),
                 ),
+                 DropdownMenuItem(
+                  value: 'Wednesday',
+                  child: Text('Wednesday'),
+                ),
+                 DropdownMenuItem(
+                  value: 'Thursday',
+                  child: Text('Thursday'),
+                ),
+                 DropdownMenuItem(
+                  value: 'Friday',
+                  child: Text('Friday'),
+                ),
               ],
               onChanged: (value) {
                 if (value != null) {
@@ -152,14 +167,24 @@ class _CoursesScreenState extends State<CoursesScreen> {
               },
             ),
           ),
+          const SizedBox(height: 8),
 
+          FilterChip(
+            label: const Text('★ favourites only'),
+            selected: _favoritesOnly,
+            onSelected: (selected) {
+              setState(() {
+                _favoritesOnly = selected;
+              });
+            },
+          ),
           const SizedBox(height: 8),
 
           // Course list or grid
           Expanded(
             child: shown.isEmpty
                 ? const Center(
-                    child: Text('No classes! Alhamdulillah :)'),
+                    child: Text('yayayayy have a good day'),
                   )
                 : _isGrid
                     ? GridView.builder(
@@ -281,6 +306,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             ),
                             onTap: () =>
                                 _toggleEnrolled(courseIndex),
+                            onLongPress: () {
+                              _confirmRemoveCourse(courseIndex);
+                            },
                           );
                         },
                       ),
@@ -289,4 +317,35 @@ class _CoursesScreenState extends State<CoursesScreen> {
       ),
     );
   }
+  Future<void> _confirmRemoveCourse(int index) async {
+  final confirm = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Remove Course?'),
+      content: Text(
+        'Are you sure you want to remove ${_courses[index].code}?',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context, false);
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context, true);
+          },
+          child: const Text('Remove'),
+        ),
+      ],
+    ),
+  );
+
+  if (confirm == true) {
+    setState(() {
+      _courses.removeAt(index);
+    });
+  }
+}
 }
