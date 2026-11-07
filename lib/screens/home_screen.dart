@@ -1,26 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
-import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  // Why Home can't clear the favourites: the course list (_courses) lives
-  // inside _CoursesScreenState, which is private to the Courses screen.
-  // Home and Courses are siblings in the shell, so Home has no reference to
-  // that State and no way to call setState on it. To share data like this,
-  // it has to live above both screens and be handed down to them, which is
-  // what state management solves.
-  Future<void> _clearFavourites(BuildContext context) async {
-    final yes = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(builder: (_) => const ConfirmScreen()),
-    );
-    if (yes == true) {
-      // nothing to clear from here: Home can't reach the favourites
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,12 +45,6 @@ class HomeScreen extends StatelessWidget {
             title: const Text('About Campus Buddy KICT'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.pushNamed(context, '/about'),
-          )),
-          Card(child: ListTile(
-            leading: const Icon(Icons.star_outline),
-            title: const Text('Clear all favourites'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _clearFavourites(context),
           )),
         ],
       ),

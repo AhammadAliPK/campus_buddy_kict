@@ -125,7 +125,7 @@ void main() {
     expect(find.textContaining('6 courses · 17 credit hours'), findsOneWidget);
   });
 
-  testWidgets('Home cards, About and clear favourites', (tester) async {
+  testWidgets('Home cards and About', (tester) async {
     await tester.pumpWidget(const CampusBuddyKictApp());
 
     // About from the app bar icon, closed with Close
@@ -153,35 +153,6 @@ void main() {
     expect(find.text('Campus links — coming in Week 7'), findsOneWidget);
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
-
-    // clear favourites from Home: confirm screen, but Home can't reach them
-    await tester.tap(find.text('Clear all favourites'));
-    await tester.pumpAndSettle();
-    expect(find.text('Are you sure?'), findsOneWidget);
-    await tester.tap(find.text('Yes'));
-    await tester.pumpAndSettle();
-    expect(find.text('Are you sure?'), findsNothing); // back on Home
-  });
-
-  testWidgets('Clear favourites from Courses tab', (tester) async {
-    await tester.pumpWidget(const MaterialApp(home: CoursesScreen()));
-    await tester.tap(find.byIcon(Icons.star_border).first);
-    await tester.pump();
-    expect(find.byIcon(Icons.star), findsOneWidget);
-
-    // No keeps them
-    await tester.tap(find.byIcon(Icons.star_half));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('No'));
-    await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.star), findsOneWidget);
-
-    // Yes clears them
-    await tester.tap(find.byIcon(Icons.star_half));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Yes'));
-    await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.star), findsNothing);
   });
 
   testWidgets('Profile edit, empty nickname and reset', (tester) async {

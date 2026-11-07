@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
-import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 
@@ -53,19 +52,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
-  Future<void> _clearFavourites() async {
-    final yes = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ConfirmScreen(),
-      ),
-    );
-    if (yes != true) return;
-    setState(() {
-      _courses = [for (final c in _courses) c.copyWith(isFavorite: false)];
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     var totalCh = 0;
@@ -89,11 +75,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
             icon: const Icon(Icons.add),
             tooltip: 'Add a course',
             onPressed: _addCourse,
-          ),
-          IconButton(
-            icon: const Icon(Icons.star_half),
-            tooltip: 'Clear all favourites',
-            onPressed: _clearFavourites,
           ),
           IconButton(
             icon: Icon(_isGrid ? Icons.list : Icons.grid_view),
