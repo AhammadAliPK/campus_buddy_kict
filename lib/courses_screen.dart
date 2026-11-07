@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 
 class CoursesScreen extends StatefulWidget {
@@ -10,12 +11,32 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+
+  final Map<String, int> _dayOrder = {
+    'Monday': 1,
+    'Tuesday': 2,
+    'Wednesday': 3,
+    'Thursday': 4,
+    'Friday': 5,
+    'Saturday': 6,
+    'Sunday': 7,
+  };
+
   @override
   Widget build(BuildContext context) {
     int totalCh=0;
     for (final c in sampleCourses) {
       totalCh = totalCh + c.creditHours;
     }
+
+    final List<Course> sortedCourses = List.from(sampleCourses);
+    sortedCourses.sort((a, b) {
+      final dayA = _dayOrder[a.day] ?? 99;
+      final dayB = _dayOrder[b.day] ?? 99;
+      return dayA.compareTo(dayB);
+    });
+    
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
@@ -71,9 +92,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
               
               :ListView.builder(
                 padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: sampleCourses.length,
+                itemCount: sortedCourses.length,
                 itemBuilder: (context, index) {
-                  final course = sampleCourses[index];
+                  final course = sortedCourses[index];
                   return ListTile(
                     tileColor: index.isOdd ? Colors.black.withValues(alpha: 0.03) : null,
                     leading: CircleAvatar(

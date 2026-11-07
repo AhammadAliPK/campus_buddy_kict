@@ -5,6 +5,9 @@ class Course{
   final String name;
   final int creditHours;
   final String day;
+  final String time;
+  final String venue;
+  final String? instructor;
   final IconData icon;
 
   const Course(
@@ -12,6 +15,9 @@ class Course{
     this.name,
     this.creditHours,
     this.day,
+    this.time,
+    this.venue,
+    this.instructor,
     this.icon,
   );
 }
