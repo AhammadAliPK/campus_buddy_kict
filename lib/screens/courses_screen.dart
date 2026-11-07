@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/confirm_clear_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -35,7 +37,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
         existingCodes: _courses.map((c) => c.code).toList(),
       ),
     );
-    if (course == null) return;
+    if (course == null) return; // user cancelled
     setState(() => _courses.add(course));
   }
 
@@ -45,6 +47,51 @@ class _CoursesScreenState extends State<CoursesScreen> {
         enrolled: !_courses[index].enrolled,
       );
     });
+  }
+
+  Future<void> _openDetail(int index) async {
+    final course = _courses[index];
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(course: course),
+      ),
+    );
+    if (!mounted) return;
+    if (result == true) {
+      setState(() => _courses.remove(course));
+    } else if (result is Course) {
+      setState(() {
+        final idx = _courses.indexOf(course);
+        if (idx != -1) {
+          _courses[idx] = result;
+        }
+      });
+    }
+  }
+
+  Future<void> _clearAllFavourites() async {
+    final confirmed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ConfirmClearScreen(
+          title: 'Clear All Favourites',
+          message: 'Are you sure you want to clear all favourited courses?',
+        ),
+      ),
+    );
+    if (confirmed == true && mounted) {
+      setState(() {
+        for (int i = 0; i < _courses.length; i++) {
+          if (_courses[i].isFavorite) {
+            _courses[i] = _courses[i].copyWith(isFavorite: false);
+          }
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('All favourites cleared')),
+      );
+    }
   }
 
   @override
@@ -61,6 +108,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.star_border_clear),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearAllFavourites,
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add course',
@@ -98,26 +150,35 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     itemCount: _courses.length,
                     itemBuilder: (context, index) {
                       final course = _courses[index];
-                      return Card(
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(course.icon, size: 40),
-                              const SizedBox(height: 8),
-                              Text(
-                                course.code,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                      return InkWell(
+                        onTap: () => _openDetail(index),
+                        child: Card(
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  course.enrolled
+                                      ? Icons.check_circle
+                                      : course.icon,
+                                  size: 40,
+                                  color: course.enrolled ? Colors.green : null,
                                 ),
-                              ),
-                              Text(
-                                course.name,
-                                textAlign: TextAlign.center,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                                const SizedBox(height: 8),
+                                Text(
+                                  course.code,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  course.name,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -129,19 +190,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     itemBuilder: (context, index) {
                       final course = _courses[index];
                       return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer,
-                          child: Icon(
-                            course.enrolled
-                                ? Icons.check_circle
-                                : course.icon,
-                            color: course.enrolled
-                                ? Colors.green
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
+                        leading: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () => _toggleEnrolled(index),
+                          child: CircleAvatar(
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer,
+                            child: Icon(
+                              course.enrolled
+                                  ? Icons.check_circle
+                                  : course.icon,
+                              color: course.enrolled
+                                  ? Colors.green
+                                  : Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
+                            ),
                           ),
                         ),
                         title: Text(course.code),
@@ -159,7 +224,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           onPressed: () => _toggleFavorite(index),
                         ),
-                        onTap: () => _toggleEnrolled(index),
+                        onTap: () => _openDetail(index),
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
