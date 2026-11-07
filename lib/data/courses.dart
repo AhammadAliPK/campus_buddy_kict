@@ -9,9 +9,6 @@ const List<Course> sampleCourses = [
     3,
     'Tuesday',
     Icons.phone_iphone,
-    '09:00–10:30',
-    'LT A',
-    'Dr. Ahammad',
   ),
   Course(
     'INFO 4303',
@@ -19,9 +16,6 @@ const List<Course> sampleCourses = [
     3,
     'Tuesday',
     Icons.code,
-    '11:00–12:30',
-    'LT A',
-    'Dr. Nur Leyni',
   ),
   Course(
     'INFO 4304',
@@ -29,9 +23,6 @@ const List<Course> sampleCourses = [
     3,
     'Tuesday',
     Icons.money,
-    '14:00–15:30',
-    'LT B',
-    'Dr. Akhtar',
   ),
   Course(
     'CSCI 4402',
@@ -39,9 +30,6 @@ const List<Course> sampleCourses = [
     4,
     'Tuesday',
     Icons.book,
-    '15:30–17:00',
-    'Lab 1',
-    'Dr. Anwar',
   ),
   Course(
     'CSCI 4333',
@@ -49,8 +37,5 @@ const List<Course> sampleCourses = [
     3,
     'Monday',
     Icons.phone_callback,
-    '09:00–10:30',
-    'LT A',
-    
   ),
 ];
