@@ -2,7 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
-import 'package:campus_buddy_kict/add_course_dialog.dart'; // ← NEW this week
+import 'package:campus_buddy_kict/add_course_dialog.dart'; 
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_favorites_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -32,13 +34,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  
-    void _toggleEnrolled(int index) {
-    setState(() {
-      _courses[index] = _courses[index].copyWith(
-        enrolled: !_courses[index].enrolled,
-      );
-    });
+  Future<void> _clearFavorites() async {
+    final confirmed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ClearFavoritesScreen(),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (confirmed == true) {
+      setState(() {
+        for (int i = 0; i < _courses.length; i++) {
+          _courses[i] = _courses[i].copyWith(isFavorite: false);
+        }
+      });
+    }
   }
   
   Future<void> _addCourse() async {
@@ -79,6 +91,33 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }
   }
 
+  
+  Future<void> _openCourseDetail(Course course) async {
+    final result = await Navigator.push<Object>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(course: course),
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (result == true) {
+      setState(() {
+        _courses.remove(course);
+      });
+    } else if (result is Course) {
+      setState(() {
+        final index = _courses.indexOf(course);
+        if (index != -1) {
+          _courses[index] = result;
+        }
+      });
+    }
+  }
+
+
+  @override
   Widget build(BuildContext context) {
     int totalCh = 0;
 
@@ -157,6 +196,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
               });
             },
           ),
+
+          ElevatedButton(
+            onPressed: _clearFavorites,
+            child: const Text('Clear all favourites'),
+          ),
        
 Expanded(
   child: shown.isEmpty
@@ -207,7 +251,7 @@ Expanded(
                 final course = shown[index];
 
                 return ListTile(
-                  onTap: () => _toggleEnrolled(_courses.indexOf(course)),
+                  onTap: () => _openCourseDetail(course),
                   tileColor: index.isOdd
                       ? Colors.black.withValues(alpha: 0.03)
                       : null,
