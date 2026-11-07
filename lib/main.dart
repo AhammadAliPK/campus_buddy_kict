@@ -1,4 +1,4 @@
-import 'package:campus_buddy_kict/courses_screen.dart'; // ← CHANGED
+import 'package:campus_buddy_kict/screens/courses_screen.dart'; // ← CHANGED
 import 'package:flutter/material.dart';
 
 void main() => runApp(const CampusBuddyKictApp());
