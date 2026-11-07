@@ -9,8 +9,8 @@ class Course {
   final String time;
   final String venue;
   final String? instructor;
-  final bool isFavorite; // true when the user stars this course
-  final bool enrolled; // true when the user enrolls in it
+  final bool isFavorite;
+  final bool enrolled;
 
   const Course(
     this.code,
@@ -25,7 +25,6 @@ class Course {
     this.enrolled = false,
   ]);
 
-  // A copy with at most one difference
   Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
         code,
         name,

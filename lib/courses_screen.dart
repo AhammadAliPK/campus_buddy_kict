@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -31,19 +32,17 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   late List<Course> _courses;
   bool _isGrid = false;
-  String? _selectedDay; // null = all days
-  bool _favOnly = false; // "favourites only" chip
+  String? _selectedDay;
+  bool _favOnly = false;
 
   @override
   void initState() {
     super.initState();
-    _courses = List.of(sampleCourses); // our own copy, safe to change
+    _courses = List.of(sampleCourses);
   }
 
   // ---------- helpers ----------
 
-  // Day filter + favourites filter, then sorted by day and time.
-  // Always built from _courses.
   List<Course> get _shown {
     final list = _courses
         .where((c) =>
@@ -62,24 +61,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   String _startTime(Course c) => c.time.split(RegExp(r'[-–]')).first;
 
-  // Example: "Mon 09:00 · LT A"
   String _info(Course c) => '${_shortDay(c)} ${_startTime(c)} · ${c.venue}';
 
-  // The list on screen is filtered and sorted, so we look up the real
-  // position in _courses instead of using the row's index.
   void _toggleFavorite(Course course) {
     final i = _courses.indexOf(course);
     if (i == -1) return;
     setState(() {
       _courses[i] = course.copyWith(isFavorite: !course.isFavorite);
-    });
-  }
-
-  void _toggleEnrolled(Course course) {
-    final i = _courses.indexOf(course);
-    if (i == -1) return;
-    setState(() {
-      _courses[i] = course.copyWith(enrolled: !course.enrolled);
     });
   }
 
@@ -90,8 +78,28 @@ class _CoursesScreenState extends State<CoursesScreen> {
         existingCodes: _courses.map((c) => c.code).toList(),
       ),
     );
-    if (course == null) return; // the user cancelled
+    if (course == null) return;
     setState(() => _courses.add(course));
+  }
+
+  Future<void> _openDetail(Course course) async {
+    final result = await Navigator.push<CourseDetailResult>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(course: course),
+      ),
+    );
+    if (result == null || !mounted) return;
+
+    final i = _courses.indexOf(course);
+    if (i == -1) return;
+    setState(() {
+      if (result.removed) {
+        _courses.removeAt(i);
+      } else {
+        _courses[i] = result.course;
+      }
+    });
   }
 
   Future<void> _confirmRemove(Course course) async {
@@ -150,7 +158,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
       ),
       body: Column(
         children: [
-          // Summary card
           Card(
             margin: const EdgeInsets.fromLTRB(12, 12, 12, 4),
             child: Padding(
@@ -161,8 +168,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
             ),
           ),
-
-          // Filter chips: favourites + days
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -191,8 +196,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ],
             ),
           ),
-
-          // List / grid / empty message
           Expanded(
             child: shown.isEmpty
                 ? Center(
@@ -240,7 +243,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
             onPressed: () => _toggleFavorite(course),
           ),
-          onTap: () => _toggleEnrolled(course),
+          onTap: () => _openDetail(course),
           onLongPress: () => _confirmRemove(course),
         );
       },
@@ -262,7 +265,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
         return Card(
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: () => _toggleEnrolled(course),
+            onTap: () => _openDetail(course),
             onLongPress: () => _confirmRemove(course),
             child: Padding(
               padding: const EdgeInsets.all(6),
