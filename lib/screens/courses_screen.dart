@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 // Day order for sorting and for the day filter chips
 const _dayOrder = {'Mon': 1, 'Tue': 2, 'Wed': 3, 'Thu': 4, 'Fri': 5};
@@ -64,6 +65,34 @@ class _CoursesScreenState extends State<CoursesScreen> {
       _courses.add(course);
       _courses.sort(_compareCourses);
     });
+  }
+
+  // Open the detail page and wait for its answer:
+  //   true   = remove | Course = edited version | null = back button
+  Future<void> _openDetail(Course course) async {
+    final result = await Navigator.push<Object>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(
+          course: course,
+          otherCodes: _courses
+              .where((c) => c.code != course.code)
+              .map((c) => c.code)
+              .toList(),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (result == true) {
+      setState(() => _courses.removeWhere((c) => c.code == course.code));
+    } else if (result is Course) {
+      final i = _indexOf(course);
+      if (i < 0) return;
+      setState(() {
+        _courses[i] = result;
+        _courses.sort(_compareCourses);
+      });
+    }
   }
 
   Future<void> _confirmRemove(Course c) async {
@@ -173,27 +202,31 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         itemBuilder: (context, index) {
                           final course = visible[index];
                           return Card(
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    course.enrolled
-                                        ? Icons.check_circle
-                                        : course.icon,
-                                    size: 40,
-                                    color:
-                                        course.enrolled ? Colors.green : null,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(course.code,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  Text(course.name,
-                                      textAlign: TextAlign.center,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis),
-                                ],
+                            child: InkWell(
+                              onTap: () => _openDetail(course),
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      course.enrolled
+                                          ? Icons.check_circle
+                                          : course.icon,
+                                      size: 40,
+                                      color: course.enrolled
+                                          ? Colors.green
+                                          : null,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(course.code,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold)),
+                                    Text(course.name,
+                                        textAlign: TextAlign.center,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis),
+                                  ],
+                                ),
                               ),
                             ),
                           );
@@ -209,19 +242,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 ? Colors.black.withValues(alpha: 0.03)
                                 : null,
                             isThreeLine: true,
-                            leading: CircleAvatar(
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer,
-                              child: Icon(
-                                course.enrolled
-                                    ? Icons.check_circle
-                                    : course.icon,
-                                color: course.enrolled
-                                    ? Colors.green
-                                    : Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer,
+                            // tap the round icon to enroll / un-enroll
+                            leading: GestureDetector(
+                              onTap: () => _toggleEnrolled(course),
+                              child: CircleAvatar(
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer,
+                                child: Icon(
+                                  course.enrolled
+                                      ? Icons.check_circle
+                                      : course.icon,
+                                  color: course.enrolled
+                                      ? Colors.green
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                ),
                               ),
                             ),
                             title: Text(course.code),
@@ -239,7 +276,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               ),
                               onPressed: () => _toggleFavorite(course),
                             ),
-                            onTap: () => _toggleEnrolled(course),
+                            onTap: () => _openDetail(course),
                             onLongPress: () => _confirmRemove(course),
                           );
                         },
