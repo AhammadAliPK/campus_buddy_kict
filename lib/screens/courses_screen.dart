@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/confirm_clear_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -15,7 +17,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   String _selectedDay = 'Monday';
 
-  bool _favOnly = false;   //favourites only filter on/off
+  bool _favOnly = false;
 
   final List<String> _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -53,7 +55,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
-  
   Future<void> _removeCourse(Course course) async {
     final sure = await showDialog<bool>(
       context: context,
@@ -72,8 +73,39 @@ class _CoursesScreenState extends State<CoursesScreen> {
         ],
       ),
     );
-    if (sure != true) return; 
+    if (sure != true) return;
     setState(() => _courses.remove(course));
+  }
+
+
+  Future<void> _openDetail(Course course) async {
+    final result = await Navigator.push<Object>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(course: course),
+      ),
+    );
+    if (result == null) return; // back button: nothing changes
+
+    final i = _courses.indexOf(course);
+    if (i == -1) return;
+
+    if (result == true) {
+      setState(() => _courses.removeAt(i));
+    } else if (result is Course) {
+      setState(() => _courses[i] = result);
+    }
+  }
+
+  Future<void> _clearFavourites() async {
+    final sure = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const ConfirmClearScreen()),
+    );
+    if (sure != true || !mounted) return;
+    setState(() {
+      _courses = _courses.map((c) => c.copyWith(isFavorite: false)).toList();
+    });
   }
 
   @override
@@ -87,7 +119,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
         .where((c) => c.enrolled)
         .fold<int>(0, (sum, c) => sum + c.creditHours);
 
-    
     final shown = _courses
         .where((c) => c.day == _selectedDay && (!_favOnly || c.isFavorite))
         .toList();
@@ -96,6 +127,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.clear_all),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavourites,
+          ),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add course',
@@ -144,7 +180,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     ),
                   );
                 }),
-                
                 FilterChip(
                   label: const Text('★ favourites only'),
                   selected: _favOnly,
@@ -237,8 +272,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               onPressed: () =>
                                   _toggleFavorite(_courses.indexOf(course)),
                             ),
-                            onTap: () => _toggleEnrolled(_courses.indexOf(course)),
-                            onLongPress: () => _removeCourse(course),   // NEW (Homework 2)
+                            onTap: () => _openDetail(course),
+                            onLongPress: () => _removeCourse(course),
                           );
                         },
                       ),

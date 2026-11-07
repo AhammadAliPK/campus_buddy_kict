@@ -9,8 +9,8 @@ class Course {
   final String time;
   final String venue;
   final String? instructor;
-  final bool isFavorite;   // NEW (Step 2)
-  final bool enrolled;     // NEW (Step 2)
+  final bool isFavorite;
+  final bool enrolled;
 
   const Course(
     this.code,
@@ -21,20 +21,31 @@ class Course {
     this.time,
     this.venue, {
     this.instructor,
-    this.isFavorite = false,   // NEW (Step 2)
-    this.enrolled = false,     // NEW (Step 2)
+    this.isFavorite = false,
+    this.enrolled = false,
   });
 
-  // NEW (Step 2): make a copy with one difference
-  Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
-        code,
-        name,
-        creditHours,
-        day,
+  
+  Course copyWith({
+    String? code,
+    String? name,
+    int? creditHours,
+    String? day,
+    String? time,
+    String? venue,
+    String? instructor,
+    bool? isFavorite,
+    bool? enrolled,
+  }) =>
+      Course(
+        code ?? this.code,
+        name ?? this.name,
+        creditHours ?? this.creditHours,
+        day ?? this.day,
         icon,
-        time,
-        venue,
-        instructor: instructor,
+        time ?? this.time,
+        venue ?? this.venue,
+        instructor: instructor ?? this.instructor,
         isFavorite: isFavorite ?? this.isFavorite,
         enrolled: enrolled ?? this.enrolled,
       );
