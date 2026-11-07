@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
-import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/data/courses.dart';
-import 'package:campus_buddy_kict/models/course.dart'; // NEW
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -13,23 +12,65 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  late List<Course> _courses;
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses);
+    
+    final dayMap = {'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5};
+    _courses.sort((a, b) => (dayMap[a.day] ?? 6).compareTo(dayMap[b.day] ?? 6));
+  }
+
+  void _toggleFavorite(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        isFavorite: !_courses[index].isFavorite,
+      );
+    });
+  }
+
+  void _toggleEnrolled(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        enrolled: !_courses[index].enrolled,
+      );
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (context) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).toList(),
+      ),
+    );
+
+    if (course == null) return; 
+
+    setState(() => _courses.add(course)); 
+  }
 
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
-    for (final c in sampleCourses) {
+    for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
     }
 
-    // Homework Part 3: Sort the list by day
-    final dayMap = {'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5};
-    final sortedCourses = List<Course>.from(sampleCourses)
-      ..sort((a, b) => (dayMap[a.day] ?? 6).compareTo(dayMap[b.day] ?? 6));
+    final enrolledCh = _courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: _addCourse,
+          ),
           IconButton(
             icon: _isGrid ? const Icon(Icons.list) : const Icon(Icons.grid_on),
             tooltip: 'Grid view',
@@ -44,7 +85,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                  '${sortedCourses.length} courses • $totalCh credit hours'),
+                  '${_courses.length} courses • $totalCh credit hours\n'
+                  'Enrolled: $enrolledCh CH'),
             ),
           ),
           Expanded(
@@ -57,9 +99,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       mainAxisSpacing: 8,
                       crossAxisSpacing: 8,
                     ),
-                    itemCount: sortedCourses.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = sortedCourses[index];
+                      final course = _courses[index];
                       return Card(
                         child: Center(
                           child: Column(
@@ -82,9 +124,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: sortedCourses.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = sortedCourses[index];
+                      final course = _courses[index];
                       return ListTile(
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
@@ -93,18 +135,28 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           backgroundColor: Theme.of(context)
                               .colorScheme
                               .primaryContainer,
-                          child: Icon(course.icon,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer),
+                          child: Icon(
+                            course.enrolled
+                                ? Icons.check_circle
+                                : course.icon,
+                            color: course.enrolled
+                                ? Colors.green
+                                : Theme.of(context).colorScheme.onPrimaryContainer,
+                          ),
                         ),
                         title: Text(course.code),
-                        // Homework Part 1 & 2: Update subtitle display
                         subtitle: Text(
                             '${course.name}\n${course.day} ${course.time} ${course.venue}\nInstructor: ${course.instructor ?? 'TBA'}'),
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${course.code} tapped')),
+                        trailing: IconButton(
+                          icon: Icon(
+                            course.isFavorite
+                                ? Icons.star
+                                : Icons.star_border,
+                            color: course.isFavorite ? Colors.amber : null,
+                          ),
+                          onPressed: () => _toggleFavorite(index),
                         ),
+                        onTap: () => _toggleEnrolled(index),
                       );
                     },
                   ),
