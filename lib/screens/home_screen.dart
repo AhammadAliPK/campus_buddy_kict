@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/prayer_screen.dart';
 import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_favourites_screen.dart';
 
 class HomeScreen extends StatelessWidget {
  const HomeScreen({super.key});
@@ -60,6 +61,26 @@ class HomeScreen extends StatelessWidget {
         trailing: const Icon(Icons.chevron_right),
         onTap: () {
           Navigator.pushNamed(context, '/about');
+        },
+      ),
+    ),
+        Card(
+      child: ListTile(
+        leading: const Icon(Icons.delete_outline),
+        title: const Text('Clear all favourites'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () async {
+          final confirmed = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const ClearFavouritesScreen(),
+            ),
+          );
+
+          if (confirmed == true) {
+            // Home cannot clear favourites because it
+            // does not own the courses list.
+          }
         },
       ),
     ),

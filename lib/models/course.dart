@@ -1,24 +1,47 @@
 import 'package:flutter/material.dart';
 
 class Course {
- final String code;
- final String name;
- final int creditHours;
- final String day;
- final IconData icon;
- final bool isFavorite; // ← NEW: true when the user stars this course
- final bool enrolled; // ← NEW: true when the user enrolls in it
+  final String code;
+  final String name;
+  final int creditHours;
+  final String day;
+  final IconData icon;
 
- // ← CHANGED: constructor now takes two optional extras in {curly braces}
- const Course(this.code, this.name, this.creditHours, this.day, this.icon,
-      {this.isFavorite = false, this.enrolled = false});
+  // Restored properties
+  final String time;
+  final String? instructor;
+  final String venue;
 
- // ← NEW method: make a copy with one difference
- Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
-      code, name, creditHours, day, icon,
-      isFavorite: isFavorite ?? this.isFavorite,
-      enrolled: enrolled ?? this.enrolled,
- );
-  
-  
+  final bool isFavorite;
+  final bool enrolled;
+
+  const Course(
+    this.code,
+    this.name,
+    this.creditHours,
+    this.day,
+    this.icon,
+    this.time,
+    this.instructor,
+    this.venue, {
+    this.isFavorite = false,
+    this.enrolled = false,
+  });
+
+  Course copyWith({
+    bool? isFavorite,
+    bool? enrolled,
+  }) =>
+      Course(
+        code,
+        name,
+        creditHours,
+        day,
+        icon,
+        time,
+        instructor,
+        venue,
+        isFavorite: isFavorite ?? this.isFavorite,
+        enrolled: enrolled ?? this.enrolled,
+      );
 }

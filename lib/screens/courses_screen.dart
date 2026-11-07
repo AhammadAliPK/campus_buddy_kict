@@ -3,7 +3,7 @@ import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart'; // ← NEW week 5
 import 'package:campus_buddy_kict/add_course_dialog.dart'; // ← NEW this step
 import 'package:campus_buddy_kict/screens/course_details_screen.dart';
-
+import 'package:campus_buddy_kict/screens/clear_favourites_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -100,7 +100,6 @@ Widget build(BuildContext context) {
     .fold<int>(0, (sum, c) => sum + c.creditHours);
 
   final shown = _courses
-    .where((c) => c.day == 'Monday')
     .where((c) => !_favoritesOnly || c.isFavorite)
     .toList();
 
@@ -109,6 +108,27 @@ Widget build(BuildContext context) {
       title: const Text('My Courses'),
       
 actions: [
+  IconButton(
+  icon: const Icon(Icons.delete_outline),
+  tooltip: 'Clear all favourites',
+  onPressed: () async {
+    final confirmed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ClearFavouritesScreen(),
+      ),
+    );
+
+    if (confirmed == true) {
+      setState(() {
+        _courses = _courses
+            .map((course) => course.copyWith(isFavorite: false))
+            .toList();
+      });
+    }
+  },
+),
+
   IconButton(
     icon: const Icon(Icons.add),
     tooltip: 'Add course',
@@ -230,17 +250,34 @@ actions: [
  onPressed: () => _toggleFavorite(course),
  ),
 
-         onTap: () async {
- final removed = await Navigator.push<bool>(
- context,
- MaterialPageRoute(
- builder: (_) => CourseDetailScreen(course: _courses[index]),
- ),
- );
- if (removed == true) {
- setState(() => _courses.removeAt(index));
- }
-},
+        onTap: () async {
+  final result = await Navigator.push<dynamic>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => CourseDetailScreen(course: course),
+    ),
+  );
+
+  if (!mounted) return;
+
+  // If an edited Course object is returned
+  if (result is Course) {
+    setState(() {
+      final index = _courses.indexOf(course);
+
+      if (index != -1) {
+        _courses[index] = result;
+      }
+    });
+  }
+
+  // If true is returned, remove the course
+  else if (result == true) {
+    setState(() {
+      _courses.remove(course);
+    });
+  }
+}, 
          onLongPress: () => _removeCourse(course), 
         );
         },

@@ -1,10 +1,13 @@
 
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/models/course.dart'; // ← NEW
-
+import 'package:campus_buddy_kict/models/course.dart';
 
 class AddCourseDialog extends StatefulWidget {
-  const AddCourseDialog({super.key, required this.existingCodes,});
+  const AddCourseDialog({
+    super.key,
+    required this.existingCodes,
+  });
+
   final List<String> existingCodes;
 
   @override
@@ -14,8 +17,12 @@ class AddCourseDialog extends StatefulWidget {
 class _AddCourseDialogState extends State<AddCourseDialog> {
   // Form and text controllers
   final _formKey = GlobalKey<FormState>();
+
   final _codeCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
+  final _timeCtrl = TextEditingController();
+  final _instructorCtrl = TextEditingController();
+  final _venueCtrl = TextEditingController();
 
   // Day dropdown
   String _day = 'Monday';
@@ -36,22 +43,31 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   void dispose() {
     _codeCtrl.dispose();
     _nameCtrl.dispose();
+    _timeCtrl.dispose();
+    _instructorCtrl.dispose();
+    _venueCtrl.dispose();
     super.dispose();
   }
 
-  // Validate the form and close the popup
+  // Validate form and return the new Course
   void _submit() {
- if (!_formKey.currentState!.validate()) return;
- final course = Course( // ← NEW: pack the answers
- _codeCtrl.text.trim().toUpperCase(),
- _nameCtrl.text.trim(),
- _creditHours,
- _day,
- Icons.auto_stories,
- );
- Navigator.pop(context, course); // ← CHANGED: close AND answer
- }
+    if (!_formKey.currentState!.validate()) return;
 
+    final course = Course(
+      _codeCtrl.text.trim().toUpperCase(),
+      _nameCtrl.text.trim(),
+      _creditHours,
+      _day,
+      Icons.auto_stories,
+      _timeCtrl.text.trim(),
+      _instructorCtrl.text.trim().isEmpty
+          ? null
+          : _instructorCtrl.text.trim(),
+      _venueCtrl.text.trim(),
+    );
+
+    Navigator.pop(context, course);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,32 +80,32 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // First field: Course Code
+              // Course Code
               TextFormField(
                 controller: _codeCtrl,
                 decoration: const InputDecoration(
                   labelText: 'Code (e.g. CSCI 4311)',
                 ),
                 validator: (v) {
-  final t = v?.trim().toUpperCase() ?? '';
+                  final t = v?.trim().toUpperCase() ?? '';
 
-  if (t.isEmpty) {
-    return 'Code is required';
-  }
+                  if (t.isEmpty) {
+                    return 'Code is required';
+                  }
 
-  if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(t)) {
-    return 'Format: 4 letters + 4 digits';
-  }
+                  if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(t)) {
+                    return 'Format: 4 letters + 4 digits';
+                  }
 
-  if (widget.existingCodes.contains(t)) {
-    return 'Already added';
-  }
+                  if (widget.existingCodes.contains(t)) {
+                    return 'Already added';
+                  }
 
-  return null;
-},
+                  return null;
+                },
               ),
 
-              // Second field: Course Name
+              // Course Name
               TextFormField(
                 controller: _nameCtrl,
                 decoration: const InputDecoration(
@@ -101,21 +117,26 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                         : null,
               ),
 
-              // Third field: Day dropdown
+              // Day dropdown
               DropdownButtonFormField<String>(
                 initialValue: _day,
-                items: _days
-                    .map(
-                      (d) => DropdownMenuItem(
-                        value: d,
-                        child: Text(d),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (v) => setState(() => _day = v!),
+                decoration: const InputDecoration(
+                  labelText: 'Day',
+                ),
+                items: _days.map((d) {
+                  return DropdownMenuItem(
+                    value: d,
+                    child: Text(d),
+                  );
+                }).toList(),
+                onChanged: (v) {
+                  if (v != null) {
+                    setState(() => _day = v);
+                  }
+                },
               ),
 
-              // Fourth field: Credit hours slider
+              // Credit hours slider
               const SizedBox(height: 8),
 
               Row(
@@ -128,12 +149,49 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                       divisions: 3,
                       label: '$_creditHours',
                       value: _creditHours.toDouble(),
-                      onChanged: (v) =>
-                          setState(() => _creditHours = v.round()),
+                      onChanged: (v) {
+                        setState(() {
+                          _creditHours = v.round();
+                        });
+                      },
                     ),
                   ),
                   Text('$_creditHours'),
                 ],
+              ),
+
+              const SizedBox(height: 12),
+
+              // Time
+              TextFormField(
+                controller: _timeCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Time (e.g. 8.00 AM - 10.00 AM)',
+                ),
+                validator: (v) =>
+                    (v?.trim().isEmpty ?? true)
+                        ? 'Time is required'
+                        : null,
+              ),
+
+              // Instructor
+              TextFormField(
+                controller: _instructorCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Instructor (optional)',
+                ),
+              ),
+
+              // Venue
+              TextFormField(
+                controller: _venueCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Venue (e.g. KICT Lab 1)',
+                ),
+                validator: (v) =>
+                    (v?.trim().isEmpty ?? true)
+                        ? 'Venue is required'
+                        : null,
               ),
             ],
           ),
