@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 import 'package:campus_buddy_kict/widgets/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
@@ -51,6 +53,33 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
+  Future<void> _openDetail(Course course) async {
+    // keep the course itself, not its position: the list may change meanwhile
+    final removed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(course: course),
+      ),
+    );
+    if (removed == true) {
+      setState(() => _courses.remove(course));
+    }
+  }
+
+  Future<void> _clearFavourites() async {
+    final yes = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            const ConfirmScreen(question: 'Clear all favourites?'),
+      ),
+    );
+    if (yes != true) return;
+    setState(() {
+      _courses = [for (final c in _courses) c.copyWith(isFavorite: false)];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     var totalCh = 0;
@@ -74,6 +103,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
             icon: const Icon(Icons.add),
             tooltip: 'Add a course',
             onPressed: _addCourse,
+          ),
+          IconButton(
+            icon: const Icon(Icons.star_half),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavourites,
           ),
           IconButton(
             icon: Icon(_isGrid ? Icons.list : Icons.grid_view),
@@ -129,9 +163,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
         // shown may be filtered, so find the course's place in _courses
         final i = _courses.indexOf(course);
         return ListTile(
-          leading: Icon(
-            course.enrolled ? Icons.check_circle : course.icon,
-            color: course.enrolled ? Colors.green : null,
+          // row tap now opens the detail page, so enroll moved to the icon
+          leading: IconButton(
+            icon: Icon(
+              course.enrolled ? Icons.check_circle : course.icon,
+              color: course.enrolled ? Colors.green : null,
+            ),
+            tooltip: 'Enroll',
+            onPressed: () => _toggleEnrolled(i),
           ),
           title: Text(course.code), // the main line
           subtitle: Text('${course.name} · ${course.day}'),
@@ -142,7 +181,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
             onPressed: () => _toggleFavorite(i),
           ),
-          onTap: () => _toggleEnrolled(i),
+          onTap: () => _openDetail(course),
         );
       },
       separatorBuilder: (_, _) => const Divider(), // thin line between rows
