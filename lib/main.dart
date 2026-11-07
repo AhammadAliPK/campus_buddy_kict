@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/shell_screen.dart';
-import 'package:campus_buddy_kict/screens/about_screen.dart'; // ← NEW
+import 'package:campus_buddy_kict/screens/about_screen.dart';
 
 void main() => runApp(const CampusBuddyKictApp());
 
@@ -15,7 +15,7 @@ class CampusBuddyKictApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
       ),
       home: const ShellScreen(),
-      // ← NEW: Registering the named route
+      
       routes: {
         '/about': (context) => const AboutScreen(),
       },

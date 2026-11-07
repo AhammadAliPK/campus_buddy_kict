@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 
 class AddCourseDialog extends StatefulWidget {
-  final List<String> existingCodes; // ← NEW: Accepts list of existing codes
+  final List<String> existingCodes; 
 
   const AddCourseDialog({
     super.key, 
-    required this.existingCodes, // ← NEW: Required constructor parameter
+    required this.existingCodes, 
   });
 
   @override
@@ -68,7 +68,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                     return 'Format: 4 letters + 4 digits';
                   }
 
-                  // ← NEW: Check if the code already exists in the list
+                  
                   final formattedCode = t.toUpperCase();
                   if (widget.existingCodes.map((c) => c.toUpperCase()).contains(formattedCode)) {
                     return 'Already added';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/home_screen.dart';
 import 'package:campus_buddy_kict/screens/courses_screen.dart';
-import 'package:campus_buddy_kict/screens/profile_screen.dart'; // ← Uncomment when file is added
+import 'package:campus_buddy_kict/screens/profile_screen.dart'; 
 
 class NotesStubScreen extends StatelessWidget {
   const NotesStubScreen({super.key});

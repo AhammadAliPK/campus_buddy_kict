@@ -20,7 +20,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
   @override
   void initState() {
     super.initState();
-    // Pre-fill the form with the existing course data
+
     _codeCtrl = TextEditingController(text: widget.course.code);
     _nameCtrl = TextEditingController(text: widget.course.name);
     _day = widget.course.day;
@@ -37,7 +37,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
   void _save() {
     if (!_formKey.currentState!.validate()) return;
     
-    // Package it back into a new Course (keeping instructor, icon, and enroll state intact)
+    
     final updatedCourse = Course(
       _codeCtrl.text.trim().toUpperCase(),
       _nameCtrl.text.trim(),

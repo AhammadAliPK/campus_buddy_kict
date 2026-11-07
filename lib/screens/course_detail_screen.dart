@@ -20,7 +20,7 @@ class CourseDetailScreen extends StatelessWidget {
                 context,
                 MaterialPageRoute(builder: (context) => EditCourseScreen(course: course)),
               );
-              // If saved, pop the edited course all the way back to the main list
+              
               if (edited != null) {
                 Navigator.pop(context, edited); 
               }

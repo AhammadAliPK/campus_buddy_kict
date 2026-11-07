@@ -21,7 +21,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
     _matricCtrl.text = _matric;
-    // pre-fill from current state
+    
   }
 
   @override
@@ -35,10 +35,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _toggleEdit() {
     setState(() {
       if (_editing) {
-        // leaving edit mode: copy controller values into state
+        
         if (_nicknameCtrl.text.trim().isEmpty) {
             _nickname = 'Guest Student';
-            _nicknameCtrl.text = 'Guest Student'; // Fix the box too
+            _nicknameCtrl.text = 'Guest Student'; 
           } else {
             _nickname = _nicknameCtrl.text;
           }
@@ -108,12 +108,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextButton(
                 onPressed: () {
                   setState(() {
-                    // 1. Reset the displayed text variables
+                   
                     _nickname = 'Guest Student';
                     _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
                     _matric = '202300000';
                     
-                    // 2. Reset the controllers so the text boxes start clean on the next edit
                     _nicknameCtrl.text = 'Guest Student';
                     _bioCtrl.text = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
                     _matricCtrl.text = '202300000'; 

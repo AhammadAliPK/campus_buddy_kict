@@ -20,7 +20,7 @@ class AboutScreen extends StatelessWidget {
             const Text('Version 1.0.0 - Week 6'),
             const SizedBox(height: 24),
             TextButton(
-              onPressed: () => Navigator.pop(context), // Closes the page
+              onPressed: () => Navigator.pop(context), 
               child: const Text('Close'),
             ),
           ],

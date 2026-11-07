@@ -20,13 +20,13 @@ class ClearFavoritesScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context, false), // Pops false
+                  onPressed: () => Navigator.pop(context, false), 
                   child: const Text('Cancel'),
                 ),
                 const SizedBox(width: 16),
                 FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                  onPressed: () => Navigator.pop(context, true), // Pops true
+                  onPressed: () => Navigator.pop(context, true), 
                   child: const Text('Clear All'),
                 ),
               ],
