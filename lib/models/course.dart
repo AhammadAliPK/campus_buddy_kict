@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 
 class Course {
@@ -27,18 +28,25 @@ class Course {
   });
 
   Course copyWith({
+    String? code,
+    String? name,
+    int? creditHours,
+    String? day,
+    String? time,
+    String? venue,
+    String? instructor,
     bool? isFavorite,
     bool? enrolled,
   }) {
     return Course(
-      code,
-      name,
-      creditHours,
-      day,
+      code ?? this.code,
+      name ?? this.name,
+      creditHours ?? this.creditHours,
+      day ?? this.day,
       icon,
-      time,
-      venue,
-      instructor: instructor,
+      time ?? this.time,
+      venue ?? this.venue,
+      instructor: instructor ?? this.instructor,
       isFavorite: isFavorite ?? this.isFavorite,
       enrolled: enrolled ?? this.enrolled,
     );

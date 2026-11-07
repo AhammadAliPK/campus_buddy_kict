@@ -1,7 +1,11 @@
+
 import 'package:flutter/material.dart';
+
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/confirmation_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -19,7 +23,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
   @override
   void initState() {
     super.initState();
-
     _courses = List.of(sampleCourses);
   }
 
@@ -32,7 +35,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  // Toggle enrolled status
+  // Toggle enrolment status
   void _toggleEnrolled(int index) {
     setState(() {
       _courses[index] = _courses[index].copyWith(
@@ -41,18 +44,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  // Open add course dialog
+  // Add new course
   Future<void> _openAddDialog() async {
     final newCourse = await showDialog<Course>(
       context: context,
       builder: (context) {
         return AddCourseDialog(
-          existingCodes: _courses.map((course) => course.code).toList(),
+          existingCodes: _courses.map((c) => c.code).toList(),
         );
       },
     );
 
-    if (newCourse == null) return;
+    if (!mounted || newCourse == null) return;
 
     setState(() {
       _courses.add(newCourse);
@@ -60,7 +63,37 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  // Remove course with confirmation
+  // Open course detail and receive the result
+  Future<void> _openCourseDetail(Course course) async {
+    final result = await Navigator.push<Object?>(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return CourseDetailScreen(course: course);
+        },
+      ),
+    );
+
+    if (!mounted) return;
+
+    final originalIndex = _courses.indexOf(course);
+
+    if (originalIndex == -1) return;
+
+    if (result == true) {
+      // Remove course
+      setState(() {
+        _courses.removeAt(originalIndex);
+      });
+    } else if (result is Course) {
+      // Replace course with edited course
+      setState(() {
+        _courses[originalIndex] = result;
+      });
+    }
+  }
+
+  // Remove course
   Future<void> _removeCourse(int index) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -91,6 +124,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
       },
     );
 
+    if (!mounted) return;
+
     if (confirm == true) {
       setState(() {
         _courses.removeAt(index);
@@ -98,15 +133,44 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }
   }
 
+  // Clear all favourites using a full confirmation screen
+  Future<void> _clearAllFavourites() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) {
+          return const ConfirmationScreen();
+        },
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (result == true) {
+      setState(() {
+        _courses = _courses.map((course) {
+          return course.copyWith(isFavorite: false);
+        }).toList();
+
+        _favouritesOnly = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('All favourites have been cleared.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
 
     // Calculate total credit hours
-    int totalCh = 0;
-
-    for (final course in _courses) {
-      totalCh += course.creditHours;
-    }
+    final totalCh = _courses.fold<int>(
+      0,
+      (sum, course) => sum + course.creditHours,
+    );
 
     // Calculate enrolled credit hours
     final enrolledCh = _courses
@@ -127,20 +191,27 @@ class _CoursesScreenState extends State<CoursesScreen> {
         title: const Text('My Courses'),
 
         actions: [
+          // Clear favourites
+          IconButton(
+            icon: const Icon(Icons.delete_sweep_outlined),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearAllFavourites,
+          ),
 
-          // Add course button
+          // Add course
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add course',
             onPressed: _openAddDialog,
           ),
 
-          // Switch grid/list view
+          // Grid and list view
           IconButton(
             icon: Icon(
               _isGrid ? Icons.list : Icons.grid_on,
             ),
             tooltip: 'Change view',
+
             onPressed: () {
               setState(() {
                 _isGrid = !_isGrid;
@@ -156,11 +227,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
           // Course summary
           Card(
             margin: const EdgeInsets.all(12),
+
             child: Padding(
               padding: const EdgeInsets.all(16),
 
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+
                 children: [
                   Text(
                     '${_courses.length} courses · $totalCh credit hours',
@@ -171,7 +244,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                   Text(
                     'Enrolled: $enrolledCh CH',
-                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],
               ),
@@ -202,7 +274,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
           Expanded(
             child: displayedCourses.isEmpty
 
-                // Empty state
                 ? Center(
                     child: Text(
                       _courses.isEmpty
@@ -211,8 +282,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     ),
                   )
 
-                // Grid view
                 : _isGrid
+
+                    // GRID VIEW
                     ? GridView.builder(
                         padding: const EdgeInsets.all(12),
 
@@ -228,111 +300,118 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                         itemBuilder: (context, index) {
                           final course = displayedCourses[index];
-
-                          final originalIndex =
-                              _courses.indexOf(course);
+                          final originalIndex = _courses.indexOf(course);
 
                           return Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
 
-                              child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                              onTap: () {
+                                _openCourseDetail(course);
+                              },
 
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        course.icon,
-                                        size: 28,
-                                      ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
 
-                                      const Spacer(),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
 
-                                      IconButton(
-                                        icon: Icon(
-                                          course.isFavorite
-                                              ? Icons.star
-                                              : Icons.star_border,
-                                          color: course.isFavorite
-                                              ? Colors.amber
-                                              : null,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          course.icon,
+                                          size: 28,
                                         ),
-                                        onPressed: () {
-                                          _toggleFavorite(originalIndex);
-                                        },
-                                      ),
-                                    ],
-                                  ),
 
-                                  Text(
-                                    course.code,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                        const Spacer(),
+
+                                        IconButton(
+                                          icon: Icon(
+                                            course.isFavorite
+                                                ? Icons.star
+                                                : Icons.star_border,
+                                            color: course.isFavorite
+                                                ? Colors.amber
+                                                : null,
+                                          ),
+
+                                          onPressed: () {
+                                            _toggleFavorite(originalIndex);
+                                          },
+                                        ),
+                                      ],
                                     ),
-                                  ),
 
-                                  const SizedBox(height: 4),
-
-                                  Text(
-                                    course.name,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-
-                                  const Spacer(),
-
-                                  Text('${course.creditHours} Credit Hours'),
-
-                                  Text(course.day),
-
-                                  const SizedBox(height: 4),
-
-                                  Row(
-                                    children: [
-                                      Checkbox(
-                                        value: course.enrolled,
-                                        onChanged: (_) {
-                                          _toggleEnrolled(originalIndex);
-                                        },
+                                    Text(
+                                      course.code,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
                                       ),
+                                    ),
 
-                                      const Expanded(
-                                        child: Text(
-                                          'Enrolled',
-                                          style: TextStyle(fontSize: 12),
+                                    const SizedBox(height: 4),
+
+                                    Text(
+                                      course.name,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+
+                                    const Spacer(),
+
+                                    Text(
+                                      '${course.creditHours} Credit Hours',
+                                    ),
+
+                                    Text(course.day),
+
+                                    const SizedBox(height: 4),
+
+                                    Row(
+                                      children: [
+                                        Checkbox(
+                                          value: course.enrolled,
+
+                                          onChanged: (_) {
+                                            _toggleEnrolled(originalIndex);
+                                          },
                                         ),
-                                      ),
 
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete_outline,
+                                        const Expanded(
+                                          child: Text(
+                                            'Enrolled',
+                                            style: TextStyle(fontSize: 12),
+                                          ),
                                         ),
-                                        onPressed: () {
-                                          _removeCourse(originalIndex);
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                ],
+
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                          ),
+
+                                          onPressed: () {
+                                            _removeCourse(originalIndex);
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           );
                         },
                       )
 
-                    // List view
+                    // LIST VIEW
                     : ListView.builder(
                         itemCount: displayedCourses.length,
 
                         itemBuilder: (context, index) {
                           final course = displayedCourses[index];
-
-                          // Find the course's actual position
-                          // in the original _courses list.
-                          final originalIndex =
-                              _courses.indexOf(course);
+                          final originalIndex = _courses.indexOf(course);
 
                           return ListTile(
                             leading: course.enrolled
@@ -363,12 +442,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               },
                             ),
 
-                            // Tap to enroll or unenroll
                             onTap: () {
-                              _toggleEnrolled(originalIndex);
+                              _openCourseDetail(course);
                             },
 
-                            // Long press to remove
                             onLongPress: () {
                               _removeCourse(originalIndex);
                             },
