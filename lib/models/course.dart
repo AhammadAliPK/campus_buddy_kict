@@ -7,9 +7,8 @@ class Course {
   final String day;
   final String time;
   final String venue;
-  final IconData icon;
   final String? instructor;
-
+  final IconData icon;
   final bool isFavorite;
   final bool enrolled;
 
@@ -18,24 +17,35 @@ class Course {
     this.name,
     this.creditHours,
     this.day,
-    this.time,
-    this.venue,
     this.icon, {
+    this.time = 'TBA',
+    this.venue = 'TBA',
     this.instructor,
     this.isFavorite = false,
     this.enrolled = false,
   });
 
-  Course copyWith({bool? isFavorite, bool? enrolled}) {
+  Course copyWith({
+    String? code,
+    String? name,
+    int? creditHours,
+    String? day,
+    String? time,
+    String? venue,
+    String? instructor,
+    IconData? icon,
+    bool? isFavorite,
+    bool? enrolled,
+  }) {
     return Course(
-      code,
-      name,
-      creditHours,
-      day,
-      time,
-      venue,
-      icon,
-      instructor: instructor,
+      code ?? this.code,
+      name ?? this.name,
+      creditHours ?? this.creditHours,
+      day ?? this.day,
+      icon ?? this.icon,
+      time: time ?? this.time,
+      venue: venue ?? this.venue,
+      instructor: instructor ?? this.instructor,
       isFavorite: isFavorite ?? this.isFavorite,
       enrolled: enrolled ?? this.enrolled,
     );

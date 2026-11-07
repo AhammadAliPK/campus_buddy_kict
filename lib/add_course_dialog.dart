@@ -14,41 +14,28 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   final _formKey = GlobalKey<FormState>();
   final _codeCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
-  final _timeCtrl = TextEditingController();
-  final _venueCtrl = TextEditingController();
 
   String _day = 'Monday';
-  int _creditHours = 3;
 
-  static const List<String> _days = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-  ];
+  static const _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+  int _creditHours = 3;
 
   @override
   void dispose() {
     _codeCtrl.dispose();
     _nameCtrl.dispose();
-    _timeCtrl.dispose();
-    _venueCtrl.dispose();
     super.dispose();
   }
 
   void _submit() {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
     final course = Course(
       _codeCtrl.text.trim().toUpperCase(),
       _nameCtrl.text.trim(),
       _creditHours,
       _day,
-      _timeCtrl.text.trim(),
-      _venueCtrl.text.trim(),
       Icons.auto_stories,
     );
 
@@ -67,97 +54,52 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
             children: [
               TextFormField(
                 controller: _codeCtrl,
-                textCapitalization: TextCapitalization.characters,
                 decoration: const InputDecoration(
-                  labelText: 'Course Code',
-                  hintText: 'e.g. CSCI 4311',
+                  labelText: 'Code (e.g. CSCI 4311)',
                 ),
-                validator: (value) {
-                  final code = value?.trim().toUpperCase() ?? '';
+                validator: (v) {
+                  final t = v?.trim() ?? '';
 
-                  if (code.isEmpty) {
+                  if (t.isEmpty) {
                     return 'Code is required';
                   }
 
-                  if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(code)) {
+                  if (!RegExp(r'^[A-Z]{4}\s?\d{4}$')
+                      .hasMatch(t.toUpperCase())) {
                     return 'Format: 4 letters + 4 digits';
                   }
 
-                  final alreadyExists = widget.existingCodes.any(
-                    (existing) => existing.trim().toUpperCase() == code,
-                  );
-
-                  if (alreadyExists) {
+                  if (widget.existingCodes.any(
+                    (code) => code.toUpperCase() == t.toUpperCase(),
+                  )) {
                     return 'Already added';
                   }
 
                   return null;
                 },
               ),
-              const SizedBox(height: 12),
+
               TextFormField(
                 controller: _nameCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Course Name',
-                  hintText: 'e.g. Mobile Application Development',
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Name is required';
-                  }
-
-                  return null;
-                },
+                decoration: const InputDecoration(labelText: 'Course name'),
+                validator: (v) =>
+                    (v?.trim().isEmpty ?? true) ? 'Name is required' : null,
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _timeCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Class Time',
-                  hintText: 'e.g. 10:00 AM - 12:00 PM',
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Class time is required';
-                  }
 
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _venueCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Venue',
-                  hintText: 'e.g. Lab 3',
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Venue is required';
-                  }
-
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _day,
-                decoration: const InputDecoration(
-                  labelText: 'Day',
-                  border: OutlineInputBorder(),
-                ),
-                items: _days.map((day) {
-                  return DropdownMenuItem<String>(value: day, child: Text(day));
-                }).toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      _day = value;
-                    });
+                items: _days
+                    .map((d) => DropdownMenuItem(value: d, child: Text(d)))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) {
+                    setState(() => _day = v);
                   }
                 },
               ),
-              const SizedBox(height: 12),
+
+              const SizedBox(height: 8),
+
               Row(
                 children: [
                   const Text('Credit hours'),
@@ -168,17 +110,12 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                       divisions: 3,
                       label: '$_creditHours',
                       value: _creditHours.toDouble(),
-                      onChanged: (value) {
-                        setState(() {
-                          _creditHours = value.round();
-                        });
+                      onChanged: (v) {
+                        setState(() => _creditHours = v.round());
                       },
                     ),
                   ),
-                  Text(
-                    '$_creditHours',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  Text('$_creditHours'),
                 ],
               ),
             ],
