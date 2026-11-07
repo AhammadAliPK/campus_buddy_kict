@@ -12,6 +12,7 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  bool _showFavoritesOnly = false; // HOMEWORK: track toggle state
   late List<Course> _courses;
 
   @override
@@ -39,6 +40,31 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
+  // HOMEWORK: Long-press remove method
+  Future<void> _removeCourse(int index) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Are you sure?'),
+        content: const Text('Remove this course from your list?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _courses.removeAt(index));
+    }
+  }
+
   Future<void> _addCourse() async {
     final course = await showDialog<Course>(
       context: context,
@@ -54,6 +80,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 1. Calculate totals based on the FULL list
     int totalCh = 0;
     for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
@@ -62,6 +89,15 @@ class _CoursesScreenState extends State<CoursesScreen> {
     final enrolledCh = _courses
         .where((c) => c.enrolled)
         .fold<int>(0, (sum, c) => sum + c.creditHours);
+
+    // 2. HOMEWORK: Filter the display list without losing data
+    Iterable<Course> displayCourses = _courses;
+    
+    if (_showFavoritesOnly) {
+      displayCourses = displayCourses.where((c) => c.isFavorite);
+    }
+    
+    final displayList = displayCourses.toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -79,16 +115,31 @@ class _CoursesScreenState extends State<CoursesScreen> {
         ],
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Card(
             margin: const EdgeInsets.all(12),
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Text(
-                  '${_courses.length} courses • $totalCh credit hours\n'
-                  'Enrolled: $enrolledCh CH'),
+              // Ensure summary card expands to fit text
+              child: SizedBox(
+                width: double.infinity,
+                child: Text(
+                    '${_courses.length} courses • $totalCh credit hours\n'
+                    'Enrolled: $enrolledCh CH'),
+              ),
             ),
           ),
+          // HOMEWORK: FilterChip Row
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: FilterChip(
+              label: const Text('Favourites only'),
+              selected: _showFavoritesOnly,
+              onSelected: (val) => setState(() => _showFavoritesOnly = val),
+            ),
+          ),
+          const SizedBox(height: 8),
           Expanded(
             child: _isGrid
                 ? GridView.builder(
@@ -99,9 +150,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       mainAxisSpacing: 8,
                       crossAxisSpacing: 8,
                     ),
-                    itemCount: _courses.length,
+                    itemCount: displayList.length,
                     itemBuilder: (context, index) {
-                      final course = _courses[index];
+                      final course = displayList[index];
                       return Card(
                         child: Center(
                           child: Column(
@@ -124,9 +175,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: _courses.length,
+                    itemCount: displayList.length,
                     itemBuilder: (context, index) {
-                      final course = _courses[index];
+                      final course = displayList[index];
+                      // Find the actual index in _courses to update the correct item
+                      final originalIndex = _courses.indexOf(course);
+                      
                       return ListTile(
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
@@ -154,9 +208,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 : Icons.star_border,
                             color: course.isFavorite ? Colors.amber : null,
                           ),
-                          onPressed: () => _toggleFavorite(index),
+                          onPressed: () => _toggleFavorite(originalIndex),
                         ),
-                        onTap: () => _toggleEnrolled(index),
+                        onTap: () => _toggleEnrolled(originalIndex),
+                        onLongPress: () => _removeCourse(originalIndex), // HOMEWORK: Long press action
                       );
                     },
                   ),
