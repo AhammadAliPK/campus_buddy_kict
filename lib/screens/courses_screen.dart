@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/widgets/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -10,22 +11,70 @@ class CoursesScreen extends StatefulWidget {
 }
 
 class _CoursesScreenState extends State<CoursesScreen> {
-  static const _days = ['All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'];
+  static const _days = [
+    'All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
+  ];
 
+  late List<Course> _courses;
   bool _isGrid = false;
   String _day = 'All';
 
   @override
+  void initState() {
+    super.initState();
+    _courses = List.of(courses); // our own copy, safe to change
+  }
+
+  void _toggleFavorite(int index) {
+    setState(() {
+      _courses[index] =
+          _courses[index].copyWith(isFavorite: !_courses[index].isFavorite);
+    });
+  }
+
+  void _toggleEnrolled(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        enrolled: !_courses[index].enrolled,
+      );
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (_) => AddCourseDialog(
+        existingCodes: _courses.map((c) => c.code).toList(),
+      ),
+    );
+    if (course == null) return; // the user cancelled, so do nothing
+    setState(() => _courses.add(course));
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // from courses, where day matches, make a list
+    var totalCh = 0;
+    for (final c in _courses) {
+      totalCh += c.creditHours;
+    }
+    final enrolledCh = _courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
+
+    // from _courses, where day matches, make a list
     final shown = _day == 'All'
-        ? courses
-        : courses.where((c) => c.day == _day).toList();
+        ? _courses
+        : _courses.where((c) => c.day == _day).toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Add a course',
+            onPressed: _addCourse,
+          ),
           IconButton(
             icon: Icon(_isGrid ? Icons.list : Icons.grid_view),
             onPressed: () => setState(() => _isGrid = !_isGrid),
@@ -34,6 +83,17 @@ class _CoursesScreenState extends State<CoursesScreen> {
       ),
       body: Column(
         children: [
+          // summary card: totals over every course, not just the filtered ones
+          Card(
+            margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+            child: ListTile(
+              leading: const Icon(Icons.school),
+              title: Text(
+                '${_courses.length} courses · $totalCh credit hours\n'
+                'Enrolled: $enrolledCh CH',
+              ),
+            ),
+          ),
           // chip row: a sideways list
           SizedBox(
             height: 56,
@@ -66,14 +126,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
       itemCount: shown.length,
       itemBuilder: (context, index) {
         final course = shown[index];
+        // shown may be filtered, so find the course's place in _courses
+        final i = _courses.indexOf(course);
         return ListTile(
-          leading: Icon(course.icon), // left: icon
-          title: Text(course.code), // the main line
-          subtitle: Text(course.name), // smaller grey second line
-          trailing: Text(course.day), // right: the day
-          onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${course.code} tapped')),
+          leading: Icon(
+            course.enrolled ? Icons.check_circle : course.icon,
+            color: course.enrolled ? Colors.green : null,
           ),
+          title: Text(course.code), // the main line
+          subtitle: Text('${course.name} · ${course.day}'),
+          trailing: IconButton(
+            icon: Icon(
+              course.isFavorite ? Icons.star : Icons.star_border,
+              color: course.isFavorite ? Colors.amber : null,
+            ),
+            onPressed: () => _toggleFavorite(i),
+          ),
+          onTap: () => _toggleEnrolled(i),
         );
       },
       separatorBuilder: (_, _) => const Divider(), // thin line between rows
