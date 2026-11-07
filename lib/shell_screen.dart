@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/home_screen.dart';
 import 'package:campus_buddy_kict/screens/courses_screen.dart';
 import 'package:campus_buddy_kict/screens/profile_screen.dart';
+import 'package:campus_buddy_kict/screens/notes_screen.dart';
 
 class ShellScreen extends StatefulWidget {
   const ShellScreen({super.key});
@@ -21,6 +22,7 @@ class _ShellScreenState extends State<ShellScreen> {
         children: const [
           HomeScreen(),
           CoursesScreen(),
+          NotesScreen(),
           ProfileScreen(),
         ],
       ),
@@ -37,6 +39,11 @@ class _ShellScreenState extends State<ShellScreen> {
             icon: Icon(Icons.book_outlined),
             selectedIcon: Icon(Icons.book),
             label: 'Courses',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.note_alt_outlined),
+            selectedIcon: Icon(Icons.note_alt),
+            label: 'Notes',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

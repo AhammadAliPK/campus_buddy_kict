@@ -155,15 +155,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         onPressed: () => _toggleFavorite(index),
                         ),
                         onTap: () async {
-                          final removed = await Navigator.push<bool>(
+                          final result = await Navigator.push<Object>(
                             context,
                             MaterialPageRoute(
                               builder: (_) => CourseDetailScreen(course: _courses[index]),
                             ),
                           );
-                          if (removed == true) {
+                          if (result == null) return;
+                          if (!mounted) return;
+                          if (result == true) {
                             setState(() {
                               _courses.removeAt(index);
+                            });
+                          } else if (result is Course) {
+                            setState(() {
+                              _courses[index] = result;
+                              _sortByDay();
                             });
                           }
                         }
