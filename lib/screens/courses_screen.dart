@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart'; // ← NEW week 5
 import 'package:campus_buddy_kict/add_course_dialog.dart'; // ← NEW this step
+import 'package:campus_buddy_kict/screens/course_details_screen.dart';
 
 
 class CoursesScreen extends StatefulWidget {
@@ -229,7 +230,17 @@ actions: [
  onPressed: () => _toggleFavorite(course),
  ),
 
-         onTap: () => _toggleEnrolled(course),
+         onTap: () async {
+ final removed = await Navigator.push<bool>(
+ context,
+ MaterialPageRoute(
+ builder: (_) => CourseDetailScreen(course: _courses[index]),
+ ),
+ );
+ if (removed == true) {
+ setState(() => _courses.removeAt(index));
+ }
+},
          onLongPress: () => _removeCourse(course), 
         );
         },

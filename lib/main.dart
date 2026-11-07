@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/courses_screen.dart';
+import 'shell_screen.dart';
+import 'package:campus_buddy_kict/screens/about_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,6 +13,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      routes: {
+ '/about': (context) => const AboutScreen(),
+},
+
       title: 'Flutter Demo',
       theme: ThemeData(
         // This is the theme of your application.
@@ -31,7 +36,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const CoursesScreen(),
+      home: const ShellScreen(),
     );
   }
 }
