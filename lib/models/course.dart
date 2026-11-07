@@ -13,11 +13,18 @@ class Course {
       {this.isFavorite = false, this.enrolled = false});
 
   // make a copy with one difference
-  Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
+  Course copyWith({
+    String? name,
+    int? creditHours,
+    String? day,
+    bool? isFavorite,
+    bool? enrolled,
+  }) =>
+      Course(
         code,
-        name,
-        creditHours,
-        day,
+        name ?? this.name,
+        creditHours ?? this.creditHours,
+        day ?? this.day,
         icon,
         isFavorite: isFavorite ?? this.isFavorite,
         enrolled: enrolled ?? this.enrolled,
