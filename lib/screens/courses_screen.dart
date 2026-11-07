@@ -3,6 +3,7 @@ import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/confirmation_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -15,7 +16,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   bool _favoritesOnly = false;
   late List<Course> _courses;
 
- /*void _toggleEnrolled(int index) {
+  /*void _toggleEnrolled(int index) {
     setState(() {
       _courses[index] = _courses[index].copyWith(
         enrolled: !_courses[index].enrolled,
@@ -29,6 +30,29 @@ class _CoursesScreenState extends State<CoursesScreen> {
         isFavorite: !_courses[index].isFavorite,
       );
     });
+  }
+
+  Future<void> _clearAllFavorites() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const ConfirmationScreen()),
+    );
+
+    if (!mounted) return;
+
+    if (result == true) {
+      setState(() {
+        _courses = _courses.map((course) {
+          return course.copyWith(isFavorite: false);
+        }).toList();
+
+        _favoritesOnly = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('All favourites have been cleared!')),
+      );
+    }
   }
 
   Future<void> _addCourse() async {
@@ -101,6 +125,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_sweep),
+            tooltip: 'Clear All Favourites',
+            onPressed: _clearAllFavorites,
+          ),
           IconButton(icon: const Icon(Icons.add), onPressed: _addCourse),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
@@ -212,8 +241,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           '${course.day} ${course.time.split('–')[0]} · ${course.venue}\n'
                           '${course.instructor ?? 'TBA'}',
                         ),
+
                         onTap: () async {
-                          final removed = await Navigator.push<bool>(
+                          final result = await Navigator.push<Object?>(
                             context,
                             MaterialPageRoute(
                               builder: (_) =>
@@ -223,12 +253,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                           if (!mounted) return;
 
-                          if (removed == true) {
+                          if (result is Course) {
+                            setState(() {
+                              final index = _courses.indexOf(course);
+
+                              if (index != -1) {
+                                _courses[index] = result;
+                              }
+                            });
+                          } else if (result == true) {
                             setState(() {
                               _courses.remove(course);
                             });
                           }
                         },
+
                         onLongPress: () => _removeCourse(actualIndex),
                         trailing: IconButton(
                           icon: Icon(
