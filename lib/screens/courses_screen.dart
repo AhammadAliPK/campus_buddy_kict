@@ -6,6 +6,7 @@ import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 import 'package:campus_buddy_kict/screens/clear_favorites_screen.dart';
+import 'package:campus_buddy_kict/models/course_detail_result.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -79,23 +80,28 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   // Week 6: Open the course detail page
   Future<void> _openCourseDetail(Course course) async {
-    final removed = await Navigator.push<bool>(
+    final result = await Navigator.push<CourseDetailResult>(
       context,
       MaterialPageRoute(
-        builder: (_) => CourseDetailScreen(
-          course: course,
-        ),
+        builder: (_) => CourseDetailScreen(course: course),
       ),
     );
 
-    if (!mounted || removed != true) {
-      return;
-    }
+    if (!mounted || result == null) return;
+
+    final index = _courses.indexOf(course);
+    if (index == -1) return;
 
     setState(() {
-      _courses.remove(course);
+      if (result.removed) {
+        _courses.removeAt(index);
+      } else if (result.updatedCourse != null) {
+        _courses[index] = result.updatedCourse!;
+      }
     });
   }
+
+
 
   // week6: clear Favourites
   Future<void> _clearAllFavorites() async {

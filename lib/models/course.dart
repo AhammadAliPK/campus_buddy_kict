@@ -30,19 +30,28 @@ class Course {
     this.enrolled = false,
   });
 
+  
   Course copyWith({
+    String? code,
+    String? name,
+    int? creditHours,
+    String? day,
+    IconData? icon,
+    String? time,
+    String? venue,
+    String? instructor,
     bool? isFavorite,
     bool? enrolled,
   }) {
     return Course(
-      code: code,
-      name: name,
-      creditHours: creditHours,
-      day: day,
-      icon: icon,
-      time: time,
-      venue: venue,
-      instructor: instructor,
+      code: code ?? this.code,
+      name: name ?? this.name,
+      creditHours: creditHours ?? this.creditHours,
+      day: day ?? this.day,
+      icon: icon ?? this.icon,
+      time: time ?? this.time,
+      venue: venue ?? this.venue,
+      instructor: instructor ?? this.instructor,
       isFavorite: isFavorite ?? this.isFavorite,
       enrolled: enrolled ?? this.enrolled,
     );
