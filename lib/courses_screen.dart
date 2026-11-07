@@ -52,7 +52,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
+                '${shown.length} courses · ${shown.fold(0, (sum, c) => sum + c.creditHours)} credit hours',
               ),
             ),
           ),
@@ -71,6 +71,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           crossAxisCount: 2,
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
+                          childAspectRatio: 1.2,
                         ),
                         itemCount: shown.length,
                         itemBuilder: (context, index) {
@@ -84,8 +85,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.center,
                                   children: [
-                                    Icon(course.icon, size: 40),
-                                    const SizedBox(height: 8),
+                                    Icon(course.icon, size: 28),
+                                    const SizedBox(height: 3),
 
                                     Text(
                                       course.code,
@@ -97,7 +98,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                     Text(
                                       course.name,
                                       textAlign: TextAlign.center,
-                                      maxLines: 2,
+                                      maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                     ),
 
