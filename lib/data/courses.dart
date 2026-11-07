@@ -4,7 +4,7 @@ import 'package:campus_buddy_kict/models/course.dart';
 const List<Course> sampleCourses = [
   Course('CSCI 4311', 'Mobile Application Development', 3,
     'Monday', Icons.phone_iphone, 
-    time: '14:00-13:20', venue: 'ICT LR 13, Level 2D', instructor: 'Sir Poyilikandiyil'),
+    time: '14:00-15:20', venue: 'ICT LR 13, Level 2D', instructor: 'Sir Poyilikandiyil'),
 
   Course('CSCI 4340', 'Machine Learning', 3,
     'Tuesday', Icons.computer_rounded,
