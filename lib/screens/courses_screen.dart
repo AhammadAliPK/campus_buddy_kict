@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_favorites_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -31,6 +33,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
       _courses[index] = _courses[index].copyWith(
         isFavorite: !_courses[index].isFavorite,
       );
+    });
+  }
+
+  Future<void> _clearFavorites() async {
+    final confirmed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const ClearFavoritesScreen()),
+    );
+
+    if (!mounted || confirmed != true) return;
+
+    setState(() {
+      for (int i = 0; i < _courses.length; i++) {
+        _courses[i] = _courses[i].copyWith(isFavorite: false);
+      }
     });
   }
 
@@ -121,6 +138,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.star_outline),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavorites,
+          ),
+
           IconButton(icon: const Icon(Icons.add), onPressed: _addCourse),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
@@ -241,16 +264,63 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           'Instructor: ${course.instructor ?? 'TBA'}',
                         ),
 
-                        trailing: IconButton(
-                          icon: Icon(
-                            course.isFavorite ? Icons.star : Icons.star_border,
-                            color: course.isFavorite ? Colors.amber : null,
-                          ),
-                          onPressed: () => _toggleFavorite(course),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                course.enrolled
+                                    ? Icons.check_circle
+                                    : Icons.radio_button_unchecked,
+                                color: course.enrolled ? Colors.green : null,
+                              ),
+                              tooltip: course.enrolled
+                                  ? 'Unenroll from course'
+                                  : 'Enroll in course',
+                              onPressed: () => _toggleEnrolled(course),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                course.isFavorite
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: course.isFavorite ? Colors.amber : null,
+                              ),
+                              tooltip: 'Toggle favourite',
+                              onPressed: () => _toggleFavorite(course),
+                            ),
+                          ],
                         ),
 
                         // Week 5 Step 15: Toggle enrollment
-                        onTap: () => _toggleEnrolled(course),
+                        onTap: () async {
+                          final selectedCourse = course;
+
+                          final result = await Navigator.push<Object?>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CourseDetailScreen(course: selectedCourse),
+                            ),
+                          );
+
+                          if (!mounted) return;
+
+                          final courseIndex = _courses.indexOf(selectedCourse);
+
+                          if (courseIndex == -1) return;
+
+                          if (result == true) {
+                            setState(() {
+                              _courses.removeAt(courseIndex);
+                            });
+                          } else if (result is Course) {
+                            setState(() {
+                              _courses[courseIndex] = result;
+                            });
+                          }
+                        },
+
                         onLongPress: () => _deleteCourse(course),
                       );
                     },
