@@ -12,8 +12,8 @@ final bool isFavorite; // ← NEW: true when the user stars this course
 final bool enrolled;
 const Course(this.code, this.name, this.creditHours, this.days, this.icon, this.time, this.venue, this.instructor,
 {this.isFavorite = false, this.enrolled = false});
-Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
-  code, name, creditHours, days, icon, time, venue, instructor,
+Course copyWith({bool? isFavorite, bool? enrolled, String? name}) => Course(
+  code, name ?? this.name, creditHours, days, icon, time, venue, instructor,
   isFavorite: isFavorite ?? this.isFavorite,
   enrolled: enrolled ?? this.enrolled,
   );

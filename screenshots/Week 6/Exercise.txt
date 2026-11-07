@@ -1,0 +1,3 @@
+The Home screen cannot clear the favourites because the _courses list is stored securely inside the private state of the Courses screen (_CoursesScreenState). 
+Widgets in Flutter cannot reach inside the private variables of other sibling widgets. 
+To share and update data across completely separate screens like this, we need to use a concept called state management.

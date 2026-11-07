@@ -3,6 +3,7 @@ import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/clear_favourites_screen.dart';
 class CoursesScreen extends StatefulWidget {
 const CoursesScreen({super.key});
 
@@ -88,6 +89,28 @@ IconButton(
 icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list), // ← CHANGED
 tooltip: 'Grid view',
 onPressed: () => setState(() => _isGrid = !_isGrid), // ← CHANGED
+),
+IconButton(
+  icon: const Icon(Icons.star_border),
+  tooltip: 'Clear Favourites',
+  onPressed: () async {
+    // 1. Open the full confirmation screen
+    final shouldClear = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (context) => const ClearFavoritesScreen()),
+    );
+
+    // 2. If they pressed Yes, loop through and remove all stars
+    if (shouldClear == true) {
+      setState(() {
+        for (int i = 0; i < _courses.length; i++) {
+          if (_courses[i].isFavorite) {
+            _courses[i] = _courses[i].copyWith(isFavorite: false);
+          }
+        }
+      });
+    }
+  },
 ),
 ],
 ),
@@ -220,19 +243,26 @@ trailing: Row(
     ),
   ],
 ),
+
 onTap: () async {
-  // Navigator.push slides the new page on top and waits for it to pop back
-  final removed = await Navigator.push<bool>(
+  // We use dynamic (or Object?) because the result could be a bool OR a Course
+  final result = await Navigator.push<dynamic>(
     context,
-    MaterialPageRoute(
-      builder: (context) => CourseDetailScreen(course: course),
-    ),
+    MaterialPageRoute(builder: (context) => CourseDetailScreen(course: course)),
   );
 
-  // If the detail page popped back 'true' (Remove button was pressed)
-  if (removed == true) {
+  if (result == true) {
+    // They pressed the Delete button
     setState(() {
-      _courses.remove(course); // Deletes the exact course cleanly
+      _courses.remove(course);
+    });
+  } else if (result is Course) {
+    // They pressed the Edit button and saved
+    setState(() {
+      final index = _courses.indexWhere((c) => c.code == course.code);
+      if (index != -1) {
+        _courses[index] = result;
+      }
     });
   }
 },

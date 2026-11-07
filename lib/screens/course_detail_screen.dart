@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/screens/edit_course_screen.dart';
 
 class CourseDetailScreen extends StatelessWidget {
   const CourseDetailScreen({super.key, required this.course});
@@ -9,7 +10,26 @@ class CourseDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(course.code)),
+      appBar: AppBar(
+        title: Text(course.code),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () async {
+              final updated = await Navigator.push<Course>(
+                context,
+                MaterialPageRoute(builder: (context) => EditCourseScreen(course: course)),
+              );
+              
+              // Task 3: Only pass it back to the main list if they actually saved (not null)
+              if (updated != null) {
+                Navigator.pop(context, updated); 
+              }
+            },
+          ),
+        ],
+      ),
+      
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
