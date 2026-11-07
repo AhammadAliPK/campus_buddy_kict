@@ -1,6 +1,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -12,16 +14,59 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
 
+  late List<Course>_courses;
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses);
+  }
+
+  void _toggleFavorite(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        isFavorite: !_courses[index].isFavorite,
+      );
+    });
+  }
+
+  void _toggleEnrolled(int index) {
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        enrolled: !_courses[index].enrolled,
+      );
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (_) => const AddCourseDialog(),
+    );
+
+    if (!mounted || course == null) {
+      return;
+    }
+
+    setState(() {
+      _courses.add(course);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
 
-    for (final c in sampleCourses) {
+    for (final c in _courses) {
       totalCh += c.creditHours;
     }
 
+    final enrolledCh = _courses
+          .where((c) => c.enrolled)
+          .fold<int>(0, (sum, c) => sum + c.creditHours);
+
     // Week 4 in-class exercise: filter Monday courses
-    final shown = sampleCourses
+    final shown = _courses
         .where((c) => c.day == 'Monday')
         .toList();
 
@@ -29,6 +74,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            tooltip: 'Add course',
+            onPressed: _addCourse,
+          ),
           IconButton(
             icon: Icon(
               _isGrid ? Icons.list : Icons.grid_on,
@@ -52,8 +102,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${sampleCourses.length} courses · '
-                '$totalCh credit hours',
+                '${_courses.length} courses · $totalCh credit hours\n'
+                'Enrolled: $enrolledCh CH',
               ),
             ),
           ),
@@ -70,9 +120,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       crossAxisSpacing: 8,
                       childAspectRatio: 0.75,
                     ),
-                    itemCount: sampleCourses.length,
+                    itemCount: _courses.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = _courses[index];
 
                       return Card(
                         child: Padding(
@@ -154,10 +204,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   .colorScheme
                                   .primaryContainer,
                               child: Icon(
-                                course.icon,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
+                                course.enrolled
+                                    ? Icons.check_circle
+                                    : course.icon,
+                                color: course.enrolled
+                                    ? Colors.green
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
                               ),
                             ),
                             title: Text(
@@ -170,19 +224,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               '${course.instructor ?? 'TBA'}',
                             ),
                             isThreeLine: true,
-                            trailing: Text(
-                              '${course.creditHours} CH',
+                            trailing: IconButton(
+                              icon: Icon(
+                                course.isFavorite
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: course.isFavorite ? Colors.amber : null,
+                              ),
+                              onPressed: () => _toggleFavorite(
+                                _courses.indexOf(course),
+                              ),
                             ),
-                            onTap: () {
-                              ScaffoldMessenger.of(context)
-                                  .showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    '${course.code} tapped',
-                                  ),
-                                ),
-                              );
-                            },
+                            onTap: () => _toggleEnrolled(
+                              _courses.indexOf(course),
+                            ),
                           );
                         },
                       ),
