@@ -1,8 +1,10 @@
 
 import 'package:flutter/material.dart';
+
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -15,7 +17,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   bool _favoritesOnly = false;
 
-  late List<Course>_courses;
+  late List<Course> _courses;
 
   @override
   void initState() {
@@ -23,26 +25,27 @@ class _CoursesScreenState extends State<CoursesScreen> {
     _courses = List.of(sampleCourses);
   }
 
-  void _toggleFavorite(int index) {
+  // Toggle favourite status
+  void _toggleFavorite(Course course) {
+    final index = _courses.indexOf(course);
+
+    if (index == -1) return;
+
     setState(() {
-      _courses[index] = _courses[index].copyWith(
-        isFavorite: !_courses[index].isFavorite,
+      _courses[index] = course.copyWith(
+        isFavorite: !course.isFavorite,
       );
     });
   }
 
-  void _toggleEnrolled(int index) {
-    setState(() {
-      _courses[index] = _courses[index].copyWith(
-        enrolled: !_courses[index].enrolled,
-      );
-    });
-  }
+  // Toggle enrollment status (Week 5)
+  
 
+  // Remove a course with confirmation
   Future<void> _removeCourse(Course course) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Remove course?'),
         content: Text(
           'Are you sure you want to remove ${course.code}?',
@@ -50,13 +53,13 @@ class _CoursesScreenState extends State<CoursesScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context, false);
+              Navigator.pop(dialogContext, false);
             },
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context, true);
+              Navigator.pop(dialogContext, true);
             },
             child: const Text('Remove'),
           ),
@@ -64,16 +67,36 @@ class _CoursesScreenState extends State<CoursesScreen> {
       ),
     );
 
-      if (!mounted || confirm != true) {
-        return;
-      }
-
-      setState(() {
-        _courses.remove(course);
-      });
+    if (!mounted || confirm != true) {
+      return;
     }
 
+    setState(() {
+      _courses.remove(course);
+    });
+  }
 
+  // Week 6: Open the course detail page
+  Future<void> _openCourseDetail(Course course) async {
+    final removed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(
+          course: course,
+        ),
+      ),
+    );
+
+    if (!mounted || removed != true) {
+      return;
+    }
+
+    setState(() {
+      _courses.remove(course);
+    });
+  }
+
+  // Week 5: Add a new course
   Future<void> _addCourse() async {
     final course = await showDialog<Course>(
       context: context,
@@ -95,37 +118,46 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int totalCh = 0;
+    // Total credit hours
+    final totalCh = _courses.fold<int>(
+      0,
+      (sum, course) => sum + course.creditHours,
+    );
 
-    for (final c in _courses) {
-      totalCh += c.creditHours;
-    }
-
+    // Enrolled credit hours
     final enrolledCh = _courses
-          .where((c) => c.enrolled)
-          .fold<int>(0, (sum, c) => sum + c.creditHours);
+        .where((course) => course.enrolled)
+        .fold<int>(
+          0,
+          (sum, course) => sum + course.creditHours,
+        );
 
-    // Week 4 in-class exercise: filter Monday courses
-    final shown = _courses.where((c) {
-      final matchesDay = c.day == 'Monday';
-      final matchesFavorite = !_favoritesOnly || c.isFavorite;
+    // List View: Monday courses + favourites filter
+    final shown = _courses.where((course) {
+      final matchesDay = course.day == 'Monday';
+      final matchesFavorite =
+          !_favoritesOnly || course.isFavorite;
 
       return matchesDay && matchesFavorite;
     }).toList();
 
-    final gridShown = _courses.where((c) {
-      return !_favoritesOnly || c.isFavorite;
+    // Grid View: all days + favourites filter
+    final gridShown = _courses.where((course) {
+      return !_favoritesOnly || course.isFavorite;
     }).toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          // Add course button
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Add course',
             onPressed: _addCourse,
           ),
+
+          // Switch between Grid and List
           IconButton(
             icon: Icon(
               _isGrid ? Icons.list : Icons.grid_on,
@@ -141,6 +173,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
           ),
         ],
       ),
+
       body: Column(
         children: [
           // Summary card
@@ -149,12 +182,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${_courses.length} courses · $totalCh credit hours\n'
+                '${_courses.length} courses · '
+                '$totalCh credit hours\n'
                 'Enrolled: $enrolledCh CH',
               ),
             ),
           ),
 
+          // Favourites-only filter
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 12,
@@ -174,7 +209,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
           ),
 
-          // Course List / Grid
+          // Grid View or List View
           Expanded(
             child: _isGrid
                 ? GridView.builder(
@@ -192,60 +227,73 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                       return Card(
                         child: InkWell(
+                          onTap: () => _openCourseDetail(course),
                           onLongPress: () => _removeCourse(course),
+                          borderRadius: BorderRadius.circular(12),
                           child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Column(
-                            mainAxisAlignment:
-                                MainAxisAlignment.center,
-                            children: [
-                              Icon(course.icon, size: 32),
-                              const SizedBox(height: 8),
-                              Text(
-                                course.code,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
+                            padding: const EdgeInsets.all(8),
+                            child: Column(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  course.icon,
+                                  size: 32,
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                course.name,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                '${course.day} ${course.time}',
-                                style: const TextStyle(
-                                  fontSize: 12,
+
+                                const SizedBox(height: 8),
+
+                                Text(
+                                  course.code,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                course.venue,
-                                style: const TextStyle(
-                                  fontSize: 12,
+
+                                const SizedBox(height: 4),
+
+                                Text(
+                                  course.name,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              Text(
-                                'Instructor: '
-                                '${course.instructor ?? 'TBA'}',
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 12,
+
+                                const SizedBox(height: 8),
+
+                                Text(
+                                  '${course.day} ${course.time}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
+
+                                Text(
+                                  course.venue,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                  ),
+                                ),
+
+                                Text(
+                                  'Instructor: '
+                                  '${course.instructor ?? 'TBA'}',
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                )
+                      );
+                    },
+                  )
 
-                // Show message if no Monday courses
+                // List View empty message
                 : shown.isEmpty
                     ? Center(
                         child: Text(
@@ -254,7 +302,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               : 'No classes! Alhamdulillah :)',
                         ),
                       )
-                    // List view
+
+                    // List View
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(
                           vertical: 8,
@@ -269,6 +318,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                     alpha: 0.03,
                                   )
                                 : null,
+
                             leading: CircleAvatar(
                               backgroundColor: Theme.of(context)
                                   .colorScheme
@@ -284,31 +334,44 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                         .onPrimaryContainer,
                               ),
                             ),
+
                             title: Text(
                               '${course.code} - ${course.name}',
                             ),
+
                             subtitle: Text(
                               '${course.day} ${course.time} '
                               '· ${course.venue}\n'
                               'Instructor: '
                               '${course.instructor ?? 'TBA'}',
                             ),
+
                             isThreeLine: true,
+
+                            // Favourite star
                             trailing: IconButton(
                               icon: Icon(
                                 course.isFavorite
                                     ? Icons.star
                                     : Icons.star_border,
-                                color: course.isFavorite ? Colors.amber : null,
+                                color: course.isFavorite
+                                    ? Colors.amber
+                                    : null,
                               ),
-                              onPressed: () => _toggleFavorite(
-                                _courses.indexOf(course),
-                              ),
+                              onPressed: () {
+                                _toggleFavorite(course);
+                              },
                             ),
-                            onTap: () => _toggleEnrolled(
-                              _courses.indexOf(course),
-                            ),
-                            onLongPress: () => _removeCourse(course),
+
+                            // Week 6: Open detail page
+                            onTap: () {
+                              _openCourseDetail(course);
+                            },
+
+                            // Week 5: Long press to remove
+                            onLongPress: () {
+                              _removeCourse(course);
+                            },
                           );
                         },
                       ),
