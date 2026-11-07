@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -10,13 +12,93 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  bool _favoritesOnly = false;
+
+  late List<Course> _courses;
+
+  @override
+  void initState() {
+    super.initState();
+    _courses = List.of(sampleCourses);
+  }
+
+  void _toggleFavorite(Course course) {
+    final index = _courses.indexOf(course);
+
+    if (index == -1) return;
+
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        isFavorite: !_courses[index].isFavorite,
+      );
+    });
+  }
+
+  void _toggleEnrolled(Course course) {
+    final index = _courses.indexOf(course);
+
+    if (index == -1) return;
+
+    setState(() {
+      _courses[index] = _courses[index].copyWith(
+        enrolled: !_courses[index].enrolled,
+      );
+    });
+  }
+
+  Future<void> _deleteCourse(Course course) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Course'),
+        content: Text('Are you sure you want to delete ${course.code}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted || confirmed != true) return;
+
+    setState(() {
+      _courses.remove(course);
+    });
+  }
+
+  Future<void> _addCourse() async {
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (_) =>
+          AddCourseDialog(existingCodes: _courses.map((c) => c.code).toList()),
+    );
+
+    if (course == null || !mounted) return;
+
+    setState(() {
+      _courses.add(course);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
-    for (final c in sampleCourses) {
+
+    for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
     }
 
+    final enrolledCh = _courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
+
+    // Sort courses by day (Week 4 homework)
     final dayOrder = {
       'Monday': 1,
       'Tuesday': 2,
@@ -27,36 +109,59 @@ class _CoursesScreenState extends State<CoursesScreen> {
       'Sunday': 7,
     };
 
-    final shown = [...sampleCourses];
+    final shown = _courses
+        .where((c) => !_favoritesOnly || c.isFavorite)
+        .toList();
 
     shown.sort((a, b) {
       return (dayOrder[a.day] ?? 8).compareTo(dayOrder[b.day] ?? 8);
     });
 
-    /*final shown = sampleCourses
-    .where((c) => c.day == '')
-    .toList();*/ //to filter days
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(icon: const Icon(Icons.add), onPressed: _addCourse),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
-            onPressed: () => setState(() => _isGrid = !_isGrid),
+            onPressed: () {
+              setState(() {
+                _isGrid = !_isGrid;
+              });
+            },
           ),
         ],
       ),
 
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FilterChip(
+                label: const Text('Favourites only'),
+                avatar: const Icon(Icons.star, size: 18),
+                selected: _favoritesOnly,
+                onSelected: (value) {
+                  setState(() {
+                    _favoritesOnly = value;
+                  });
+                },
+              ),
+            ),
+          ),
+
+          // Summary Card
           Card(
             margin: const EdgeInsets.all(12),
             child: Padding(
               padding: const EdgeInsets.all(12),
+
               child: Text(
-                '${sampleCourses.length} courses · $totalCh credit hours',
+                '${_courses.length} courses · $totalCh credit hours\n'
+                'Enrolled: $enrolledCh CH',
               ),
             ),
           ),
@@ -71,9 +176,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: sampleCourses.length,
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = sampleCourses[index];
+                      final course = shown[index];
 
                       return Card(
                         child: Center(
@@ -112,29 +217,41 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
+
                         leading: CircleAvatar(
                           backgroundColor: Theme.of(context)
                               .colorScheme
                               .primaryContainer,
                           child: Icon(
-                            course.icon,
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
+                            course.enrolled ? Icons.check_circle : course.icon,
+                            color: course.enrolled
+                                ? Colors.green
+                                : Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
                           ),
                         ),
+
                         title: Text(course.code),
 
                         subtitle: Text(
-                          '${course.name} · ${course.day.substring(0, 3)} '
+                          '${course.name} · '
+                          '${course.day.substring(0, 3)} '
                           '${course.time} · ${course.venue}\n'
                           'Instructor: ${course.instructor ?? 'TBA'}',
                         ),
 
-                        trailing: Text(course.day),
-                        onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${course.code} tapped')),
+                        trailing: IconButton(
+                          icon: Icon(
+                            course.isFavorite ? Icons.star : Icons.star_border,
+                            color: course.isFavorite ? Colors.amber : null,
+                          ),
+                          onPressed: () => _toggleFavorite(course),
                         ),
+
+                        // Week 5 Step 15: Toggle enrollment
+                        onTap: () => _toggleEnrolled(course),
+                        onLongPress: () => _deleteCourse(course),
                       );
                     },
                   ),
