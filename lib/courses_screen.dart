@@ -13,6 +13,7 @@ class CoursesScreen extends StatefulWidget {
 
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
+  bool _favoritesOnly = false;
 
   late List<Course>_courses;
 
@@ -38,6 +39,41 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
+  Future<void> _removeCourse(Course course) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove course?'),
+        content: Text(
+          'Are you sure you want to remove ${course.code}?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+            },
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, true);
+            },
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+
+      if (!mounted || confirm != true) {
+        return;
+      }
+
+      setState(() {
+        _courses.remove(course);
+      });
+    }
+
+
   Future<void> _addCourse() async {
     final course = await showDialog<Course>(
       context: context,
@@ -47,7 +83,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
             .toSet(),
       ),
     );
-    
+
     if (!mounted || course == null) {
       return;
     }
@@ -70,9 +106,16 @@ class _CoursesScreenState extends State<CoursesScreen> {
           .fold<int>(0, (sum, c) => sum + c.creditHours);
 
     // Week 4 in-class exercise: filter Monday courses
-    final shown = _courses
-        .where((c) => c.day == 'Monday')
-        .toList();
+    final shown = _courses.where((c) {
+      final matchesDay = c.day == 'Monday';
+      final matchesFavorite = !_favoritesOnly || c.isFavorite;
+
+      return matchesDay && matchesFavorite;
+    }).toList();
+
+    final gridShown = _courses.where((c) {
+      return !_favoritesOnly || c.isFavorite;
+    }).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -112,6 +155,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
           ),
 
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 4,
+            ),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FilterChip(
+                label: const Text('★ Favourites only'),
+                selected: _favoritesOnly,
+                onSelected: (selected) {
+                  setState(() {
+                    _favoritesOnly = selected;
+                  });
+                },
+              ),
+            ),
+          ),
+
           // Course List / Grid
           Expanded(
             child: _isGrid
@@ -124,12 +186,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       crossAxisSpacing: 8,
                       childAspectRatio: 0.75,
                     ),
-                    itemCount: _courses.length,
+                    itemCount: gridShown.length,
                     itemBuilder: (context, index) {
-                      final course = _courses[index];
+                      final course = gridShown[index];
 
                       return Card(
-                        child: Padding(
+                        child: InkWell(
+                          onLongPress: () => _removeCourse(course),
+                          child: Padding(
                           padding: const EdgeInsets.all(8),
                           child: Column(
                             mainAxisAlignment:
@@ -176,18 +240,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             ],
                           ),
                         ),
-                      );
-                    },
-                  )
+                      ),
+                    );
+                  },
+                )
 
                 // Show message if no Monday courses
                 : shown.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Text(
-                          'No classes! Alhamdulillah :)',
+                          _favoritesOnly
+                              ? 'No favourite Monday courses yet.'
+                              : 'No classes! Alhamdulillah :)',
                         ),
                       )
-
                     // List view
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(
@@ -242,6 +308,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             onTap: () => _toggleEnrolled(
                               _courses.indexOf(course),
                             ),
+                            onLongPress: () => _removeCourse(course),
                           );
                         },
                       ),
