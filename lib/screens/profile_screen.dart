@@ -87,7 +87,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: CircleAvatar(
                 radius: 48,
                 backgroundImage: AssetImage('assets/me.jpg'),
-              )
+              ),
             ),
             const SizedBox(height: 12),
             if (_editing ) ...[
@@ -124,12 +124,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
               ),
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
+              TextButton(
                 onPressed: _toggleReset,
-                icon: const Icon(Icons.restore),
-                label: const Text('Reset'),
-              )
+                child: const Text('Reset'),
+              ),
             ] else ...[
               Text(_nickname,
                   style: Theme.of(context).textTheme.headlineSmall,
@@ -141,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 10),
               Text(_matric,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.black54)),
+                  style: const TextStyle(color: Colors.black54, fontSize: 12)),
             ],
           ],
         ),
