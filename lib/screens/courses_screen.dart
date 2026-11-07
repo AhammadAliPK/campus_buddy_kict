@@ -53,19 +53,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
-  Future<void> _openDetail(Course course) async {
-    // keep the course itself, not its position: the list may change meanwhile
-    final removed = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CourseDetailScreen(course: course),
-      ),
-    );
-    if (removed == true) {
-      setState(() => _courses.remove(course));
-    }
-  }
-
   Future<void> _clearFavourites() async {
     final yes = await Navigator.push<bool>(
       context,
@@ -163,14 +150,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
         // shown may be filtered, so find the course's place in _courses
         final i = _courses.indexOf(course);
         return ListTile(
-          // row tap now opens the detail page, so enroll moved to the icon
-          leading: IconButton(
-            icon: Icon(
-              course.enrolled ? Icons.check_circle : course.icon,
-              color: course.enrolled ? Colors.green : null,
-            ),
-            tooltip: 'Enroll',
-            onPressed: () => _toggleEnrolled(i),
+          leading: Icon(
+            course.enrolled ? Icons.check_circle : course.icon,
+            color: course.enrolled ? Colors.green : null,
           ),
           title: Text(course.code), // the main line
           subtitle: Text('${course.name} · ${course.day}'),
@@ -181,7 +163,18 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
             onPressed: () => _toggleFavorite(i),
           ),
-          onTap: () => _openDetail(course),
+          onTap: () async {
+            final removed = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CourseDetailScreen(course: _courses[i]),
+              ),
+            );
+            if (removed == true) {
+              // remove the course itself, not the old position
+              setState(() => _courses.remove(course));
+            }
+          },
         );
       },
       separatorBuilder: (_, _) => const Divider(), // thin line between rows

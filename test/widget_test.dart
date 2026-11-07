@@ -25,7 +25,7 @@ void main() {
     expect(find.byType(GridView), findsOneWidget);
   });
 
-  testWidgets('Star, enroll and live totals', (tester) async {
+  testWidgets('Star and live totals', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: CoursesScreen()));
     expect(find.textContaining('7 courses · 20 credit hours'), findsOneWidget);
     expect(find.textContaining('Enrolled: 0 CH'), findsOneWidget);
@@ -34,19 +34,6 @@ void main() {
     await tester.tap(find.byIcon(Icons.star_border).first);
     await tester.pump();
     expect(find.byIcon(Icons.star), findsOneWidget);
-
-    // tap the row icon -> enrolled, green tick, total changes
-    await tester.tap(find.byIcon(Icons.phone_iphone));
-    await tester.pump();
-    expect(find.byIcon(Icons.check_circle), findsOneWidget);
-    expect(find.textContaining('Enrolled: 3 CH'), findsOneWidget);
-
-    // filtered view still toggles the right course
-    await tester.tap(find.widgetWithText(ChoiceChip, 'Tuesday'));
-    await tester.pump();
-    await tester.tap(find.byIcon(Icons.web));
-    await tester.pump();
-    expect(find.textContaining('Enrolled: 6 CH'), findsOneWidget);
   });
 
   testWidgets('Add course popup validates and adds', (tester) async {
