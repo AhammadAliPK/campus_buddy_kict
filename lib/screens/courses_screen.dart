@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -37,6 +38,24 @@ class _CoursesScreenState extends State<CoursesScreen> {
         enrolled: !_courses[originalIndex].enrolled,
       );
     });
+  }
+
+  Future<void> _openCourseDetail(Course targetCourse) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(course: targetCourse),
+      ),
+    );
+
+    if (result == 'delete') {
+      setState(() => _courses.remove(targetCourse));
+    } else if (result is Course) {
+      final idx = _courses.indexOf(targetCourse);
+      if (idx != -1) {
+        setState(() => _courses[idx] = result);
+      }
+    }
   }
 
   Future<void> _addCourse() async {
@@ -152,7 +171,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     itemBuilder: (context, index) {
                       final course = displayedCourses[index];
                       return InkWell(
-                        onTap: () => _toggleEnrolled(index, displayedCourses),
+                        onTap: () => _openCourseDetail(course),
                         onLongPress: () => _confirmDelete(course),
                         child: Card(
                           color: course.enrolled
@@ -166,16 +185,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(
-                                        course.enrolled
-                                            ? Icons.check_circle
-                                            : course.icon,
-                                        size: 32,
-                                        color: course.enrolled
-                                            ? Colors.green
-                                            : Theme.of(context)
-                                                  .colorScheme
-                                                  .onPrimaryContainer,
+                                      InkWell(
+                                        onTap: () => _toggleEnrolled(
+                                          index,
+                                          displayedCourses,
+                                        ),
+                                        child: Icon(
+                                          course.enrolled
+                                              ? Icons.check_circle
+                                              : course.icon,
+                                          size: 32,
+                                          color: course.enrolled
+                                              ? Colors.green
+                                              : Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimaryContainer,
+                                        ),
                                       ),
                                       const SizedBox(height: 6),
                                       Text(
@@ -234,17 +259,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer,
-                          child: Icon(
-                            course.enrolled ? Icons.check_circle : course.icon,
-                            color: course.enrolled
-                                ? Colors.green
-                                : Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer,
+                        leading: InkWell(
+                          onTap: () => _toggleEnrolled(index, displayedCourses),
+                          child: CircleAvatar(
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer,
+                            child: Icon(
+                              course.enrolled
+                                  ? Icons.check_circle
+                                  : course.icon,
+                              color: course.enrolled
+                                  ? Colors.green
+                                  : Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                            ),
                           ),
                         ),
                         title: Text(
@@ -260,7 +290,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           onPressed: () =>
                               _toggleFavorite(index, displayedCourses),
                         ),
-                        onTap: () => _toggleEnrolled(index, displayedCourses),
+                        onTap: () => _openCourseDetail(course),
                         onLongPress: () => _confirmDelete(course),
                       );
                     },
