@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
 import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -52,7 +53,27 @@ class HomeScreen extends StatelessWidget {
               onTap: () => Navigator.pushNamed(context, '/about'),
             ),
           ),
-        ],
+          const SizedBox(height: 16),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.star_outline),
+              label: const Text('Clear all favourites'),
+              onPressed: () async {
+                final ok = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const ConfirmScreen(message: 'Clear all favourites?'),
+                  ),
+                );
+                if (ok == true && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text("Can't clear from Home: see the explanation")),
+                  );
+                }
+              },
+            ),
+          ],
       ),
     );
   }
