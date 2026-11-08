@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';   // ← NEW
 
 /// Day name -> weekday number, used to sort the timetable.
 const Map<String, int> _dayOrder = {
@@ -234,7 +235,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             tileColor: index.isOdd
                                 ? Colors.black.withValues(alpha: 0.03)
                                 : null,
-                            leading: CircleAvatar(
+                            leading: GestureDetector(           // ← NEW: tap the icon to enroll
+                              onTap: () => _toggleEnrolled(course),
+                              child: CircleAvatar(
                               backgroundColor: Theme.of(context)
                                   .colorScheme
                                   .primaryContainer,
@@ -246,6 +249,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                     ? Colors.green
                                     : Theme.of(context).colorScheme.onPrimaryContainer,
                               ),
+                            ),
                             ),
                             title: Text(course.code),
                             subtitle: Text(
@@ -263,7 +267,17 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               ),
                               onPressed: () => _toggleFavorite(course),
                             ),
-                          onTap: () => _toggleEnrolled(course),   // ← CHANGED
+                          onTap: () async {                        // ← CHANGED: opens the detail page
+                            final removed = await Navigator.push<bool>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CourseDetailScreen(course: course),
+                              ),
+                            );
+                            if (removed == true) {
+                              setState(() => _courses.remove(course));
+                            }
+                          },
                           onLongPress: () => _removeCourse(course),   // ← NEW
                           );
                         },
