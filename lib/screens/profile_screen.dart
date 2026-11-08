@@ -8,9 +8,9 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String _nickname = 'Guest Student';
+  String _nickname = 'Muaz Zulkifli';
   String _bio =
-      'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+      'Kuliyyah of ICT · Year 4· Loves to learn flutter.';
 
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
@@ -44,7 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _reset() {
     setState(() {
       _nickname = 'Muaz Zulkifli';
-      _bio = 'Kuliyyah of ICT · Year 4· Loves to play football.';
+      _bio = 'Kuliyyah of ICT · Year 4· Loves to learn flutter.';
       _nicknameCtrl.text = _nickname;
       _bioCtrl.text = _bio;
     });
@@ -69,7 +69,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const CircleAvatar(
               radius: 48,
-              backgroundImage: NetworkImage('https://picsum.photos/200'),
+              backgroundImage: AssetImage('assets/me.jpg'),
             ),
             const SizedBox(height: 12),
             if (_editing) ...[
