@@ -9,15 +9,18 @@ class Course {
   final String venue; // like 'LT A'
   final IconData icon;
   final String? instructor; // null = not known yet
+  final bool isFavorite;   // ← NEW: true when the user stars this course
+  final bool enrolled;     // ← NEW: true when the user enrolls in it
 
-  const Course(
-    this.code,
-    this.name,
-    this.creditHours,
-    this.day,
-    this.time,
-    this.venue,
-    this.icon, {
-    this.instructor,
-  });
+  // ← CHANGED: constructor now takes two optional extras in {curly braces}
+  const Course(this.code, this.name, this.creditHours, this.day, this.time, this.venue, this.icon,
+      {this.instructor, this.isFavorite = false, this.enrolled = false});
+
+  // ← NEW method: make a copy with one difference
+  Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
+        code, name, creditHours, day, time, venue, icon,
+        instructor: instructor,
+        isFavorite: isFavorite ?? this.isFavorite,
+        enrolled: enrolled ?? this.enrolled,
+      );
 }

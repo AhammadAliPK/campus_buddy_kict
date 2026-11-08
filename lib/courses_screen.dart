@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
+import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/add_course_dialog.dart';
 
 /// Day name -> weekday number, used to sort the timetable.
 const Map<String, int> _dayOrder = {
@@ -10,6 +12,8 @@ const Map<String, int> _dayOrder = {
   'Friday': 5,
   'Saturday': 6,
   'Sunday': 7,
+  'Tue-Thu': 2,
+  'Mon-Wed': 1,
 };
 
 /// Day name -> short name, used in the row subtitle ('Mon 09:00 · LT A').
@@ -21,6 +25,8 @@ const Map<String, String> _dayShort = {
   'Friday': 'Fri',
   'Saturday': 'Sat',
   'Sunday': 'Sun',
+  'Tue-Thu': 'Tue/Thu',
+  'Mon-Wed': 'Mon/Wed',
 };
 
 class CoursesScreen extends StatefulWidget {
@@ -34,14 +40,48 @@ class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false; // -- NEW
   String? _selectedDay; // null = show every day
 
+  late List<Course> _courses;
+
+  @override
+  void initState() {
+    super.initState();
+      _courses = List.of(sampleCourses);   
+  
+  }
+
+  void _toggleFavorite(Course course) {     // ← was: int index
+    final i = _courses.indexOf(course);     // ← NEW: find where this course is
+    setState(() {
+      _courses[i] =                         // ← index → i
+          _courses[i].copyWith(isFavorite: !_courses[i].isFavorite);
+    });
+  }
+
+  
+  void _toggleEnrolled(Course course) {   // ← NEW: same shape as the star
+    final i = _courses.indexOf(course);
+    setState(() {
+      _courses[i] = _courses[i].copyWith(enrolled: !_courses[i].enrolled);
+    });
+  }
+
+  Future<void> _addCourse() async {        // ← CHANGED: was _openAddDialog
+    final course = await showDialog<Course>(
+      context: context,
+      builder: (_) => const AddCourseDialog(),
+    );
+    if (course == null) return;   // the user cancelled, so do nothing
+    setState(() => _courses.add(course));
+  }
+
   @override
   Widget build(BuildContext context) {
     // Every day that actually has a class, in timetable order.
-    final days = sampleCourses.map((c) => c.day).toSet().toList()
+    final days = _courses.map((c) => c.day).toSet().toList()
       ..sort((a, b) => (_dayOrder[a] ?? 99).compareTo(_dayOrder[b] ?? 99));
 
     // 1. keep only the chosen day (all when nothing is chosen)
-    final shown = sampleCourses
+    final shown = _courses
         .where((c) => _selectedDay == null || c.day == _selectedDay)
         .toList();
 
@@ -56,10 +96,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
       totalCh = totalCh + c.creditHours;
     }
 
+    
+  final enrolledCh = _courses              // ← NEW
+      .where((c) => c.enrolled)
+      .fold<int>(0, (sum, c) => sum + c.creditHours);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(                        // ← NEW: opens the Add popup
+            icon: const Icon(Icons.add),
+            onPressed: _addCourse,         // ← CHANGED: was _openAddDialog
+          ),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
@@ -74,7 +123,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${shown.length} courses · $totalCh credit hours',
+                '${shown.length} courses · $totalCh credit hours\n'
+                'Enrolled: $enrolledCh CH',   // ← NEW: the second line
               ),
             ),
           ),
@@ -156,10 +206,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   .colorScheme
                                   .primaryContainer,
                               child: Icon(
-                                course.icon,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onPrimaryContainer,
+                                course.enrolled            // ← CHANGED: was course.icon
+                                    ? Icons.check_circle
+                                    : course.icon,
+                                color: course.enrolled     // ← CHANGED
+                                    ? Colors.green
+                                    : Theme.of(context).colorScheme.onPrimaryContainer,
                               ),
                             ),
                             title: Text(course.code),
@@ -169,11 +221,16 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               '${course.venue} · ${course.instructor ?? 'TBA'}',
                             ),
                             isThreeLine: true,
-                            trailing: Text('${course.creditHours} CH'),
-                            onTap: () =>
-                                ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${course.code} tapped')),
+                            trailing: IconButton(
+                              icon: Icon(
+                                course.isFavorite
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                color: course.isFavorite ? Colors.amber : null,
+                              ),
+                              onPressed: () => _toggleFavorite(course),
                             ),
+                          onTap: () => _toggleEnrolled(course),   // ← CHANGED
                           );
                         },
                       ),
