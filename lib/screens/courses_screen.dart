@@ -1,3 +1,4 @@
+import 'package:campus_buddy_kict/screens/course_details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
@@ -209,7 +210,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       color: course.isFavorite ? Colors.amber: null,
                       onPressed: () => _toggleFavorite(index),  
                     ),
-                    onTap: () => _toggleEnrolled(index),
+                    onTap: () async{
+                      final removed = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CourseDetailScreen(course:_courses[index]),
+                        ),
+                      );
+                  
+                      if (removed == true) {
+                        setState(() => _courses.removeAt(index));
+                      }
+                        
+                      
+                    },
                   );
                 },
               ),
