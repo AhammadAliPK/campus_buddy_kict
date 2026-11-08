@@ -39,6 +39,7 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false; // -- NEW
   String? _selectedDay; // null = show every day
+  bool _favOnly = false;   // ← NEW: true = show starred courses only
 
   late List<Course> _courses;
 
@@ -76,6 +77,30 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
+  
+  Future<void> _removeCourse(Course course) async {   // ← NEW
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Are you sure?'),
+        content: Text('Remove ${course.code}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),   // No = false
+            child: const Text('No'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),    // Yes = true
+            child: const Text('Yes'),
+          ),
+        ],
+      ),
+    );
+    if (sure == true) {
+      setState(() => _courses.remove(course));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Every day that actually has a class, in timetable order.
@@ -85,6 +110,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
     // 1. keep only the chosen day (all when nothing is chosen)
     final shown = _courses
         .where((c) => _selectedDay == null || c.day == _selectedDay)
+        .where((c) => !_favOnly || c.isFavorite)   // ← NEW: favourites filter
         .toList();
 
     // 3. sort by day, then by start time
@@ -147,6 +173,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           () => _selectedDay = day == 'All' ? null : day),
                     ),
                   ),
+                  FilterChip(                                  // ← NEW
+                  label: const Text('★ favourites only'),
+                  selected: _favOnly,
+                  onSelected: (v) => setState(() => _favOnly = v),
+                ),
               ],
             ),
           ),
@@ -233,6 +264,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               onPressed: () => _toggleFavorite(course),
                             ),
                           onTap: () => _toggleEnrolled(course),   // ← CHANGED
+                          onLongPress: () => _removeCourse(course),   // ← NEW
                           );
                         },
                       ),
