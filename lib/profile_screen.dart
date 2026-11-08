@@ -43,8 +43,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _reset() {
     setState(() {
-      _nickname = 'Guest Student';
-      _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+      _nickname = 'Muaz Zulkifli';
+      _bio = 'Kuliyyah of ICT · Year 4· Loves to play football.';
       _nicknameCtrl.text = _nickname;
       _bioCtrl.text = _bio;
     });
