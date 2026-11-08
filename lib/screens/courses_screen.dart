@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
-import 'package:campus_buddy_kict/add_course_dialog.dart';   // ← NEW this step
+import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -78,6 +79,41 @@ class _CoursesScreenState extends State<CoursesScreen> {
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list), // ← CHANGED
             tooltip: 'Grid view',
             onPressed: () => setState(() => _isGrid = !_isGrid), // ← CHANGED
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_sweep),
+            tooltip: 'Clear all favourites',
+            onPressed: () async {
+              // 1. Open the confirmation screen and wait for the result (true/false)
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Clear all favourites?'),
+                    content: const Text(
+                      'This will remove the favourite star from every course.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Clear'),
+                      ),
+                    ],
+                  ),
+              );
+
+              // 2. If user pressed "Yes" (true), clear the favorites using setState
+              if (confirm == true) {
+                setState(() {
+                    for (var i = 0; i < _courses.length; i++) {
+                      _courses[i] = _courses[i].copyWith(isFavorite: false);
+                  }
+                });
+              }
+            },
           ),
         ],
       ),
@@ -185,7 +221,17 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     ),
                   onPressed: () => _toggleFavorite(index),
                   ),
-                  onTap: () => _toggleEnrolled(index),   // ← CHANGED
+                  onTap: () async {
+                    final removed = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CourseDetailScreen(course: _courses[index]),
+                      ),
+                    );
+                    if (removed == true) {
+                      setState(() => _courses.removeAt(index));
+                    }
+                  }, // ← CHANGED
                   tileColor: index.isOdd // ← NEW
                   ? Colors.black.withValues(alpha: 0.03)
                   : null,
