@@ -3,6 +3,7 @@ import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';   // ← NEW
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';   // ← NEW
 
 /// Day name -> weekday number, used to sort the timetable.
 const Map<String, int> _dayOrder = {
@@ -102,6 +103,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }
   }
 
+  
+  Future<void> _clearFavourites() async {            // ← NEW
+    final sure = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const ConfirmScreen()),
+    );
+    if (sure == true) {
+      setState(() {
+        _courses = _courses.map((c) => c.copyWith(isFavorite: false)).toList();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Every day that actually has a class, in timetable order.
@@ -134,6 +148,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(                                  // ← NEW: clear all stars
+            icon: const Icon(Icons.clear_all),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavourites,
+          ),
           IconButton(                        // ← NEW: opens the Add popup
             icon: const Icon(Icons.add),
             onPressed: _addCourse,         // ← CHANGED: was _openAddDialog
