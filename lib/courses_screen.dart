@@ -45,6 +45,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
     _courses = List.of(sampleCourses);
   }
   bool _isGrid = false;
+  String _selectedDay = 'All';
+  bool _showFavoritesOnly = false;
 
   final Map<String, int> _dayOrder = {
     'Monday': 1,
@@ -58,6 +60,26 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    List<Course> displayedCourses = List.from(_courses);
+    if (_selectedDay != 'All') {
+      displayedCourses = displayedCourses
+        .where((course) => course.day == _selectedDay)
+        .toList();
+    }
+
+    if (_showFavoritesOnly){
+      displayedCourses = displayedCourses
+        .where((course) => course.isFavorite)
+        .toList();
+    }
+
+    displayedCourses.sort((a, b) {
+      final dayA = _dayOrder[a.day] ?? 99;
+      final dayB = _dayOrder[b.day] ?? 99;
+      return dayA.compareTo(dayB);
+    });
+
     int totalCh=0;
     for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
@@ -91,6 +113,39 @@ class _CoursesScreenState extends State<CoursesScreen> {
       ),
       body: Column(
         children:[
+
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            child: Row(
+              children: [
+                DropdownButton<String>(
+                  value: _selectedDay,
+                  items: ['All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+                    .map((day) => DropdownMenuItem(
+                      value: day,
+                      child: Text(day),
+                    )).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedDay = value;
+                      });
+                    }
+                  },
+                ),
+                const SizedBox(width: 12),
+                FilterChip(
+                  label: const Text('Favorites only'),
+                  selected: _showFavoritesOnly,
+                  onSelected: (selected) {
+                    setState(() {
+                      _showFavoritesOnly = selected;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
           Card(
             margin: const EdgeInsets.all(12),
             child: Padding(
