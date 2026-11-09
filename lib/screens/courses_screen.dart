@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -17,7 +18,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   @override
   void initState() {
     super.initState();
-    _courses = List.of(sampleCourses); // our own copy, safe to change
+    _courses = List.of(sampleCourses);
   }
 
   void _toggleFavorite(int index) {
@@ -28,21 +29,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  void _toggleEnrolled(int index) {
-    setState(() {
-      _courses[index] = _courses[index].copyWith(
-        enrolled: !_courses[index].enrolled,
-      );
-    });
-  }
-
   Future<void> _addCourse() async {
     final course = await showDialog<Course>(
       context: context,
       builder: (_) => const AddCourseDialog(),
     );
-    if (course == null) return; // cancelled
+    if (course == null) return;
     setState(() => _courses.add(course));
+  }
+
+  Future<void> _openDetail(Course course) async {
+    final removed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => CourseDetailScreen(course: course)),
+    );
+    if (removed == true) {
+      setState(() => _courses.remove(course));
+    }
   }
 
   @override
@@ -149,7 +152,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           onPressed: () => _toggleFavorite(index),
                         ),
-                        onTap: () => _toggleEnrolled(index),
+                        onTap: () => _openDetail(course),
                       );
                     },
                   ),
