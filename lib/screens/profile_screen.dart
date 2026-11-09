@@ -10,14 +10,17 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'MUHAMMAD HARITH IKHWAN';
   String _bio = 'Kuliyyah of ICT · Year 4 · Data Science/AI';
+  String _matric = '2310515';   // ← NEW: HW1
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+  final _matricCtrl = TextEditingController();   // ← NEW: HW1
   bool _editing = false;
   @override
   void initState() {
     super.initState();
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
+    _matricCtrl.text = _matric;   // ← NEW
     // pre-fill from current state
   }
 
@@ -25,18 +28,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void dispose() {
     _nicknameCtrl.dispose();
     _bioCtrl.dispose();
+    _matricCtrl.dispose();   // ← NEW
     super.dispose();
   }
 
-  void _toggleEdit() {
+    void _toggleEdit() {
     setState(() {
       if (_editing) {
         // leaving edit mode: copy controller values into state
-        _nickname = _nicknameCtrl.text.trim();
+        final name = _nicknameCtrl.text.trim();
+        _nickname = name.isEmpty ? 'Guest Student' : name;   // ← NEW: HW2 empty → Guest Student
         _bio = _bioCtrl.text.trim();
+        _matric = _matricCtrl.text.trim();                   // ← NEW: HW1
       }
+      _editing = !_editing;                                  // ← MOVED: now inside setState
     });
-    _editing = !_editing;
+  }
+
+  void _reset() {                                            // ← NEW: Exercise
+    setState(() {
+      _nickname = 'Guest Student';
+      _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+      _matric = '2310515';
+      _nicknameCtrl.text = _nickname;   // fix the boxes too
+      _bioCtrl.text = _bio;
+      _matricCtrl.text = _matric;
+    });
   }
 
   @override
@@ -58,7 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             const CircleAvatar(
               radius: 48,
-              backgroundImage: NetworkImage('https://picsum.photos/200'),
+              backgroundImage: AssetImage('assets/me.jpg'),   // ← CHANGED: my own photo
             ),
             const SizedBox(height: 12),
             if (_editing) ...[
@@ -81,10 +98,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+              TextField(                                     // ← NEW: HW1
+                controller: _matricCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Matric number',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
               ElevatedButton.icon(
                 onPressed: _toggleEdit,
                 icon: const Icon(Icons.save),
                 label: const Text('Save'),
+              ),
+              TextButton(                                    // ← NEW: Exercise
+                onPressed: _reset,
+                child: const Text('Reset'),
               ),
             ] else ...[
               Text(
@@ -97,6 +127,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _bio,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.black54),
+              ),
+              const SizedBox(height: 4),
+              Text(                                          // ← NEW: HW1 small grey text
+                'Matric: $_matric',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
           ],
