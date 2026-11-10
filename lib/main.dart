@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-
-import 'courses_screen.dart';
+import 'package:campus_buddy_kict/shell_screen.dart';
+import 'package:campus_buddy_kict/screens/about_screen.dart';
+import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
+import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
 
 void main() => runApp(const CampusBuddyKictApp());
 
@@ -14,7 +16,13 @@ class CampusBuddyKictApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
       ),
-      home: const CoursesScreen(),
+      // NEW: Add the named route here
+      routes: {
+        '/about': (context) => const AboutScreen(),
+        '/prayer': (context) => const PrayerTimesScreen(),
+        '/links': (context) => const CampusLinksScreen(),
+      },
+      home: const ShellScreen(),
     );
   }
 }
