@@ -19,13 +19,23 @@ const _links = [
       Icons.local_library, 'https://division.iium.edu.my/lib'),
   LinkItem('KICT', 'Kuliyyah of ICT',
       Icons.computer, 'https://www.iium.edu.my/kict'),
+  LinkItem('CELPAD', 'Centre for Languages',                  // ← NEW: HW1
+      Icons.translate, 'https://centre.iium.edu.my/celpad/'),
 ];
 
-class LinksScreen extends StatelessWidget {
+class LinksScreen extends StatefulWidget {                    // ← CHANGED: now has state
   const LinksScreen({super.key});
 
+  @override
+  State<LinksScreen> createState() => _LinksScreenState();
+}
+
+class _LinksScreenState extends State<LinksScreen> {
+  bool _inApp = false;   // ← NEW: HW2 the "Open in-app" switch
+
   Future<void> _open(BuildContext context, String uri) async {
-    final ok = await LinkOpener.open(uri);
+    final ok = await LinkOpener.open(uri,
+        inApp: _inApp && uri.startsWith('http'));   // ← CHANGED: only websites go in-app
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Cannot open $uri on this device')),
@@ -46,6 +56,14 @@ class LinksScreen extends StatelessWidget {
           ? 'geo:3.0717,101.7182?q=IIUM+Gombak+Campus'
           : 'https://maps.apple.com/?q=IIUM+Gombak+Campus'
             '&ll=3.0717,101.7182');
+  
+  
+  void _openKuantanMap(BuildContext context) => _open(          // ← NEW: HW1
+      context,
+      Platform.isAndroid
+          ? 'geo:3.8435,103.2956?q=IIUM+Kuantan+Campus'
+          : 'https://maps.apple.com/?q=IIUM+Kuantan+Campus'
+            '&ll=3.8435,103.2956');
 
   void _share(BuildContext context) => SharePlus.instance.share(
       ShareParams(text: 'Campus Buddy KICT — built in CSCI 4311 at IIUM.'));
@@ -57,6 +75,12 @@ class LinksScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          SwitchListTile(                                       // ← NEW: HW2
+            title: const Text('Open in-app'),
+            subtitle: const Text('Websites open inside Campus Buddy'),
+            value: _inApp,
+            onChanged: (v) => setState(() => _inApp = v),
+          ),
           ..._links.map((l) => Card(
                 child: ListTile(
                   leading: Icon(l.icon),
@@ -72,6 +96,12 @@ class LinksScreen extends StatelessWidget {
             title: const Text('Campus map'),
             subtitle: const Text('IIUM Gombak on Google Maps'),
             onTap: () => _openMap(context),
+          ),
+          ListTile(                                             // ← NEW: HW1
+            leading: const Icon(Icons.map_outlined),
+            title: const Text('Kuantan campus map'),
+            subtitle: const Text('IIUM Kuantan on Google Maps'),
+            onTap: () => _openKuantanMap(context),
           ),
           ListTile(
             leading: const Icon(Icons.phone),
