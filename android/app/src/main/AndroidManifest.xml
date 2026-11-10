@@ -1,4 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <queries>   <!-- your/the app’s declaration of what it wants to query -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />    <!-- action - what to do (“view this”, “send this”)--> <!-- "I want to VIEW/OPEN something" -->
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SEND" />   <!-- "I want to SEND something/Hand this to another app”" -->
+            <data android:mimeType="*/*" />     <!-- "...ANY type of content" -->
+        </intent>
+    </queries>
     <application
         android:label="Campus Buddy KICT"
         android:name="${applicationName}"

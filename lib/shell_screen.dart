@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/home_screen.dart';
 import 'package:campus_buddy_kict/screens/courses_screen.dart';
 import 'package:campus_buddy_kict/screens/profile_screen.dart';
+import 'package:campus_buddy_kict/screens/notes_screen.dart';
 
 class ShellScreen extends StatefulWidget {        // Stateful: it must REMEMBER the current tab
   const ShellScreen({super.key});
@@ -22,6 +23,7 @@ class _ShellScreenState extends State<ShellScreen> {
           HomeScreen(),                           // tab 0
           CoursesScreen(),                        // tab 1
           ProfileScreen(),                        // tab 2
+          NotesScreen(),                          // tab 3
         ],
       ),
       bottomNavigationBar: NavigationBar(         // the bar of buttons at the bottom
@@ -34,6 +36,8 @@ class _ShellScreenState extends State<ShellScreen> {
               selectedIcon: Icon(Icons.list), label: 'Courses'),
           NavigationDestination(icon: Icon(Icons.person_outline),
               selectedIcon: Icon(Icons.person), label: 'Profile'),
+          NavigationDestination(icon: Icon(Icons.note_outlined),
+              selectedIcon: Icon(Icons.note), label: 'Notes'),
         ],
       ),
     );

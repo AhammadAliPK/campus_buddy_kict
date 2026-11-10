@@ -20,11 +20,20 @@ class Course {
   // { } = optional extras. If you leave them out: instructor = null,
   // isFavorite = false, enrolled = false. So courses.dart needs NO changes.
 
-  Course copyWith({bool? isFavorite, bool? enrolled}) => Course(
-        // "make a copy of me, maybe with a new star / enrolled value"
-        code, name, creditHours, day, time, venue, icon,  // copy every field as-is
-        instructor: instructor,                           // keep the instructor
-        isFavorite: isFavorite ?? this.isFavorite,        // new value if given, else old one
+  Course copyWith({
+    String? name, int? creditHours, String? day,      // NEW: editable fields
+    String? time, String? venue,                      // NEW
+    bool? isFavorite, bool? enrolled,                 // already had these
+  }) => Course(
+        code,                                         // code never changes
+        name ?? this.name,                            // new value if given, else keep old
+        creditHours ?? this.creditHours,
+        day ?? this.day,
+        time ?? this.time,
+        venue ?? this.venue,
+        icon,
+        instructor: instructor,
+        isFavorite: isFavorite ?? this.isFavorite,
         enrolled: enrolled ?? this.enrolled,
       );
 }

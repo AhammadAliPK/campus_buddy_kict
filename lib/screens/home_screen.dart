@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
-import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
+import 'package:campus_buddy_kict/screens/links_screen.dart';   // the real links page instead of the placeholder
 import 'package:campus_buddy_kict/screens/confirm_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -32,10 +33,14 @@ class HomeScreen extends StatelessWidget {
           Card(child: ListTile(
             leading: const Icon(Icons.link),
             title: const Text('Campus links'),
-            subtitle: const Text('Arrives in Week 7'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const CampusLinksScreen())),
+            subtitle: const Text('Websites, map, call, email, share'), //subtitle = smaller text under the title
+            trailing: const Icon(Icons.chevron_right),    // trailing: the ">" arrow = "opens something"
+            onTap: () async {                                // tap → open the links page
+              await Navigator.push<bool>(                    // push a new screen on top of this one, wait for it to finish and return a value
+                context,                                     // context = this screen, the one that called Navigator.push
+                MaterialPageRoute(builder: (_) => const LinksScreen()), // MaterialPageRoute = a new page that slides in from the right. builder = what to show on that page. _ = "the argument I'm given isn't needed"
+              );
+            },
           )),
           Card(child: ListTile(
             leading: const Icon(Icons.info_outline),
