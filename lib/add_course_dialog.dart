@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/widgets/days_form_field.dart';
 
 class AddCourseDialog extends StatefulWidget {
   // Exercise: the screen passes in the codes it already has
@@ -19,12 +20,9 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   final _venueCtrl = TextEditingController();
   final _instructorCtrl = TextEditingController(); // may stay empty
 
-  String _day = 'Monday'; // current choice in the dropdown
-  static const _days = [
-    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'
-  ];
+  List<String> _days = ['Monday']; // the ticked day chips
 
-  int _creditHours = 3; // the slider's current value
+  double _creditHours = 3; // the slider's current value (0.5 steps)
 
   @override
   void dispose() {
@@ -43,7 +41,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
       _codeCtrl.text.trim().toUpperCase(),
       _nameCtrl.text.trim(),
       _creditHours,
-      _day,
+      _days,
       Icons.auto_stories,
       time: _timeCtrl.text.trim(),
       venue: _venueCtrl.text.trim(),
@@ -86,12 +84,9 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                 validator: (v) =>
                     (v?.trim().isEmpty ?? true) ? 'Name is required' : null,
               ),
-              DropdownButtonFormField<String>(
-                initialValue: _day,
-                items: _days
-                    .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                    .toList(),
-                onChanged: (v) => setState(() => _day = v!),
+              DaysFormField(
+                initialDays: _days,
+                onChanged: (v) => _days = v,
               ),
               TextFormField(
                 controller: _timeCtrl,
@@ -118,16 +113,15 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                   const Text('Credit hours'),
                   Expanded(
                     child: Slider(
-                      min: 1,
+                      min: 0.5,
                       max: 4,
-                      divisions: 3,
-                      label: '$_creditHours',
-                      value: _creditHours.toDouble(),
-                      onChanged: (v) =>
-                          setState(() => _creditHours = v.round()),
+                      divisions: 7, // 0.5 steps: 0.5, 1, 1.5 ... 4
+                      label: formatCh(_creditHours),
+                      value: _creditHours,
+                      onChanged: (v) => setState(() => _creditHours = v),
                     ),
                   ),
-                  Text('$_creditHours'),
+                  Text(formatCh(_creditHours)),
                 ],
               ),
             ],

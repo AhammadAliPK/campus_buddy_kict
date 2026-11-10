@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/widgets/days_form_field.dart';
 
 class EditCourseScreen extends StatefulWidget {
   const EditCourseScreen({super.key, required this.course});
@@ -16,10 +17,8 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
   late final TextEditingController _timeCtrl;
   late final TextEditingController _venueCtrl;
   late final TextEditingController _instructorCtrl;
-  late String _day;
-  late int _creditHours;
-
-  static const _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  late List<String> _days;
+  late double _creditHours;
 
   @override
   void initState() {
@@ -31,7 +30,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
     _venueCtrl = TextEditingController(text: widget.course.venue);
     _instructorCtrl =
         TextEditingController(text: widget.course.instructor ?? '');
-    _day = widget.course.day;
+    _days = List.of(widget.course.days);
     _creditHours = widget.course.creditHours;
   }
 
@@ -55,7 +54,7 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
       _codeCtrl.text.trim().toUpperCase(),
       _nameCtrl.text.trim(),
       _creditHours,
-      _day,
+      _days,
       old.icon,
       time: _timeCtrl.text.trim(),
       venue: _venueCtrl.text.trim(),
@@ -97,12 +96,9 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
                   validator: (v) =>
                       (v?.trim().isEmpty ?? true) ? 'Name is required' : null,
                 ),
-                DropdownButtonFormField<String>(
-                  initialValue: _day,
-                  items: _days
-                      .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                      .toList(),
-                  onChanged: (v) => setState(() => _day = v!),
+                DaysFormField(
+                  initialDays: _days,
+                  onChanged: (v) => _days = v,
                 ),
                 TextFormField(
                   controller: _timeCtrl,
@@ -129,14 +125,13 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
                     const Text('Credit hours'),
                     Expanded(
                       child: Slider(
-                        min: 1, max: 4, divisions: 3,
-                        label: '$_creditHours',
-                        value: _creditHours.toDouble(),
-                        onChanged: (v) =>
-                            setState(() => _creditHours = v.round()),
+                        min: 0.5, max: 4, divisions: 7, // 0.5 steps
+                        label: formatCh(_creditHours),
+                        value: _creditHours,
+                        onChanged: (v) => setState(() => _creditHours = v),
                       ),
                     ),
-                    Text('$_creditHours'),
+                    Text(formatCh(_creditHours)),
                   ],
                 ),
                 const SizedBox(height: 16),

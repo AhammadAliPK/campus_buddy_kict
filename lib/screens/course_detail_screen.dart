@@ -42,7 +42,8 @@ class CourseDetailScreen extends StatelessWidget {
               ),
             ]),
             const SizedBox(height: 16),
-            Text('${course.creditHours} credit hours · ${course.day}'),
+            Text('${formatCh(course.creditHours)} credit hours · '
+                '${course.days.join(' & ')}'),
             const SizedBox(height: 8),
             Text('${course.time} · ${course.venue}'),
             const SizedBox(height: 8),

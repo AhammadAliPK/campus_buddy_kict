@@ -15,6 +15,7 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false; // the screen remembers which view is on
   bool _favOnly = false; // Homework 3: is the "favourites only" chip on?
+  String? _dayFilter; // Week 4 day filter, picked with chips; null = All days
   late List<Course> _courses;
 
   @override
@@ -92,19 +93,20 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int totalCh = 0;
+    double totalCh = 0;
     for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
     }
     final enrolledCh = _courses
         .where((c) => c.enrolled)
-        .fold<int>(0, (sum, c) => sum + c.creditHours);
+        .fold<double>(0, (sum, c) => sum + c.creditHours);
 
-    // Week 4 day filter, now reading from _courses.
+    // Week 4 day filter, now picked with chips and reading from _courses.
+    // A Tue/Thu course shows under both Tue and Thu.
     // Homework 3: when the chip is on, also keep only starred courses.
     // Week 4 homework 3 (optional): sorted by day, then time
     final shown = sortedByDay(_courses
-        .where((c) => c.day == 'Monday')
+        .where((c) => _dayFilter == null || c.days.contains(_dayFilter))
         .where((c) => !_favOnly || c.isFavorite)
         .toList());
     final gridCourses = sortedByDay(_courses);
@@ -136,17 +138,32 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${_courses.length} courses · $totalCh credit hours\n'
-                'Enrolled: $enrolledCh CH',
+                '${_courses.length} courses · ${formatCh(totalCh)} credit hours\n'
+                'Enrolled: ${formatCh(enrolledCh)} CH',
               ),
             ),
           ),
-          // Homework 3: the filter chip (the list view uses it)
+          // Day chips (Week 4 filter) + Homework 3 favourites chip.
+          // The list view uses them; the grid always shows everything.
           if (!_isGrid)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
+              // Wrap = a Row that moves to a new line when it runs out of
+              // width, so every chip stays visible on small phones.
+              child: Wrap(
+                spacing: 6,
                 children: [
+                  ChoiceChip(
+                    label: const Text('All'),
+                    selected: _dayFilter == null,
+                    onSelected: (_) => setState(() => _dayFilter = null),
+                  ),
+                  for (final d in weekdays)
+                    ChoiceChip(
+                      label: Text(d.substring(0, 3)),
+                      selected: _dayFilter == d,
+                      onSelected: (_) => setState(() => _dayFilter = d),
+                    ),
                   FilterChip(
                     label: const Text('★ favourites only'),
                     selected: _favOnly,
@@ -197,7 +214,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 ? Center(
                     child: Text(
                       _favOnly
-                          ? 'No starred courses yet — tap a ☆ first'
+                          ? 'No starred courses here — tap a ☆ first'
                           : 'No classes! Alhamdulillah :)',
                     ),
                   )
@@ -232,7 +249,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         // ?? shows 'TBA' when the instructor is missing
                         subtitle: Text(
                           '${course.name}\n'
-                          '${course.shortDay} ${course.time} · ${course.venue}'
+                          '${course.shortDays} ${course.time} · ${course.venue}'
                           ' · ${course.instructor ?? 'TBA'}',
                         ),
                         isThreeLine: true,

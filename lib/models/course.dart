@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+/// The weekdays a class can meet on — used by the day chips and the forms.
+const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
 class Course {
   final String code;
   final String name;
-  final int creditHours;
-  final String day;
+  final double creditHours; // double, because some courses are 0.5 CH
+  final List<String> days; // a list, because some classes meet Tue AND Thu
   final IconData icon;
   final String time; // Week 4 homework 1, e.g. '09:00–10:30'
   final String venue; // Week 4 homework 1, e.g. 'LT A'
@@ -13,22 +16,22 @@ class Course {
   final bool enrolled; // true when the user enrolls in it
 
   // time and venue must always be given; instructor may be left out
-  const Course(this.code, this.name, this.creditHours, this.day, this.icon,
+  const Course(this.code, this.name, this.creditHours, this.days, this.icon,
       {required this.time,
       required this.venue,
       this.instructor,
       this.isFavorite = false,
       this.enrolled = false});
 
-  // 'Monday' -> 'Mon', used in the row subtitle
-  String get shortDay => day.substring(0, 3);
+  // ['Tuesday', 'Thursday'] -> 'Tue/Thu', used in the row subtitle
+  String get shortDays => days.map((d) => d.substring(0, 3)).join('/');
 
   // make a copy with one difference
   Course copyWith({
     String? code,
     String? name,
-    int? creditHours,
-    String? day,
+    double? creditHours,
+    List<String>? days,
     IconData? icon,
     String? time,
     String? venue,
@@ -39,7 +42,7 @@ class Course {
     code ?? this.code,
     name ?? this.name,
     creditHours ?? this.creditHours,
-    day ?? this.day,
+    days ?? this.days,
     icon ?? this.icon,
     time: time ?? this.time,
     venue: venue ?? this.venue,
@@ -48,6 +51,10 @@ class Course {
     enrolled: enrolled ?? this.enrolled,
   );
 }
+
+/// 3.0 -> '3', 0.5 -> '0.5', 13.5 -> '13.5'
+String formatCh(double ch) =>
+    ch == ch.roundToDouble() ? ch.toInt().toString() : ch.toString();
 
 // Week 4 homework 3 (optional): day names -> numbers, for sorting by day
 const Map<String, int> dayOrder = {
@@ -60,11 +67,13 @@ const Map<String, int> dayOrder = {
   'Sunday': 7,
 };
 
-// returns a new list sorted by day, then by start time
+// returns a new list sorted by (first) day, then by start time
 List<Course> sortedByDay(List<Course> list) {
+  int firstDay(Course c) =>
+      c.days.isEmpty ? 99 : (dayOrder[c.days.first] ?? 99);
   final copy = List.of(list);
   copy.sort((a, b) {
-    final byDay = (dayOrder[a.day] ?? 99).compareTo(dayOrder[b.day] ?? 99);
+    final byDay = firstDay(a).compareTo(firstDay(b));
     if (byDay != 0) return byDay;
     return a.time.compareTo(b.time);
   });
