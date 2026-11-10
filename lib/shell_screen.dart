@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/home_screen.dart';
 import 'package:campus_buddy_kict/screens/courses_screen.dart';
 import 'package:campus_buddy_kict/screens/profile_screen.dart';
+import 'package:campus_buddy_kict/screens/notes_screen.dart'; // NEW IMPORT
 
 class ShellScreen extends StatefulWidget {
   const ShellScreen({super.key});
@@ -18,7 +19,12 @@ class ShellScreenState extends State<ShellScreen> {
     return Scaffold(
       body: IndexedStack(
         index: _tab,
-        children: const [HomeScreen(), CoursesScreen(), ProfileScreen()],
+        children: const [
+          HomeScreen(),
+          CoursesScreen(),
+          NotesScreen(), // NEW SCREEN
+          ProfileScreen(),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _tab,
@@ -33,6 +39,12 @@ class ShellScreenState extends State<ShellScreen> {
             icon: Icon(Icons.list_outlined),
             selectedIcon: Icon(Icons.list),
             label: 'Courses',
+          ),
+          // NEW NAVIGATION DESTINATION
+          NavigationDestination(
+            icon: Icon(Icons.note_alt_outlined),
+            selectedIcon: Icon(Icons.note_alt),
+            label: 'Notes',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

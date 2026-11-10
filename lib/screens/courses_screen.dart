@@ -1,6 +1,10 @@
+/* 
+Explanation: We cannot clear the courses from the Home tab because the course data lives entirely inside the local memory (state) of the CoursesScreen. The Home screen is a separate widget and cannot reach into another screen's internal variables to modify them. To fix this so any screen can access and modify the data, we need a concept called "state management".
+*/
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/confirm_clear_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -27,6 +31,25 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          // 1. The delete all button
+          IconButton(
+            icon: const Icon(Icons.delete_sweep),
+            onPressed: () async {
+              final confirm = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ConfirmClearScreen(),
+                ),
+              );
+
+              if (confirm == true) {
+                setState(() {
+                  sampleCourses.clear(); // Clears the list
+                });
+              }
+            },
+          ),
+          // 2. The grid toggle button
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
@@ -63,7 +86,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     itemBuilder: (context, index) {
                       final course = shown[index];
                       return Card(
-                        // Added InkWell here so grid cards are tappable too
                         child: InkWell(
                           onTap: () async {
                             final removed = await Navigator.push<bool>(
@@ -74,11 +96,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               ),
                             );
 
-                            if (removed == true) {
-                              setState(() {
+                            // NEW: Refresh the screen whether edited or removed
+                            setState(() {
+                              if (removed == true) {
                                 sampleCourses.remove(course);
-                              });
-                            }
+                              }
+                            });
                           },
                           child: Center(
                             child: Column(
@@ -131,7 +154,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           '${course.name} ${course.creditHours} CH',
                         ),
                         trailing: Text(course.day),
-                        // Replaced ScaffoldMessenger with navigation logic
                         onTap: () async {
                           final removed = await Navigator.push<bool>(
                             context,
@@ -141,11 +163,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             ),
                           );
 
-                          if (removed == true) {
-                            setState(() {
+                          // NEW: Refresh the screen whether edited or removed
+                          setState(() {
+                            if (removed == true) {
                               sampleCourses.remove(course);
-                            });
-                          }
+                            }
+                          });
                         },
                       );
                     },
