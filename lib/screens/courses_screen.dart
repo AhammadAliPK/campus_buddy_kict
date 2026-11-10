@@ -5,8 +5,8 @@ import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
-// Day filter from Week 4: show only this day. null = show every day.
-const String? _filterDay = null;
+// Day filter from Week 4, picked by tapping the day chips.
+const _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 const _dayOrder = {
   'Monday': 1,
@@ -27,6 +27,13 @@ int _dayRank(String day) {
   return rank;
 }
 
+// Week 4 homework 1: 'Tuesday/Thursday' -> 'Tue/Thu', '09:00–10:30' -> '09:00'.
+String _shortDay(String day) =>
+    day.split('/').map((d) => d.length > 3 ? d.substring(0, 3) : d).join('/');
+
+String _startTime(String time) =>
+    time.split(RegExp(r'\s*[–-]\s*')).first.trim();
+
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
 
@@ -37,6 +44,7 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   bool _favOnly = false; // Homework 3: "favourites only" chip
+  String? _filterDay; // null = all days
   late List<Course> _courses;
 
   @override
@@ -180,15 +188,35 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
             ),
           ),
-          Padding(
+          // Day chips (Week 4) + favourites chip (Week 5), one scrollable row
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: FilterChip(
-                label: const Text('★ favourites only'),
-                selected: _favOnly,
-                onSelected: (v) => setState(() => _favOnly = v),
-              ),
+            child: Row(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: const Text('All'),
+                    selected: _filterDay == null,
+                    onSelected: (_) => setState(() => _filterDay = null),
+                  ),
+                ),
+                for (final day in _days)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: FilterChip(
+                      label: Text(day.substring(0, 3)),
+                      selected: _filterDay == day,
+                      onSelected: (_) => setState(() => _filterDay = day),
+                    ),
+                  ),
+                FilterChip(
+                  label: const Text('★ favourites only'),
+                  selected: _favOnly,
+                  onSelected: (v) => setState(() => _favOnly = v),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -262,8 +290,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             isThreeLine: true,
                             subtitle: Text(
                               '${course.name} · ${course.creditHours} CH\n'
-                              '${course.day} ${course.time} · '
-                              '${course.venue} · ${course.instructor ?? 'TBA'}',
+                              '${_shortDay(course.day)} ${_startTime(course.time)}'
+                              ' · ${course.venue} · '
+                              '${course.instructor ?? 'TBA'}',
                             ),
                             trailing: IconButton(
                               icon: Icon(
