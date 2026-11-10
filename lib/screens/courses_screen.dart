@@ -49,21 +49,27 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
-  // B. open the detail page; capture the course BEFORE await
+  // Detail page can answer: true (remove), a Course (edited), or null (back)
   Future<void> _openDetail(int index) async {
-    final course = _courses[index];
-    final removed = await Navigator.push<bool>(
+    final course = _courses[index]; // capture BEFORE await
+    final result = await Navigator.push<Object?>(
       context,
       MaterialPageRoute(
         builder: (_) => CourseDetailScreen(course: course),
       ),
     );
-    if (removed == true) {
+    if (result == true) {
       setState(() => _courses.remove(course));
+    } else if (result is Course) {
+      // HW Part 2: replace that row with the edited course
+      setState(() {
+        final i = _courses.indexOf(course);
+        if (i != -1) _courses[i] = result;
+      });
     }
+    // result == null -> back pressed -> nothing changes (Part 3)
   }
 
-  // Exercise: this works because the list lives HERE
   Future<void> _clearFavorites() async {
     final yes = await Navigator.push<bool>(
       context,
@@ -168,7 +174,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
-                        // tap the round icon = enroll / un-enroll
                         leading: GestureDetector(
                           onTap: () => _toggleEnrolled(index),
                           child: CircleAvatar(
@@ -195,7 +200,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           onPressed: () => _toggleFavorite(index),
                         ),
-                        onTap: () => _openDetail(index), // tap row = details
+                        onTap: () => _openDetail(index),
                       );
                     },
                   ),

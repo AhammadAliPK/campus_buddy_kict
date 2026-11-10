@@ -2,12 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
-import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
+import 'package:campus_buddy_kict/screens/links_screen.dart';
+import 'package:campus_buddy_kict/services/share_helper.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  // Exercise: confirm first... but Home can't reach the favourites
+  // Week 6 exercise: confirm first... but Home can't reach the favourites
   Future<void> _clearFavorites(BuildContext context) async {
     final yes = await Navigator.push<bool>(
       context,
@@ -31,6 +32,11 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Campus Buddy KICT'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Share',
+            onPressed: () => ShareHelper.shareApp(), // Week 7 Step 9
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             tooltip: 'About',
@@ -57,12 +63,14 @@ class HomeScreen extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.link),
               title: const Text('Campus links'),
-              subtitle: const Text('Arrives in Week 7'),
+              subtitle: const Text('Websites, map, call, email, share'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CampusLinksScreen()),
-              ),
+              onTap: () async {
+                await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LinksScreen()),
+                );
+              },
             ),
           ),
           Card(
