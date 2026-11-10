@@ -15,9 +15,9 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   String _day = 'All';
-  bool _favOnly = false; // NEW: "★ favourites only" chip state
+  bool _favOnly = false;
   static const _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-  late List<Course> _courses; // FIX: field was never declared
+  late List<Course> _courses;
 
   @override
   void initState() {
@@ -38,6 +38,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
+  // detail page answers: true = removed, Course = edited, null = back (no change)
+  Future<void> _openDetail(Course course) async {
+    final result = await Navigator.push<Object>(
+      context,
+      MaterialPageRoute(builder: (_) => CourseDetailScreen(course: course)),
+    );
+    if (result == true) {
+      setState(() => _courses.remove(course));
+    } else if (result is Course) {
+      setState(() => _courses[_courses.indexOf(course)] = result);
+    }
+  }
+
   void _toggleFavourite(int index) {
     setState(() {
       _courses[index] = _courses[index].copyWith(
@@ -47,10 +60,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
   }
 
   Future<void> _addCourse() async {
-    // ← CHANGED: was _openAddDialog
     final course = await showDialog<Course>(
       context: context,
-      // NEW: pass current codes so dialog can reject duplicates (no const: list built at runtime)
       builder: (_) =>
           AddCourseDialog(existingCodes: _courses.map((c) => c.code).toList()),
     );
@@ -58,7 +69,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.add(course));
   }
 
-  // NEW: long-press -> confirm -> remove
   Future<void> _removeCourse(Course course) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -67,24 +77,21 @@ class _CoursesScreenState extends State<CoursesScreen> {
         content: Text('Remove ${course.code}?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, false), // NEW: cancel -> false
+            onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, true), // NEW: confirm -> true
+            onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Remove'),
           ),
         ],
       ),
     );
-    if (ok != true) return; // NEW: null = tapped outside, treat as cancel
-    setState(
-      () => _courses.remove(course),
-    ); // NEW: remove by object, safe with filtered/sorted view
+    if (ok != true) return;
+    setState(() => _courses.remove(course));
   }
 
   void _toggleEnrolled(int index) {
-    // ← NEW: same shape as the star
     setState(() {
       _courses[index] = _courses[index].copyWith(
         enrolled: !_courses[index].enrolled,
@@ -94,35 +101,26 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    int totalCh = 0; // ← NEW
+    int totalCh = 0;
     for (final c in _courses) {
-      // ← NEW
-      totalCh = totalCh + c.creditHours; // ← NEW
-    } // ← NEW
-    final enrolledCh =
-        _courses // ← NEW
-            .where((c) => c.enrolled)
-            .fold<int>(0, (sum, c) => sum + c.creditHours);
-    // NEW: favourites filter applied first, then day filter (same _courses, just a view)
+      totalCh = totalCh + c.creditHours;
+    }
+    final enrolledCh = _courses
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
     final base = _favOnly
         ? _courses.where((c) => c.isFavourite).toList()
         : _courses;
     final shown = _day == 'All'
         ? ([...base]..sort(
-            // FIX: was sampleCourses, so added/toggled courses ignored
             (a, b) => _days.indexOf(a.days.first) - _days.indexOf(b.days.first),
           ))
-        : base
-              .where((c) => c.days.contains(_day))
-              .toList(); // CHANGED: _courses -> base
+        : base.where((c) => c.days.contains(_day)).toList();
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _addCourse, // ← NEW
-          ),
+          IconButton(icon: const Icon(Icons.add), onPressed: _addCourse),
           IconButton(
             icon: const Icon(Icons.star_border),
             tooltip: 'Clear favourites',
@@ -131,8 +129,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
-            onPressed: () =>
-                setState(() => _isGrid = !_isGrid), // D. wires this up
+            onPressed: () => setState(() => _isGrid = !_isGrid),
           ),
         ],
       ),
@@ -165,7 +162,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ],
             ),
           ),
-          // NEW: second chip row, favourites only toggle
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Align(
@@ -182,7 +178,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 ? Center(
                     child: Text(
                       _favOnly
-                          ? 'No starred courses' // NEW: clearer message when fav filter on
+                          ? 'No starred courses'
                           : 'No classes! Alhamdulillah :)',
                     ),
                   )
@@ -196,28 +192,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
-                    itemCount: shown
-                        .length, // FIX: render filtered list so day chips work
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = shown[index]; // FIX: same
-                      final realIndex = _courses.indexOf(course); // FIX: shown is sorted/filtered, find position in _courses
+                      final course = shown[index];
+                      final realIndex = _courses.indexOf(course);
                       return Card(
                         child: InkWell(
-                          onTap: () async {
-                            final removed = await Navigator.push<bool>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    CourseDetailScreen(course: course),
-                              ),
-                            );
-                            if (removed == true) {
-                              setState(() => _courses.remove(course));
-                            }
-                          }, // FIX: use realIndex, not shown index
-                          onLongPress: () => _removeCourse(
-                            course,
-                          ), // NEW: long-press card to remove
+                          onTap: () => _openDetail(course),
+                          onLongPress: () => _removeCourse(course),
                           child: Padding(
                             padding: const EdgeInsets.all(12),
                             child: Column(
@@ -226,7 +208,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 Icon(
                                   course.enrolled
                                       ? Icons.check_circle
-                                      : course.icon, // FIX: show enrolled state in grid too
+                                      : course.icon,
                                   size: 28,
                                   color: course.enrolled ? Colors.green : null,
                                 ),
@@ -243,13 +225,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                   maxLines: 5,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                Text(
-                                  '${course.creditHours} CH', //· ${course.days.map((d) => d.substring(0, 3)).join(', ')}
-                                ),
-                                Text(
-                                  course.time,
-                                ), // FIX: no need '${}' for plain String (lint)
-                                Text(course.venue), // FIX: same
+                                Text('${course.creditHours} CH'),
+                                Text(course.time),
+                                Text(course.venue),
                                 Center(
                                   child: Text(
                                     course.instructor ?? 'TBA',
@@ -265,11 +243,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: shown
-                        .length, // FIX: render filtered list so day chips work
+                    itemCount: shown.length,
                     itemBuilder: (context, index) {
-                      final course = shown[index]; // FIX: same
-                      final realIndex = _courses.indexOf(course); // FIX: shown is sorted/filtered, find position in _courses
+                      final course = shown[index];
+                      final realIndex = _courses.indexOf(course);
                       return ListTile(
                         tileColor: index.isOdd
                             ? Colors.black.withValues(alpha: 0.03)
@@ -279,13 +256,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               .colorScheme
                               .primaryContainer,
                           child: Icon(
-                            course
-                                    .enrolled // ← CHANGED: was course.icon
-                                ? Icons.check_circle
-                                : course.icon,
-                            color:
-                                course
-                                    .enrolled // ← CHANGED
+                            course.enrolled ? Icons.check_circle : course.icon,
+                            color: course.enrolled
                                 ? Colors.green
                                 : Theme.of(context)
                                       .colorScheme
@@ -295,7 +267,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         title: Text(course.code),
                         isThreeLine: true,
                         subtitle: Text(
-                          '${course.name} \n' // FIX: CH label had days instead of creditHours
+                          '${course.name} \n'
                           '${course.creditHours} CH · ${course.time} \n'
                           '${course.venue}\n'
                           '${course.instructor ?? 'TBA'}',
@@ -303,27 +275,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
                         trailing: IconButton(
                           icon: Icon(
                             course.isFavourite ? Icons.star : Icons.star_border,
-                            color: course.isFavourite
-                                ? Colors.amber
-                                : null, // FIX: typo isFavourtie
+                            color: course.isFavourite ? Colors.amber : null,
                           ),
-                          onPressed: () => _toggleFavourite(realIndex), // FIX: moved inside IconButton (ListTile has no onPressed), pass index not IndexError
+                          onPressed: () => _toggleFavourite(realIndex),
                         ),
-                        onTap: () async {
-                          final removed = await Navigator.push<bool>(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  CourseDetailScreen(course: course),
-                            ),
-                          );
-                          if (removed == true) {
-                            setState(() => _courses.remove(course));
-                          }
-                        }, // FIX: use realIndex
-                        onLongPress: () => _removeCourse(
-                          course,
-                        ), // NEW: long-press row to remove
+                        onTap: () => _openDetail(course),
+                        onLongPress: () => _removeCourse(course),
                       );
                     },
                   ),

@@ -84,9 +84,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Container(
                   width: 96,
                   height: 96,
-                  color: Colors
-                      .grey
-                      .shade200, // shows if the image doesn't fill the circle
+                  color: Colors.grey.shade200,
                   child: Image.asset(
                     'assets/me.jpg',
                     fit: BoxFit.contain, // zoom out: shows the whole photo

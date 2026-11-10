@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 
 class AddCourseDialog extends StatefulWidget {
-  const AddCourseDialog({super.key, required this.existingCodes}); // NEW: screen passes codes already in list
+  const AddCourseDialog({super.key, required this.existingCodes});
 
-  final List<String> existingCodes; // NEW: used by code validator to block duplicates
+  final List<String> existingCodes;
 
   @override
   State<AddCourseDialog> createState() => _AddCourseDialogState();
@@ -14,42 +14,41 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   final _formKey = GlobalKey<FormState>();
   final _codeCtrl = TextEditingController();
   final _nameCtrl = TextEditingController();
-  final _timeCtrl = TextEditingController(); // NEW: time field
-  final _venueCtrl = TextEditingController(); // NEW: venue field
-  final _instructorCtrl = TextEditingController(); // NEW: instructor field
-  final Set<String> _selectedDays = {}; // CHANGED: start empty, no forced Monday; user picks 1+ days (e.g. Tue + Thu)
+  final _timeCtrl = TextEditingController();
+  final _venueCtrl = TextEditingController();
+  final _instructorCtrl = TextEditingController();
+  final Set<String> _selectedDays = {};
   static const _days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   int _creditHours = 3;
 
   @override
   void dispose() {
     _codeCtrl.dispose();
-    _nameCtrl.dispose(); // ← NEW
-    _timeCtrl.dispose(); // NEW: free controllers to avoid memory leak
-    _venueCtrl.dispose(); // NEW
-    _instructorCtrl.dispose(); // NEW
+    _nameCtrl.dispose();
+    _timeCtrl.dispose();
+    _venueCtrl.dispose();
+    _instructorCtrl.dispose();
     super.dispose();
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     final course = Course(
-      // ← NEW: pack the answers
       _codeCtrl.text.trim().toUpperCase(),
       _nameCtrl.text.trim(),
       _creditHours,
-      // CHANGED: keep Mon→Fri order, not tap order (list sort in screen uses days.first)
       _days.where(_selectedDays.contains).toList(),
-      // NEW: normalise "-" to "–" so it matches courses.dart (e.g. 3:30pm–4:50pm)
-      _timeCtrl.text.trim().toLowerCase().replaceAll(RegExp(r'\s*[-–]\s*'), '–'),
-      _venueCtrl.text.trim(), // NEW: venue from field
+      _timeCtrl.text.trim().toLowerCase().replaceAll(
+        RegExp(r'\s*[-–]\s*'),
+        '–',
+      ),
+      _venueCtrl.text.trim(),
       Icons.auto_stories,
-      // NEW: empty instructor -> null, screen shows 'TBA'
       instructor: _instructorCtrl.text.trim().isEmpty
           ? null
           : _instructorCtrl.text.trim(),
     );
-    Navigator.pop(context, course); // ← CHANGED: close AND answer
+    Navigator.pop(context, course);
   }
 
   @override
@@ -69,12 +68,11 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                   labelText: 'Code (e.g. CSCI 4311)',
                 ),
                 validator: (v) {
-                  final t = (v?.trim() ?? '').toUpperCase(); // FIX: uppercase before check so "csci 4311" passes
+                  final t = (v?.trim() ?? '').toUpperCase();
                   if (t.isEmpty) return 'Code is required';
                   if (!RegExp(r'^[A-Z]{4}\s?\d{4}$').hasMatch(t)) {
                     return 'Format: 4 letters + 4 digits';
                   }
-                  // NEW: duplicate guard; ignore spaces so "CSCI4311" also matches "CSCI 4311"
                   final key = t.replaceAll(' ', '');
                   if (widget.existingCodes.any(
                     (c) => c.toUpperCase().replaceAll(' ', '') == key,
@@ -93,9 +91,7 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                     (v?.trim().isEmpty ?? true) ? 'Name is required' : null,
               ),
 
-              // CHANGED: Third child: Day chips (pick 1 or more), was single dropdown
               const SizedBox(height: 12),
-              // CHANGED: FormField so validate() on Add also checks days, like other fields
               FormField<Set<String>>(
                 validator: (_) =>
                     _selectedDays.isEmpty ? 'Pick at least 1 day' : null,
@@ -108,18 +104,20 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                       children: [
                         for (final d in _days)
                           FilterChip(
-                            label: Text(d.substring(0, 3)), // Mon, Tue... same as screen chips
+                            label: Text(d.substring(0, 3)),
                             selected: _selectedDays.contains(d),
                             onSelected: (on) {
-                              setState(() => on
-                                  ? _selectedDays.add(d)
-                                  : _selectedDays.remove(d)); // CHANGED: free toggle, any day can be removed
-                              if (field.hasError) field.validate(); // CHANGED: re-check so red error clears once a day picked
+                              setState(
+                                () => on
+                                    ? _selectedDays.add(d)
+                                    : _selectedDays.remove(d),
+                              );
+                              if (field.hasError) field.validate();
                             },
                           ),
                       ],
                     ),
-                    if (field.hasError) // CHANGED: show error under chips when none picked
+                    if (field.hasError)
                       Text(
                         field.errorText!,
                         style: TextStyle(
@@ -131,7 +129,6 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                 ),
               ),
 
-              // NEW: Time, same format as courses.dart
               TextFormField(
                 controller: _timeCtrl,
                 decoration: const InputDecoration(
@@ -140,7 +137,6 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                 validator: (v) {
                   final t = v?.trim() ?? '';
                   if (t.isEmpty) return 'Time is required';
-                  // NEW: start-end, each like 3:30pm; accepts "-" or "–", any case
                   if (!RegExp(
                     r'^\d{1,2}:\d{2}(am|pm)\s*[-–]\s*\d{1,2}:\d{2}(am|pm)$',
                     caseSensitive: false,
@@ -151,7 +147,6 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                 },
               ),
 
-              // NEW: Venue
               TextFormField(
                 controller: _venueCtrl,
                 decoration: const InputDecoration(
@@ -161,7 +156,6 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                     (v?.trim().isEmpty ?? true) ? 'Venue is required' : null,
               ),
 
-              // NEW: Instructor (optional, like nullable instructor in Course)
               TextFormField(
                 controller: _instructorCtrl,
                 decoration: const InputDecoration(

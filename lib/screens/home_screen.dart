@@ -68,7 +68,9 @@ class HomeScreen extends StatelessWidget {
                 if (yes != true || !context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text("Can't clear from Home — use the Courses tab"),
+                    content: Text(
+                      "Can't clear from Home — use the Courses tab",
+                    ),
                   ),
                 );
               },

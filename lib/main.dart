@@ -11,9 +11,7 @@ class CampusBuddyKictApp extends StatelessWidget {
     return MaterialApp(
       title: 'Campus Buddy KICT',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
-      ),
+      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),),
       home: const ShellScreen(),
       routes: {'/about': (context) => const AboutScreen()},
     );

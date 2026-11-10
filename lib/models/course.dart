@@ -19,21 +19,29 @@ class Course {
     this.time,
     this.venue,
     this.icon, {
-    this.instructor, // FIX: back inside {} so it stays named + optional (data/courses.dart uses instructor:)
+    this.instructor,
     this.isFavourite = false,
     this.enrolled = false,
   });
-  // ← NEW method: make a copy with one difference
-  // FIX: param renamed isFavorite -> isFavourite to match field + screen call
-  Course copyWith({bool? isFavourite, bool? enrolled}) => Course(
+  Course copyWith({
+    String? name,
+    int? creditHours,
+    String? time,
+    String? venue,
+    String? instructor,
+    // null instructor means "keep", so this flag is needed to go back to TBA
+    bool clearInstructor = false,
+    bool? isFavourite,
+    bool? enrolled,
+  }) => Course(
     code,
-    name,
-    creditHours,
+    name ?? this.name,
+    creditHours ?? this.creditHours,
     days,
-    time, // FIX: was missing, positional order must match constructor
-    venue, // FIX: was missing
+    time ?? this.time,
+    venue ?? this.venue,
     icon,
-    instructor: instructor, // FIX: keep instructor, else lost on every toggle
+    instructor: clearInstructor ? null : (instructor ?? this.instructor),
     isFavourite: isFavourite ?? this.isFavourite,
     enrolled: enrolled ?? this.enrolled,
   );
