@@ -3,10 +3,12 @@ import 'package:url_launcher/url_launcher.dart';
 
 class LinkOpener {
   /// Tries to open [uriString]; returns false (and shows nothing) if it can't.
-  static Future<bool> open(String uriString) async {
+  /// [mode] defaults to the external app (browser, dialer, mail, maps).
+  static Future<bool> open(String uriString,
+      {LaunchMode mode = LaunchMode.externalApplication}) async {
     final uri = Uri.parse(uriString);
     try {
-      return await launchUrl(uri, mode: LaunchMode.externalApplication);
+      return await launchUrl(uri, mode: mode);
     } catch (e) {
       // No app registered for the scheme (e.g. geo:/mailto:/tel: on the
       // iOS Simulator), malformed URI, restricted mode...
