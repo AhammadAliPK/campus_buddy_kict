@@ -15,6 +15,9 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   final _formKey = GlobalKey<FormState>(); // the form's name tag
   final _codeCtrl = TextEditingController(); // remembers the typing
   final _nameCtrl = TextEditingController();
+  final _timeCtrl = TextEditingController(); // Week 4 homework
+  final _venueCtrl = TextEditingController();
+  final _instructorCtrl = TextEditingController(); // may stay empty
 
   String _day = 'Monday'; // current choice in the dropdown
   static const _days = [
@@ -27,17 +30,24 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
   void dispose() {
     _codeCtrl.dispose();
     _nameCtrl.dispose();
+    _timeCtrl.dispose();
+    _venueCtrl.dispose();
+    _instructorCtrl.dispose();
     super.dispose();
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return; // run every check
+    final instructor = _instructorCtrl.text.trim();
     final course = Course(
       _codeCtrl.text.trim().toUpperCase(),
       _nameCtrl.text.trim(),
       _creditHours,
       _day,
       Icons.auto_stories,
+      time: _timeCtrl.text.trim(),
+      venue: _venueCtrl.text.trim(),
+      instructor: instructor.isEmpty ? null : instructor, // empty -> unknown
     );
     Navigator.pop(context, course); // close AND answer
   }
@@ -82,6 +92,25 @@ class _AddCourseDialogState extends State<AddCourseDialog> {
                     .map((d) => DropdownMenuItem(value: d, child: Text(d)))
                     .toList(),
                 onChanged: (v) => setState(() => _day = v!),
+              ),
+              TextFormField(
+                controller: _timeCtrl,
+                decoration:
+                    const InputDecoration(labelText: 'Time (e.g. 09:00–10:30)'),
+                validator: (v) =>
+                    (v?.trim().isEmpty ?? true) ? 'Time is required' : null,
+              ),
+              TextFormField(
+                controller: _venueCtrl,
+                decoration: const InputDecoration(labelText: 'Venue (e.g. LT A)'),
+                validator: (v) =>
+                    (v?.trim().isEmpty ?? true) ? 'Venue is required' : null,
+              ),
+              TextFormField(
+                controller: _instructorCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Instructor (leave empty if not known)',
+                ),
               ),
               const SizedBox(height: 8),
               Row(

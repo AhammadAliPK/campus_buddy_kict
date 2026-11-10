@@ -3,6 +3,7 @@ import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -73,6 +74,22 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }
   }
 
+  // Week 6 exercise: this one works, because _courses lives in this State
+  Future<void> _clearFavourites() async {
+    final yes = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ConfirmScreen(
+          message: 'Remove the star from every course?',
+        ),
+      ),
+    );
+    if (yes != true) return; // No, or system back (null) = do nothing
+    setState(() {
+      _courses = _courses.map((c) => c.copyWith(isFavorite: false)).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
@@ -85,10 +102,12 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
     // Week 4 day filter, now reading from _courses.
     // Homework 3: when the chip is on, also keep only starred courses.
-    final shown = _courses
+    // Week 4 homework 3 (optional): sorted by day, then time
+    final shown = sortedByDay(_courses
         .where((c) => c.day == 'Monday')
         .where((c) => !_favOnly || c.isFavorite)
-        .toList();
+        .toList());
+    final gridCourses = sortedByDay(_courses);
 
     return Scaffold(
         appBar: AppBar(
@@ -97,6 +116,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
             IconButton(
               icon: const Icon(Icons.add),
               onPressed: _addCourse,
+            ),
+            IconButton(
+              icon: const Icon(Icons.star_outline),
+              tooltip: 'Clear all favourites',
+              onPressed: _clearFavourites,
             ),
             IconButton(
               icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
@@ -141,9 +165,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
                         ),
-                    itemCount: _courses.length,
+                    itemCount: gridCourses.length,
                     itemBuilder: (context, index) {
-                      final course = _courses[index];
+                      final course = gridCourses[index];
                       return Card(
                         child: Center(
                           child: Column(
@@ -204,7 +228,14 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                         ),
                         title: Text(course.code),
-                        subtitle: Text('${course.name} · ${course.day}'),
+                        // Week 4 homework: 'Mon 09:00–10:30 · LT A', and
+                        // ?? shows 'TBA' when the instructor is missing
+                        subtitle: Text(
+                          '${course.name}\n'
+                          '${course.shortDay} ${course.time} · ${course.venue}'
+                          ' · ${course.instructor ?? 'TBA'}',
+                        ),
+                        isThreeLine: true,
                         trailing: IconButton(
                           icon: Icon(
                             course.isFavorite ? Icons.star : Icons.star_border,

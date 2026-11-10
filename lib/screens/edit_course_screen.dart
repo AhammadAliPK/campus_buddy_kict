@@ -13,6 +13,9 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _codeCtrl;
   late final TextEditingController _nameCtrl;
+  late final TextEditingController _timeCtrl;
+  late final TextEditingController _venueCtrl;
+  late final TextEditingController _instructorCtrl;
   late String _day;
   late int _creditHours;
 
@@ -24,6 +27,10 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
     // pre-fill every field from the course we were handed
     _codeCtrl = TextEditingController(text: widget.course.code);
     _nameCtrl = TextEditingController(text: widget.course.name);
+    _timeCtrl = TextEditingController(text: widget.course.time);
+    _venueCtrl = TextEditingController(text: widget.course.venue);
+    _instructorCtrl =
+        TextEditingController(text: widget.course.instructor ?? '');
     _day = widget.course.day;
     _creditHours = widget.course.creditHours;
   }
@@ -32,16 +39,29 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
   void dispose() {
     _codeCtrl.dispose();
     _nameCtrl.dispose();
+    _timeCtrl.dispose();
+    _venueCtrl.dispose();
+    _instructorCtrl.dispose();
     super.dispose();
   }
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    final edited = widget.course.copyWith(
-      code: _codeCtrl.text.trim().toUpperCase(),
-      name: _nameCtrl.text.trim(),
-      creditHours: _creditHours,
-      day: _day,
+    final instructor = _instructorCtrl.text.trim();
+    final old = widget.course;
+    // Built with Course(...) rather than copyWith, because copyWith cannot
+    // set instructor back to null when the user clears the box.
+    final edited = Course(
+      _codeCtrl.text.trim().toUpperCase(),
+      _nameCtrl.text.trim(),
+      _creditHours,
+      _day,
+      old.icon,
+      time: _timeCtrl.text.trim(),
+      venue: _venueCtrl.text.trim(),
+      instructor: instructor.isEmpty ? null : instructor,
+      isFavorite: old.isFavorite, // keep the star
+      enrolled: old.enrolled, // keep the tick
     );
     Navigator.pop(context, edited); // hand the edited course back
   }
@@ -83,6 +103,25 @@ class _EditCourseScreenState extends State<EditCourseScreen> {
                       .map((d) => DropdownMenuItem(value: d, child: Text(d)))
                       .toList(),
                   onChanged: (v) => setState(() => _day = v!),
+                ),
+                TextFormField(
+                  controller: _timeCtrl,
+                  decoration:
+                      const InputDecoration(labelText: 'Time (e.g. 09:00–10:30)'),
+                  validator: (v) =>
+                      (v?.trim().isEmpty ?? true) ? 'Time is required' : null,
+                ),
+                TextFormField(
+                  controller: _venueCtrl,
+                  decoration: const InputDecoration(labelText: 'Venue (e.g. LT A)'),
+                  validator: (v) =>
+                      (v?.trim().isEmpty ?? true) ? 'Venue is required' : null,
+                ),
+                TextFormField(
+                  controller: _instructorCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Instructor (leave empty if not known)',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Row(
