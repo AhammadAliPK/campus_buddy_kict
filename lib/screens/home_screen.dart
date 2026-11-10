@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:campus_buddy_kict/screens/links_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  void _shareApp() {
+    SharePlus.instance.share(
+      ShareParams(text: 'Campus Buddy KICT — built in CSCI 4311 at IIUM.'),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,6 +20,10 @@ class HomeScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => Navigator.pushNamed(context, '/about'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: _shareApp,
           ),
         ],
       ),
@@ -34,14 +46,14 @@ class HomeScreen extends StatelessWidget {
           ),
           Card(
             child: ListTile(
-              leading: Icon(Icons.link),
-              title: Text('Campus links'),
-              subtitle: Text('Arrives in Week 7'),
-              trailing: Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.push(
+              leading: const Icon(Icons.link),
+              title: const Text('Campus links'),
+              subtitle: const Text('Websites, map, call, email, share'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                await Navigator.push<bool>(
                   context,
-                  MaterialPageRoute(builder: (context) => const StubScreen(title: 'Campus Links')),
+                  MaterialPageRoute(builder: (_) => const LinksScreen()),
                 );
               },
             ),
