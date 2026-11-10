@@ -1,26 +1,60 @@
-import 'package:campus_buddy_kict/main.dart';
-import 'package:flutter/material.dart';
+pimport 'package:campus_buddy_kict/main.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('shows six courses and switches between list and grid', (
-    WidgetTester tester,
+  testWidgets('home navigation opens About and placeholder destinations', (
+    tester,
   ) async {
     await tester.pumpWidget(const CampusBuddyKictApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('My Courses'), findsOneWidget);
-    expect(find.text('6 courses · 0 credit hours'), findsOneWidget);
-    expect(find.text('COURSE 1'), findsOneWidget);
-    expect(find.text('COURSE 6'), findsOneWidget);
-    expect(find.byType(ListView), findsOneWidget);
+    expect(find.text('Campus Buddy KICT'), findsOneWidget);
+    expect(find.text('Prayer times'), findsOneWidget);
+    expect(find.text('Campus links'), findsOneWidget);
 
-    await tester.tap(find.byIcon(Icons.list));
+    await tester.tap(find.byTooltip('About'));
     await tester.pumpAndSettle();
-    expect(find.byType(GridView), findsOneWidget);
+    expect(find.text('Developed by simo'), findsOneWidget);
+    await tester.tap(find.text('Close'));
+    await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.grid_on));
+    await tester.tap(find.text('Prayer times'));
     await tester.pumpAndSettle();
-    expect(find.byType(ListView), findsOneWidget);
+    expect(find.text('Prayer times — coming soon'), findsOneWidget);
+  });
+
+  testWidgets('course detail removes a course and navigation preserves state', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const CampusBuddyKictApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Courses'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('6 courses · 19 credit hours\nEnrolled: 10 CH'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('CSCI 4334'));
+    await tester.pumpAndSettle();
+    expect(find.text('Network System and Administration'), findsOneWidget);
+    await tester.tap(find.text('Remove this course'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('5 courses · 16 credit hours\nEnrolled: 10 CH'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Courses'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('5 courses · 16 credit hours\nEnrolled: 10 CH'),
+      findsOneWidget,
+    );
+    expect(find.text('CSCI 4334'), findsNothing);
   });
 }

@@ -1,3 +1,4 @@
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
@@ -49,6 +50,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }
 
     setState(() => _courses.add(course));
+  }
+
+  Future<void> _openCourse(int index) async {
+    final removed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(course: _courses[index]),
+      ),
+    );
+
+    if (removed == true) {
+      setState(() => _courses.removeAt(index));
+    }
   }
 
   @override
@@ -107,7 +121,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       return Card(
                         child: InkWell(
                           borderRadius: BorderRadius.circular(12),
-                          onTap: () => _toggleEnrolled(index),
+                          onTap: () => _openCourse(index),
                           child: Padding(
                             padding: const EdgeInsets.all(12),
                             child: Column(
@@ -217,7 +231,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           value: course.enrolled,
                           onChanged: (_) => _toggleEnrolled(index),
                         ),
-                        onTap: () => _toggleEnrolled(index),
+                        onTap: () => _openCourse(index),
                       );
                     },
                   ),
