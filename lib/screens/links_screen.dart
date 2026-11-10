@@ -25,7 +25,7 @@ const _links = [
 ];
 
 // Assignment 5 — personal advising email.
-const _advisorEmail = 'advisor@iium.edu.my'; // TODO: your programme advisor
+const _advisorEmail = 'amelia@iium.edu.my';
 const _matricNo = '2311252';
 
 class LinksScreen extends StatefulWidget {
