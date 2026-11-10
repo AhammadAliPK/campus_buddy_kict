@@ -39,13 +39,14 @@ class _ShellScreenState extends State<ShellScreen> {
               selectedIcon: Icon(Icons.list),
               label: 'Courses'),
           NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: 'Profile'),
-          NavigationDestination(
               icon: Icon(Icons.note_outlined),
               selectedIcon: Icon(Icons.note),
               label: 'Notes'),
+          NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'Profile'),
+          
         ],
       ),
     );
