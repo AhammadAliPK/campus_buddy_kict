@@ -22,28 +22,59 @@ const _links = [
       Icons.local_library, 'https://division.iium.edu.my/lib'),
   LinkItem('KICT', 'Kuliyyah of ICT',
       Icons.computer, 'https://www.iium.edu.my/kict'),
+  LinkItem(
+  'CELPAD',
+  'Centre for Languages and Pre-University Academic Development',
+  Icons.language,
+  'https://centre.iium.edu.my/celpad/',
+),
 ];
 
-class LinksScreen extends StatelessWidget {
+class LinksScreen extends StatefulWidget {
   const LinksScreen({super.key});
 
-  Future<void> _open(BuildContext context, String uri) async {
-    final ok = await LinkOpener.open(uri);
-    if (!ok && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Cannot open $uri on this device')),
-      );
-    }
+  @override
+  State<LinksScreen> createState() => _LinksScreenState();
+}
+
+class _LinksScreenState extends State<LinksScreen> {
+  bool _openInApp = false;
+
+  
+Future<void> _open(BuildContext context, String uri) async {
+  final ok = await LinkOpener.open(
+    uri,
+    inApp: _openInApp,
+  );
+
+  if (!ok && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Cannot open $uri on this device')),
+    );
   }
+}
+
 
   void _callHotline(BuildContext context) =>
       _open(context, 'tel:+60361964000');
 
-  void _emailAdvisor(BuildContext context) => _open(
-        context,
-        'mailto:advisor@iium.edu.my?subject=Advising%20session'
-        '&body=Assalamualaikum%2C%20I%20would%20like%20to%20book%20a%20slot.',
-      );
+  
+void _emailAdvisor(BuildContext context) {
+  final emailUri = Uri(
+    scheme: 'mailto',
+    path: 'azlinnordin@iium.edu.my',
+    query: Uri(queryParameters: {
+      'subject': 'Advising Session - 2311586',
+      'body': 'Assalamualaikum Dr.,\n\n'
+          'I would like to book an advising session.\n\n'
+          'Matric Number: 2311586\n\n'
+          'Thank you.',
+    }).query,
+  );
+
+  _open(context, emailUri.toString());
+}
+
 
   void _openMap(BuildContext context) => _open(
         context,
@@ -51,6 +82,14 @@ class LinksScreen extends StatelessWidget {
             ? 'geo:3.0717,101.7182?q=IIUM+Gombak+Campus'
             : 'https://maps.apple.com/?q=IIUM+Gombak+Campus'
                 '&ll=3.0717,101.7182',
+      );
+      
+  void _openKuantanMap(BuildContext context) => _open(
+        context,
+        Platform.isAndroid
+            ? 'geo:3.84618,103.30821?q=IIUM+Kuantan+Campus'
+            : 'https://maps.apple.com/?q=IIUM+Kuantan+Campus'
+                '&ll=3.84618,103.30821',
       );
 
   void _share(BuildContext context) => SharePlus.instance.share(
@@ -66,6 +105,18 @@ class LinksScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          SwitchListTile(
+            title: const Text('Open in-app'),
+            subtitle: const Text('Open websites inside the app'),
+            secondary: const Icon(Icons.open_in_browser),
+            value: _openInApp,
+            onChanged: (value) {
+              setState(() {
+                _openInApp = value;
+              });
+            },
+          ),
+          const Divider(),
           ..._links.map(
             (l) => Card(
               child: ListTile(
@@ -83,6 +134,12 @@ class LinksScreen extends StatelessWidget {
             title: const Text('Campus map'),
             subtitle: const Text('IIUM Gombak on Google Maps'),
             onTap: () => _openMap(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.map_outlined),
+            title: const Text('IIUM Kuantan Campus Map'),
+            subtitle: const Text('IIUM Kuantan on Google Maps'),
+            onTap: () => _openKuantanMap(context),
           ),
           ListTile(
             leading: const Icon(Icons.phone),
