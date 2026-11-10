@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/placeholder_screen.dart';
+import 'package:campus_buddy_kict/screens/links_screen.dart';
+import 'package:campus_buddy_kict/services/app_share.dart';
 import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 
 // Week 6 exercise — why Home cannot clear the favourites:
@@ -19,6 +21,11 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Campus Buddy KICT'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Share Campus Buddy KICT',
+            onPressed: AppShare.share,
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => Navigator.pushNamed(context, '/about'),
@@ -47,15 +54,14 @@ class HomeScreen extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.link),
               title: const Text('Campus links'),
-              subtitle: const Text('Arrives in Week 7'),
+              subtitle: const Text('Websites, map, call, email, share'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      const PlaceholderScreen(title: 'Campus links', arrivesWeek: 7),
-                ),
-              ),
+              onTap: () async {
+                await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LinksScreen()),
+                );
+              },
             ),
           ),
           Card(
