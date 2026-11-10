@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/courses_screen.dart';
 import 'package:campus_buddy_kict/profile_screen.dart';
+import 'package:campus_buddy_kict/screens/links_screen.dart';
 
 void main() {
   runApp(const CampusBuddyKictApp());
@@ -18,7 +19,6 @@ class CampusBuddyKictApp extends StatelessWidget {
     return MaterialApp(
       title: 'Campus Buddy KICT',
       debugShowCheckedModeBanner: false,
-
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -72,26 +72,21 @@ class CampusBuddyKictApp extends StatelessWidget {
         ),
       ),
 
-      // WEEK 6: Named Routes
       initialRoute: '/',
       routes: {
         '/': (context) => const CampusHomeScreen(),
-
         '/profile-page': (context) => const ProfileScreen(),
       },
     );
   }
 }
 
-// ============================================================
-// CAMPUS HOME SCREEN
-// ============================================================
-
 class CampusHomeScreen extends StatefulWidget {
   const CampusHomeScreen({super.key});
 
   @override
-  State<CampusHomeScreen> createState() => _CampusHomeScreenState();
+  State<CampusHomeScreen> createState() =>
+      _CampusHomeScreenState();
 }
 
 class _CampusHomeScreenState extends State<CampusHomeScreen> {
@@ -100,6 +95,7 @@ class _CampusHomeScreenState extends State<CampusHomeScreen> {
   final List<Widget> _screens = const [
     CoursesScreen(),
     ProfileScreen(),
+    LinksScreen(),
   ];
 
   @override
@@ -109,8 +105,6 @@ class _CampusHomeScreenState extends State<CampusHomeScreen> {
         index: _selectedIndex,
         children: _screens,
       ),
-
-      // WEEK 6: Bottom Navigation Bar
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
@@ -130,6 +124,11 @@ class _CampusHomeScreenState extends State<CampusHomeScreen> {
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
             label: 'Profile',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.link_outlined),
+            selectedIcon: Icon(Icons.link),
+            label: 'Campus Links',
           ),
         ],
       ),
