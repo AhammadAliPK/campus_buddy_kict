@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/data/courses.dart';
-import 'package:campus_buddy_kict/models/course.dart';
-import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/data/courses.dart';       // Fixed import path
+import 'package:campus_buddy_kict/models/course.dart';     // Fixed import path
+import 'package:campus_buddy_kict/add_course_dialog.dart'; // Fixed import path
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -44,6 +45,19 @@ class _CoursesScreenState extends State<CoursesScreen> {
     );
     if (course == null) return;
     setState(() => courses.add(course));
+  }
+
+  Future<void> openDetail(int index) async {
+    final removed = await Navigator.push<bool>(
+      context,
+      CupertinoPageRoute(
+        builder: (context) => CourseDetailScreen(course: courses[index]),
+      ),
+    );
+
+    if (removed == true) {
+      setState(() => courses.removeAt(index));
+    }
   }
 
   @override
@@ -89,10 +103,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 children: [
                   const Text(
                     'Summary',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                   ),
                   Text(
                     '${courses.length} courses • $totalCh CH\nEnrolled: $enrolledCh CH',
@@ -127,7 +138,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           child: CupertinoButton(
                             padding: const EdgeInsets.all(8),
-                            onPressed: () => toggleEnrolled(index),
+                            onPressed: () => openDetail(index),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -179,27 +190,31 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           child: CupertinoButton(
                             padding: const EdgeInsets.all(10),
-                            onPressed: () => toggleEnrolled(index),
+                            onPressed: () => openDetail(index),
                             child: Row(
                               children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: course.enrolled
-                                        ? CupertinoColors.activeGreen
-                                            .withOpacity(0.12)
-                                        : CupertinoColors.activeBlue
-                                            .withOpacity(0.12),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    course.enrolled
-                                        ? CupertinoIcons.check_mark_circled_solid
-                                        : course.icon,
-                                    color: course.enrolled
-                                        ? CupertinoColors.activeGreen
-                                        : CupertinoColors.activeBlue,
-                                    size: 22,
+                                GestureDetector(
+                                  onTap: () => toggleEnrolled(index),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: course.enrolled
+                                          ? CupertinoColors.activeGreen
+                                              .withOpacity(0.12)
+                                          : CupertinoColors.activeBlue
+                                              .withOpacity(0.12),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Icon(
+                                      course.enrolled
+                                          ? CupertinoIcons
+                                              .check_mark_circled_solid
+                                          : course.icon,
+                                      color: course.enrolled
+                                          ? CupertinoColors.activeGreen
+                                          : CupertinoColors.activeBlue,
+                                      size: 22,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),

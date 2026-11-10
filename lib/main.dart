@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
-import 'package:campus_buddy_kict/courses_screen.dart';
+import 'package:campus_buddy_kict/screens/shell_screen.dart';
+import 'package:campus_buddy_kict/screens/about_screen.dart';
 
 void main() => runApp(const CampusBuddyKictApp());
 
@@ -8,13 +9,16 @@ class CampusBuddyKictApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const CupertinoApp(
+    return CupertinoApp(
       title: 'Campus Buddy KICT',
-      theme: CupertinoThemeData(
+      theme: const CupertinoThemeData(
         brightness: Brightness.light,
         primaryColor: CupertinoColors.activeBlue,
       ),
-      home: CoursesScreen(),
+      home: const ShellScreen(),
+      routes: {
+        '/about': (context) => const AboutScreen(),
+      },
     );
   }
 }
