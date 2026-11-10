@@ -4,7 +4,7 @@ import 'package:campus_buddy_kict/screens/links_screen.dart';   // the real link
 import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 import 'package:share_plus/share_plus.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatelessWidget {    // HomeScreen is a StatelessWidget because it has no changing state. It just shows a menu of cards and responds to taps.
   const HomeScreen({super.key});
 
   @override
@@ -13,6 +13,13 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Campus Buddy KICT'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share),                 // share button in the app bar
+            tooltip: 'Share',
+            onPressed: () => SharePlus.instance.share(     // open the share sheet
+              ShareParams(text: 'Campus Buddy KICT — built in CSCI 4311 at IIUM.'),   // ShareParams = the content to share. text = the text to share. Can also share files, URLs, etc.
+            ),
+          ),
           IconButton(                                         // Step 8: ⓘ button
             icon: const Icon(Icons.info_outline),
             onPressed: () => Navigator.pushNamed(context, '/about'), // open by NAME
