@@ -1,87 +1,56 @@
-import 'package:flutter/cupertino.dart';
-import 'package:campus_buddy_kict/screens/about_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';                          // ← NEW
+import 'package:campus_buddy_kict/screens/links_screen.dart';         // ← NEW
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: const Text('Campus Buddy KICT'),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          child: const Icon(CupertinoIcons.info),
-          onPressed: () => Navigator.pushNamed(context, '/about'),
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Campus Buddy KICT'), // still const - fine
+        actions: [                                                    // ← NEW
+          IconButton(                                                 // ← NEW
+            icon: const Icon(Icons.share),                            // ← NEW
+            tooltip: 'Share Campus Buddy KICT',                       // ← NEW
+            onPressed: () => SharePlus.instance.share(                // ← NEW
+              ShareParams(                                            // ← NEW
+                text: 'Campus Buddy KICT — built in CSCI 4311 at IIUM.', // ← NEW
+              ),                                                      // ← NEW
+            ),                                                        // ← NEW
+          ),                                                          // ← NEW
+        ],                                                            // ← NEW
       ),
-      child: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            CupertinoListSection.insetGrouped(
-              header: const Text('QUICK ACCESS'),
-              children: [
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.time),
-                  title: const Text('Prayer times'),
-                  subtitle: const Text('Arrives in Week 8'),
-                  trailing: const CupertinoListTileChevron(),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      CupertinoPageRoute(
-                        builder: (context) => const PlaceholderScreen(title: 'Prayer Times'),
-                      ),
-                    );
-                  },
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.link),
-                  title: const Text('Campus links'),
-                  subtitle: const Text('Arrives in Week 7'),
-                  trailing: const CupertinoListTileChevron(),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      CupertinoPageRoute(
-                        builder: (context) => const PlaceholderScreen(title: 'Campus Links'),
-                      ),
-                    );
-                  },
-                ),
-                CupertinoListTile(
-                  leading: const Icon(CupertinoIcons.info_circle),
-                  title: const Text('About Campus Buddy KICT'),
-                  trailing: const CupertinoListTileChevron(),
-                  onTap: () => Navigator.pushNamed(context, '/about'), // FIXED from onPressed to onTap
-                ),
-              ],
+      body: ListView(
+        padding: const EdgeInsets.all(16), // still const - fine
+        children: [ // ← NEW: the word `const` was DELETED here
+          // ---- keep your other Week 6 cards here ----
+          const Card(
+            child: ListTile(
+              leading: Icon(Icons.access_time),
+              title: Text('Prayer times'),
+              subtitle: Text('Arrives in Week 8'),
+              trailing: Icon(Icons.chevron_right),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const PlaceholderScreen({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text(title),
-      ),
-      child: SafeArea(
-        child: Center(
-          child: Text(
-            '$title coming soon!',
-            style: const TextStyle(fontSize: 18, color: CupertinoColors.systemGrey),
           ),
-        ),
+
+          // ---- the Campus links card, now working ----
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.link),
+              title: const Text('Campus links'),
+              subtitle: const Text('Websites, map, call, email, share'), // ← NEW
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {                                       // ← NEW
+                await Navigator.push<bool>(                           // ← NEW
+                  context,                                            // ← NEW
+                  MaterialPageRoute(builder: (_) => LinksScreen()),   // ← NEW
+                );                                                    // ← NEW
+              },                                                      // ← NEW
+            ),
+          ),
+        ],
       ),
     );
   }
