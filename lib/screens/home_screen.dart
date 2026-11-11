@@ -37,7 +37,7 @@ class HomeScreen extends StatelessWidget {    // HomeScreen is a StatelessWidget
             onTap: () => Navigator.push(context,              // Step 10: open placeholder
                 MaterialPageRoute(builder: (_) => const PrayerTimesScreen())),
           )),
-          Card(child: ListTile(
+          Card(child: ListTile(   // The "Campus links" card. Tap → open the links page. The links page has a list of links, each of which opens the link in a browser or app.
             leading: const Icon(Icons.link),
             title: const Text('Campus links'),
             subtitle: const Text('Websites, map, call, email, share'), //subtitle = smaller text under the title
