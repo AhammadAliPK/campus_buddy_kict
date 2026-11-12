@@ -12,19 +12,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _bio = 'Kulliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
   bool _editing = false;
 
-  // NEW: controllers let us read the text the user typed
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
 
-  // NEW: runs ONCE, when the screen is first created
   @override
   void initState() {
     super.initState();
-    _nicknameCtrl.text = _nickname; // pre-fill the boxes
+    _nicknameCtrl.text = _nickname; 
     _bioCtrl.text = _bio;
   }
 
-  // NEW: runs ONCE, when the screen is destroyed. Clean up.
   @override
   void dispose() {
     _nicknameCtrl.dispose();
@@ -35,7 +32,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _toggleEdit() {
     setState(() {
       if (_editing) {
-        // NEW: leaving edit mode, so save what was typed
         _nickname = _nicknameCtrl.text.trim();
         _bio = _bioCtrl.text.trim();
       }
@@ -65,8 +61,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               backgroundImage: NetworkImage('https://picsum.photos/200'),
             ),
             const SizedBox(height: 12),
-            if (_editing) ...[ // CHANGED: now a list of several widgets
-              TextField( // NEW
+            if (_editing) ...[ 
+              TextField(
                 controller: _nicknameCtrl,
                 decoration: const InputDecoration(
                   labelText: 'Nickname',
