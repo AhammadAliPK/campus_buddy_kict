@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/courses_screen.dart';
+import 'package:campus_buddy_kict/shell_screen.dart';
+import 'package:campus_buddy_kict/screens/about_screen.dart';
 
 void main() => runApp(const CampusBuddyKictApp());
 
@@ -16,8 +17,10 @@ class CampusBuddyKictApp extends StatelessWidget {
           seedColor: Colors.teal,
         ),
       ),
-      home: const CoursesScreen(),
+      home: const ShellScreen(),
+      routes: {
+        '/about': (context) => const AboutScreen(),
+      },
     );
   }
 }
-
