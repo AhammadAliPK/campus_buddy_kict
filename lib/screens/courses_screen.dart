@@ -182,7 +182,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
         actions: [
           // Clear favorite button
           IconButton(
-            icon: const Icon(Icons.star_outline),
+            icon: const Icon(Icons.delete_sweep_outlined),
             tooltip: 'Clear all favourites',
             onPressed: _clearAllFavorites,
           ),
