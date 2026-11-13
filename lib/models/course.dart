@@ -25,14 +25,23 @@ class Course {
     this.enrolled = false,
   });
 
-  // Fields are final, so a "change" is a copy with at most one difference.
-  Course copyWith({bool? starred, bool? enrolled}) => Course(
+  // Fields are final, so a "change" is a copy with some differences.
+  Course copyWith({
+    String? name,
+    double? creditHours,
+    String? day,
+    String? time,
+    String? venue,
+    bool? starred,
+    bool? enrolled,
+  }) =>
+      Course(
         code,
-        name,
-        creditHours,
-        day,
-        time,
-        venue,
+        name ?? this.name,
+        creditHours ?? this.creditHours,
+        day ?? this.day,
+        time ?? this.time,
+        venue ?? this.venue,
         icon,
         instructor: instructor,
         starred: starred ?? this.starred,

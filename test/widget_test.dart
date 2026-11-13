@@ -6,6 +6,8 @@ import 'package:campus_buddy_kict/main.dart';
 void main() {
   testWidgets('Courses screen shows the summary card', (tester) async {
     await tester.pumpWidget(const CampusBuddyKictApp());
+    await tester.tap(find.text('Courses'));
+    await tester.pumpAndSettle();
 
     expect(find.text('My Courses'), findsOneWidget);
     expect(find.text('6 courses · 16.5 credit hours'), findsOneWidget);
@@ -14,6 +16,8 @@ void main() {
 
   testWidgets('Ticking a course updates the enrolled total', (tester) async {
     await tester.pumpWidget(const CampusBuddyKictApp());
+    await tester.tap(find.text('Courses'));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.byType(Checkbox).first);
     await tester.pump();
@@ -23,6 +27,8 @@ void main() {
 
   testWidgets('Starring a course fills the star', (tester) async {
     await tester.pumpWidget(const CampusBuddyKictApp());
+    await tester.tap(find.text('Courses'));
+    await tester.pumpAndSettle();
 
     expect(find.byIcon(Icons.star), findsNothing);
     await tester.tap(find.byIcon(Icons.star_border).first);
@@ -34,6 +40,8 @@ void main() {
   testWidgets('Add course form rejects empty input, then saves a course',
       (tester) async {
     await tester.pumpWidget(const CampusBuddyKictApp());
+    await tester.tap(find.text('Courses'));
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Add course'));
     await tester.pumpAndSettle();

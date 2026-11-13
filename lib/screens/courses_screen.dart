@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -42,6 +44,40 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }
   }
 
+  // Capture the course (not its position) before awaiting: the list may be
+  // filtered, so an index into `shown` is not an index into _courses.
+  Future<void> _openDetail(Course course) async {
+    final result = await Navigator.push<Object>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(course: course),
+      ),
+    );
+    if (result == true) {
+      setState(() => _courses.removeAt(_courses.indexOf(course)));
+    } else if (result is Course) {
+      _replace(course, result); // edited copy; null (back) changes nothing
+    }
+  }
+
+  // Exercise: confirmation is a whole screen that pops true / false.
+  Future<void> _clearFavourites() async {
+    final yes = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            const ConfirmScreen(message: 'Clear all your starred courses?'),
+      ),
+    );
+    if (yes == true) {
+      setState(() {
+        _courses = [
+          for (final c in _courses) c.starred ? c.copyWith(starred: false) : c,
+        ];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double totalCh = 0;
@@ -64,6 +100,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.star_border_purple500),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavourites,
+          ),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
@@ -232,10 +273,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                                 ),
                               ],
                             ),
-                            onTap: () =>
-                                ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${course.code} tapped')),
-                            ),
+                            onTap: () => _openDetail(course),
                           );
                         },
                       ),
