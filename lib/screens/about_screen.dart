@@ -22,7 +22,7 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 8),
             const Text('CSCI 4311 Mobile Application Development'),
             const SizedBox(height: 8),
-            const Text('Developer: ' + _developer),
+            const Text('Developer: $_developer'),
             const SizedBox(height: 8),
             const Text('1.0.0 · Week 6'),
             const SizedBox(height: 24),
