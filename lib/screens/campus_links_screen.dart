@@ -1,8 +1,9 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/services/link_opener.dart';
+import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LinkItem {
   final String title;
@@ -10,24 +11,19 @@ class LinkItem {
   final IconData icon;
   final String uri;
 
-  const LinkItem(
-    this.title,
-    this.subtitle,
-    this.icon,
-    this.uri
-  );
+  const LinkItem(this.title, this.subtitle, this.icon, this.uri);
 }
 
 const _links = [
   LinkItem(
     'IIUM portal',
-    'Student porta & registration',
+    'Student portal & registration',
     Icons.school,
     'https://my.iium.edu.my',
   ),
   LinkItem(
     'IIUM website',
-    'News & announcments',
+    'News & announcements',
     Icons.public,
     'https://www.iium.edu.my',
   ),
@@ -43,63 +39,90 @@ const _links = [
     Icons.computer,
     'https://www.iium.edu.my/kict',
   ),
+  LinkItem(
+    'CELPAD',
+    'Language courses and proficiency tests',
+    Icons.translate,
+    'https://centre.iium.edu.my/celpad/',
+  ),
 ];
 
-class CampusLinksScreen extends StatelessWidget {
+class CampusLinksScreen extends StatefulWidget {
   const CampusLinksScreen({super.key});
 
-  Future<void> _open(BuildContext context, String uri) async {
-    final ok = await LinkOpener.open(uri);
+  @override
+  State<CampusLinksScreen> createState() => _CampusLinksScreenState();
+}
 
-    if (!ok && context.mounted) {
+class _CampusLinksScreenState extends State<CampusLinksScreen> {
+  bool _openInApp = false;
+
+  Future<void> _open(
+    String uri, {
+    LaunchMode mode = LaunchMode.externalApplication,
+  }) async {
+    final opened = await LinkOpener.open(uri, mode: mode);
+
+    if (!opened && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Canot open $uri on this device'),
+        const SnackBar(
+          content: Text('Cannot open this link on this device.'),
         ),
       );
     }
   }
 
-  Future<void> _openMap(BuildContext context) async {
-    final uri = Platform.isAndroid 
-      ? 'geo:0,0?q=IIUM+Gombak+Campus'
-      : 'https://maps.apple.com/?q=IIUM+Gombak+Campus';
-    
-    await _open(context, uri);
+  Future<void> _openGombakMap() {
+    final uri = Platform.isAndroid
+        ? 'geo:0,0?q=IIUM+Gombak+Campus'
+        : 'https://maps.apple.com/?q=IIUM+Gombak+Campus';
+
+    return _open(uri);
   }
 
-  Future<void> _callHotline(BuildContext context) async {
-    await _open(context, 'tel:+60361964000');
+  Future<void> _openKuantanMap() {
+    const coordinates = '3.84618,103.30821';
+    final label = Uri.encodeComponent('IIUM Kuantan Campus');
+
+    final uri = Platform.isAndroid
+        ? 'geo:0,0?q=$coordinates($label)'
+        : 'https://maps.apple.com/?ll=$coordinates&q=$label';
+
+    return _open(uri);
   }
 
-  Future<void> _emailAdvisor(BuildContext context) async {
-    // Lab placeholder
-    final subject = Uri.encodeComponent('Advising session');
+  Future<void> _emailAdvisor() {
+    const advisorEmail = 'zainab_senan@iium.edu.my';
+    final subject = Uri.encodeComponent(
+      'Request for academic advising session',
+    );
     final body = Uri.encodeComponent(
-      'Assalamualaikum, I would like to book a slot.',
+      'Assalamualaikum,\n\n'
+      'I am a Bachelor of Computer Science student. '
+      'My matric number is 2318072.\n\n'
+      'I would like to arrange an academic advising session. '
+      'Please let me know a suitable date and time.\n\n'
+      'Thank you.',
     );
 
-    await _open(
-      context,
-      'mailto:advisor@iium.edu.my?subject=$subject&body=$body',
-    );
+    return _open('mailto:$advisorEmail?subject=$subject&body=$body');
   }
 
-  Future<void> _share(BuildContext context) async {
+  Future<void> _share() async {
     try {
       await SharePlus.instance.share(
         ShareParams(
           text: 'Campus Buddy KICT - built in CSCI 4311 at IIUM.',
         ),
       );
-    } catch (e) {
-      debugPrint('Could not open sharing: $e');
+    } catch (error) {
+      debugPrint('Could not open sharing: $error');
 
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Cannot open sharing on this device'),
+          content: Text('Cannot open sharing on this device.'),
         ),
       );
     }
@@ -109,46 +132,66 @@ class CampusLinksScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Campus Links')
+        title: const Text('Campus Links'),
       ),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          SwitchListTile(
+            title: const Text('Open in-app'),
+            value: _openInApp,
+            onChanged: (value) {
+              setState(() {
+                _openInApp = value;
+              });
+            },
+          ),
           ..._links.map(
             (link) => Card(
               child: ListTile(
-                leading:Icon(link.icon),
+                leading: Icon(link.icon),
                 title: Text(link.title),
                 subtitle: Text(link.subtitle),
                 trailing: const Icon(Icons.open_in_new),
-                onTap: () => _open(context, link.uri),
+                onTap: () => _open(
+                  link.uri,
+                  mode: _openInApp
+                      ? LaunchMode.inAppBrowserView
+                      : LaunchMode.externalApplication,
+                ),
               ),
             ),
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.map),
-            title: const Text('Campus map'),
+            title: const Text('Gombak campus map'),
             subtitle: const Text('Find IIUM Gombak Campus'),
-            onTap: () => _openMap(context),
+            onTap: _openGombakMap,
+          ),
+          ListTile(
+            leading: const Icon(Icons.map),
+            title: const Text('Kuantan campus map'),
+            subtitle: const Text('Find IIUM Kuantan Campus'),
+            onTap: _openKuantanMap,
           ),
           ListTile(
             leading: const Icon(Icons.phone),
             title: const Text('Call university hotline'),
             subtitle: const Text('+60 3-6196 4000'),
-            onTap: () => _callHotline(context),
+            onTap: () => _open('tel:+60361964000'),
           ),
           ListTile(
             leading: const Icon(Icons.mail),
             title: const Text('Email academic advisor'),
-            subtitle: const Text('Prefilled subject & body'),
-            onTap: () => _emailAdvisor(context),
+            subtitle: const Text('Prefilled subject and body'),
+            onTap: _emailAdvisor,
           ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.share),
             title: const Text('Share Campus Buddy KICT'),
-            onTap: () => _share(context),
+            onTap: _share,
           ),
         ],
       ),
