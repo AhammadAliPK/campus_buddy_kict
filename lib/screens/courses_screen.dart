@@ -106,10 +106,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
       totalCh += c.creditHours;
     }
 
-    final enrolledCh = _courses
+    /*final enrolledCh = _courses
         .where((c) => c.enrolled)
         .fold<int>(0, (sum, c) => sum + c.creditHours);
-
+*/
     //final shown = _courses.toList();
     //final shown = sampleCourses.where((c) => c.day == 'Monday').toList();
 
@@ -145,7 +145,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Text(
-                '${_courses.length} courses · $totalCh credit hours\n Enrolled: $enrolledCh CH',
+                '${_courses.length} courses · $totalCh credit hours',
               ),
             ),
           ),
