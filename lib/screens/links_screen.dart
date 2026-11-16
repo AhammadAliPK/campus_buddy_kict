@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/services/link_opener.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LinkItem {
   final String title, subtitle;
@@ -36,12 +36,34 @@ const _links = [
     Icons.computer,
     'https://www.iium.edu.my/kict',
   ),
+  LinkItem(
+    'CELPAD',
+    'Centre for language & Pre-University Academic Development',
+    Icons.language,
+    'https://www.iium.edu.my/celpad',
+  ),
 ];
 
-class LinksScreen extends StatelessWidget {
+class LinksScreen extends StatefulWidget {
   const LinksScreen({super.key});
+
+  @override
+  State<LinksScreen> createState() => _LinksScreenState();
+}
+
+class _LinksScreenState extends State<LinksScreen> {
+  bool _openInApp = false;
   Future<void> _open(BuildContext context, String uri) async {
-    final ok = await LinkOpener.open(uri);
+    final parsedUri = Uri.parse(uri);
+
+    final isWebsite = parsedUri.scheme == 'http' || parsedUri.scheme == 'https';
+
+    final mode = isWebsite && _openInApp
+        ? LaunchMode.inAppBrowserView
+        : LaunchMode.externalApplication;
+
+    final ok = await launchUrl(parsedUri, mode: mode);
+
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Cannot open $uri on this device')),
@@ -50,12 +72,21 @@ class LinksScreen extends StatelessWidget {
   }
 
   void _callHotline(BuildContext context) => _open(context, 'tel:+60361964000');
-  void _emailAdvisor(BuildContext context) => _open(
-    context,
-    'mailto:advisor@iium.edu.my?subject=Advising%20session'
-    '&body=Assalamualaikum%2C%20I%20would%20like%20to%20book%20a%20slot.',
-  );
-  void _openMap(BuildContext context) => _open(
+  void _emailAdvisor(BuildContext context) {
+
+    final emailUri = Uri.parse(
+      'mailto:nadhrah@iium.edu.my'
+      '?subject=Advising%20session'
+      '&body=Assalamualaikum%2C%0A%0A'
+      'I%20would%20like%20to%20book%20an%20advising%20session.%0A%0A'
+      'My%20matric%20number%20is%202318463.%0A%0A'
+      'Thank%20you.',
+    );
+
+    _open(context, emailUri.toString());
+  }
+
+  void _openMapGombak(BuildContext context) => _open(
     context,
     Platform
             .isAndroid // ← NEW
@@ -63,13 +94,34 @@ class LinksScreen extends StatelessWidget {
         : 'https://maps.apple.com/?q=IIUM+Gombak+Campus'
               '&ll=3.0717,101.7182',
   );
+  void _openMapKuantan(BuildContext context) => _open(
+    context,
+    Platform
+            .isAndroid // ← NEW
+        ? 'geo:3.8167,103.3333?q=IIUM+Kuantan+Campus'
+        : 'https://maps.apple.com/?q=IIUM+Kuantan+Campus'
+              '&ll=3.8167,103.3333',
+  );
   void _share(BuildContext context) => SharePlus.instance.share(
     ShareParams(text: 'Campus Buddy KICT — built in CSCI 4311 at IIUM.'),
   );
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Campus links')),
+      appBar: AppBar(
+        title: const Text('Campus links'),
+        actions: [
+          const Text('Open in-app', style: TextStyle(fontSize: 12)),
+          Switch(
+            value: _openInApp,
+            onChanged: (value) {
+              setState(() {
+                _openInApp = value;
+              });
+            },
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
@@ -89,7 +141,13 @@ class LinksScreen extends StatelessWidget {
             leading: const Icon(Icons.map),
             title: const Text('Campus map'),
             subtitle: const Text('IIUM Gombak on Google Maps'),
-            onTap: () => _openMap(context),
+            onTap: () => _openMapGombak(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.map),
+            title: const Text('Campus map'),
+            subtitle: const Text('IIUM Kuantan on Google Maps'),
+            onTap: () => _openMapKuantan(context),
           ),
           ListTile(
             leading: const Icon(Icons.phone),
