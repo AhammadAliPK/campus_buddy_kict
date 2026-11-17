@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
 import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
+import 'package:campus_buddy_kict/screens/links_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
 class HomeScreen extends StatelessWidget {
  const HomeScreen({super.key});
@@ -11,6 +13,11 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Campus Buddy KICT'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () => SharePlus.instance.share(
+                ShareParams(text: 'Campus Buddy KICT built in CSCI 4311 at IIUM.')),
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => Navigator.pushNamed(context, '/about'), // Opens the named route
@@ -35,14 +42,16 @@ class HomeScreen extends StatelessWidget {
           ),
           Card(
             child: ListTile(
-              leading: const Icon(Icons.link),
-              title: const Text('Campus links'),
-              subtitle: const Text('Arrives in Week 7'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const CampusLinksScreen()),
-              ),
+              leading: Icon(Icons.link),
+              title: Text('Campus links'),
+              subtitle: Text('Websites, map, call, email, share'), // ← NEW
+              trailing: Icon(Icons.chevron_right),
+              onTap: () async { // ← NEW
+                await Navigator.push<bool>( // ← NEW
+                  context, // ← NEW
+                  MaterialPageRoute(builder: (_) => LinksScreen()), // ← NEW
+                ); // ← NEW
+              }, // ← NEW
             ),
           ),
           Card(
