@@ -177,3 +177,22 @@ Dart 3.13.5
 ```
 
 If something behaves strangely, run `flutter --version` and compare.
+
+## Campus Buddy KICT completion
+
+The project now includes the Weeks 3–7 application flow:
+
+- Student profile for Rafiq Hamsyari, matric 2312887, Section 1
+- Home dashboard with course summary and timetable preview
+- Searchable course list, favourites, course details, notes and sharing
+- Campus website, IIUM portal, campus map and hotline actions
+- Configurable academic advisor email placeholder
+- Android package-visibility queries for web, map, phone and email intents
+
+The timetable data in `lib/data/courses.dart` contains the eight supplied
+courses, including their credit hours, section, schedule, venue and lecturer.
+The advisor email remains intentionally configurable because no real address
+was supplied.
+
+Run `flutter pub get`, `flutter analyze` and `flutter test` from this folder.
+For Android builds, configure `ANDROID_HOME` and install an Android SDK first.
