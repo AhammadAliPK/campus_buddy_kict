@@ -44,16 +44,34 @@ const _links = [
     Icons.computer,
     'https://www.iium.edu.my/kict',
   ),
+  LinkItem(
+    'CELPAD',
+    'Centre for Languages and Pre-University Academic Development',
+    Icons.language,
+    'https://centre.iium.edu.my/celpad/',
+  ),
 ];
 
-class LinksScreen extends StatelessWidget {
-  const LinksScreen({super.key});
 
+  class LinksScreen extends StatefulWidget {
+    const LinksScreen({super.key});
+
+    @override
+    State<LinksScreen> createState() => _LinksScreenState();
+  }
+
+  class _LinksScreenState extends State<LinksScreen> {
+    bool _openInApp = false;
+
+  
   Future<void> _open(
     BuildContext context,
     String uri,
   ) async {
-    final ok = await LinkOpener.open(uri);
+    final ok = await LinkOpener.open(
+      uri,
+      inApp: _openInApp,
+    );
 
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -70,14 +88,22 @@ class LinksScreen extends StatelessWidget {
     _open(context, 'tel:+60361964000');
   }
 
+  
   void _emailAdvisor(BuildContext context) {
-    _open(
-      context,
-      'mailto:advisor@iium.edu.my'
-      '?subject=Advising%20session'
-      '&body=Assalamualaikum%2C%20I%20would%20like'
-      '%20to%20book%20a%20slot.',
+    final emailUri = Uri(
+      scheme: 'mailto',
+      path: 'siti_asma@iium.edu.my',
+      query: Uri(queryParameters: {
+        'subject': 'Academic Advising Session',
+        'body': 'Assalamualaikum,\n\n'
+            'I would like to request an academic advising session.\n\n'
+            'Name: Syarifah Noraqielah\n'
+            'Matric No: 2310400\n\n'
+            'Thank you.',
+      }).query,
     );
+
+    _open(context, emailUri.toString());
   }
 
   void _openMap(BuildContext context) {
@@ -108,6 +134,22 @@ class LinksScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+        SwitchListTile(
+          title: const Text('Open in-app'),
+          subtitle: const Text(
+            'Open website links inside Campus Buddy KICT',
+          ),
+          secondary: const Icon(Icons.open_in_browser),
+          value: _openInApp,
+          onChanged: (value) {
+            setState(() {
+              _openInApp = value;
+            });
+          },
+        ),
+
+        const Divider(),
+
           ..._links.map(
             (link) => Card(
               child: ListTile(
@@ -127,6 +169,19 @@ class LinksScreen extends StatelessWidget {
             title: const Text('Campus map'),
             subtitle: const Text('IIUM Gombak on Google Maps'),
             onTap: () => _openMap(context),
+          ),
+
+          ListTile(
+            leading: const Icon(Icons.map_outlined),
+            title: const Text('IIUM Kuantan Campus'),
+            subtitle: const Text('Jalan Sultan Ahmad Shah, Kuantan'),
+            onTap: () => _open(
+              context,
+              Platform.isAndroid
+                  ? 'geo:3.84618,103.30821?q=IIUM+Kuantan+Campus'
+                  : 'https://www.google.com/maps/search/?api=1'
+                    '&query=IIUM+Kuantan+Campus',
+            ),
           ),
 
           ListTile(
