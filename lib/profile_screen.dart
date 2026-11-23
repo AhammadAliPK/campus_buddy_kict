@@ -9,34 +9,40 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String _nickname = 'Guest Student';
-  String _bio = 'Kuliyyah of ICT · Year 2 · Loves nasi ayam and clean code.';
+  String _bio = 'Kuliyyah of ICT Year 2\nLoves nasi ayam and clean code.';
+  String _matric = '202300000';
+
   final _nicknameCtrl = TextEditingController();
   final _bioCtrl = TextEditingController();
+  final _matricCtrl = TextEditingController();
   bool _editing = false;
+
   @override
   void initState() {
     super.initState();
     _nicknameCtrl.text = _nickname;
     _bioCtrl.text = _bio;
-    // pre-fill from current state
+    _matricCtrl.text = _matric;
   }
 
   @override
   void dispose() {
     _nicknameCtrl.dispose();
     _bioCtrl.dispose();
+    _matricCtrl.dispose();
     super.dispose();
   }
 
   void _toggleEdit() {
     setState(() {
       if (_editing) {
-        // leaving edit mode: copy controller values into state
         _nickname = _nicknameCtrl.text.trim();
+        if (_nickname.isEmpty) _nickname = 'Guest Student';
         _bio = _bioCtrl.text.trim();
+        _matric = _matricCtrl.text.trim();
       }
+      _editing = !_editing;
     });
-    _editing = !_editing;
   }
 
   @override
@@ -72,6 +78,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 12),
               TextField(
+                controller: _matricCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Matric Number',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
                 controller: _bioCtrl,
                 maxLines: 3,
                 keyboardType: TextInputType.multiline,
@@ -90,6 +105,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Text(
                 _nickname,
                 style: Theme.of(context).textTheme.headlineSmall,
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                _matric,
+                style: const TextStyle(color: Colors.grey, fontSize: 12),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 6),

@@ -1,0 +1,24 @@
+Week 6 - In-class exercise: A screen that answers, part 2
+========================================================
+
+Why the "clear all favourites" button on Home can't actually clear anything
+---------------------------------------------------------------------------
+The list of courses (and which ones are favourited) lives inside the
+CoursesScreen's State object as the private _courses field. Home is a
+completely separate widget and has no reference to that list, so even after
+the confirmation screen pops back true, Home has nothing to call setState on
+and nothing to change. Each screen only owns its own state, and there is no
+shared place that both Home and Courses can read and write. The concept that
+fixes this is state management (lifting the course list up into a shared
+store above both tabs - e.g. Provider / Riverpod / an InheritedWidget - so any
+screen can reach the same data). We use it, not teach it, later this semester.
+
+What I did instead
+------------------
+The real "Clear all favourites" button is in the Courses tab (star icon in the
+app bar). It opens ConfirmScreen (a full Scaffold with "Are you sure?" and
+Yes/No, which pops true/false - not a popup dialog), and on true it sets every
+course's isFavorite back to false with setState. That works because the button
+and the course list are in the same screen. The Home button still opens the
+same confirmation screen, but on true it only shows a SnackBar explaining it
+can't reach the favourites from here.
