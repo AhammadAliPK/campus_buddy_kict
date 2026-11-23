@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/services/link_opener.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LinkItem {
   final String title, subtitle;
@@ -36,12 +37,34 @@ const _links = [
     Icons.computer,
     'https://www.iium.edu.my/kict',
   ),
+  LinkItem(
+    'CELPAD',
+    'Centre for Languages and Pre-University Academic Development',
+    Icons.language,
+    // 'https://centre.iium.edu.my/celpad/' another link to test.
+    'https://www.iium.edu.my/celpad/',
+  ),
 ];
 
-class LinksScreen extends StatelessWidget {
+class LinksScreen extends StatefulWidget {
   const LinksScreen({super.key});
+
+  @override
+  State<LinksScreen> createState() => _LinksScreenState();
+}
+
+class _LinksScreenState extends State<LinksScreen> {
+  bool _openInApp = false;
+
   Future<void> _open(BuildContext context, String uri) async {
-    final ok = await LinkOpener.open(uri);
+    final isWebsite = uri.startsWith('https://') || uri.startsWith('http://');
+
+    final mode = isWebsite && _openInApp
+        ? LaunchMode.inAppBrowserView
+        : LaunchMode.externalApplication;
+
+    final ok = await LinkOpener.open(uri, mode: mode);
+
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Cannot open $uri on this device')),
@@ -50,11 +73,35 @@ class LinksScreen extends StatelessWidget {
   }
 
   void _callHotline(BuildContext context) => _open(context, 'tel:+60361964000');
-  void _emailAdvisor(BuildContext context) => _open(
-    context,
-    'mailto:advisor@iium.edu.my?subject=Advising%20session'
-    '&body=Assalamualaikum%2C%20I%20would%20like%20to%20book%20a%20slot.',
-  );
+
+  void _emailAdvisor(BuildContext context) {
+    const advisorEmail = 'ahammad.ali@live.iium.edu.my';
+    const matricNumber = '2319717';
+
+    final subject = 'Academic Advising Session';
+
+    final body =
+        '''
+Assalamualaikum,
+
+I would like to request an academic advising session.
+
+My matric number is $matricNumber.
+
+Thank you.
+''';
+
+    final emailUri = Uri(
+      scheme: 'mailto',
+      path: advisorEmail,
+      query:
+          'subject=${Uri.encodeComponent(subject)}'
+          '&body=${Uri.encodeComponent(body)}',
+    );
+
+    _open(context, emailUri.toString());
+  }
+
   void _openMap(BuildContext context) => _open(
     context,
     Platform
@@ -73,6 +120,20 @@ class LinksScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
+          SwitchListTile(
+            title: const Text('Open in-app'),
+            subtitle: const Text('Open websites inside Campus Buddy KICT'),
+            secondary: const Icon(Icons.open_in_browser),
+            value: _openInApp,
+            onChanged: (value) {
+              setState(() {
+                _openInApp = value;
+              });
+            },
+          ),
+
+          const Divider(),
+
           ..._links.map(
             (l) => Card(
               child: ListTile(
@@ -91,6 +152,18 @@ class LinksScreen extends StatelessWidget {
             subtitle: const Text('IIUM Gombak on Google Maps'),
             onTap: () => _openMap(context),
           ),
+
+          ListTile(
+            leading: const Icon(Icons.map_outlined),
+            title: const Text('Kuantan campus map'),
+            subtitle: const Text('IIUM Kuantan on Google Maps'),
+            onTap: () => _open(
+              context,
+              'https://www.google.com/maps/search/?api=1'
+              '&query=IIUM+Kuantan+Campus',
+            ),
+          ),
+
           ListTile(
             leading: const Icon(Icons.phone),
             title: const Text('Call university hotline'),
