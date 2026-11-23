@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/clear_favourites_screen.dart';
+import 'package:campus_buddy_kict/screens/links_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -10,6 +12,17 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Campus Buddy KICT'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Share Campus Buddy KICT',
+            onPressed: () {
+              SharePlus.instance.share(
+                ShareParams(
+                  text: 'Campus Buddy KICT — built in CSCI 4311 at IIUM.',
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             tooltip: 'About',
@@ -42,25 +55,41 @@ class HomeScreen extends StatelessWidget {
               },
             ),
           ),
+          // Card(
+          //   child: ListTile(
+          //     leading: const Icon(Icons.link),
+          //     title: const Text('Campus links'),
+          //     subtitle: const Text('Arrives in Week 7'),
+          //     trailing: const Icon(Icons.chevron_right),
+          //     onTap: () {
+          //       Navigator.push(
+          //         context,
+          //         MaterialPageRoute(
+          //           builder: (_) => const PlaceholderScreen(
+          //             title: 'Campus links',
+          //             message: 'Coming in Week 7',
+          //           ),
+          //         ),
+          //       );
+          //     },
+          //   ),
+          // ),
+
           Card(
             child: ListTile(
               leading: const Icon(Icons.link),
               title: const Text('Campus links'),
-              subtitle: const Text('Arrives in Week 7'),
+              subtitle: const Text('Websites, map, call, email, share'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push<bool>(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const PlaceholderScreen(
-                      title: 'Campus links',
-                      message: 'Coming in Week 7',
-                    ),
-                  ),
+                  MaterialPageRoute(builder: (_) => const LinksScreen()),
                 );
               },
             ),
           ),
+
           Card(
             child: ListTile(
               leading: const Icon(Icons.info_outline),
