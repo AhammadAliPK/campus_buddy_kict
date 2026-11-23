@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/prayer_screen.dart';
 import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
 import 'package:campus_buddy_kict/screens/clear_favourites_screen.dart';
+import 'package:campus_buddy_kict/screens/links_screen.dart';
 
 class HomeScreen extends StatelessWidget {
  const HomeScreen({super.key});
@@ -41,13 +42,13 @@ class HomeScreen extends StatelessWidget {
       child: ListTile(
         leading: const Icon(Icons.link),
         title: const Text('Campus links'),
-        subtitle: const Text('Arrives in Week 7'),
+        subtitle: Text('Websites, map, call, email, share'), // ← NEW
         trailing: const Icon(Icons.chevron_right),
-        onTap: () {
-          Navigator.push(
-            context,
+        onTap: () async { // ← NEW
+ await Navigator.push<bool>( // ← NEW
+ context, 
             MaterialPageRoute(
-              builder: (_) => const CampusLinksScreen(),
+              builder: (_) => LinksScreen(),
             ),
           );
         },

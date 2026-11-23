@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:campus_buddy_kict/services/link_opener.dart';
 
 class CampusLinksScreen extends StatelessWidget {
   const CampusLinksScreen({super.key});
+
+Future<void> _open(BuildContext context, String uri) async {
+ final ok = await LinkOpener.open(uri);
+ if (!ok && context.mounted) {
+ ScaffoldMessenger.of(context).showSnackBar(
+ SnackBar(content: Text('Cannot open $uri on this device')),
+ );
+ }
+}
+
 
   @override
   Widget build(BuildContext context) {
