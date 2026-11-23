@@ -17,7 +17,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   bool _favoritesOnly = false;
   late List<Course> _courses;
-  String _selectedDay = 'All';
+  final String _selectedDay = 'Monday';
 
   @override
   void initState() {
@@ -144,6 +144,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
         title: const Text('My Courses'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.delete_sweep_outlined),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavorites,
+          ),
+          IconButton(
             icon: const Icon(Icons.add),
             onPressed: _addCourse,
           ),
@@ -170,23 +175,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
             ),
           ),
 
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: ['All', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-                  .map((day) => FilterChip(
-                        label: Text(day),
-                        selected: _selectedDay == day,
-                        onSelected: (_) {
-                          setState(() {
-                            _selectedDay = day;
-                          });
-                        },
-                      ))
-                  .toList(),
-            ),
-          ),
-
           FilterChip(
             label: const Text('★ favourites only'),
             selected: _favoritesOnly,
@@ -195,11 +183,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                 _favoritesOnly = selected;
               });
             },
-          ),
-
-          ElevatedButton(
-            onPressed: _clearFavorites,
-            child: const Text('Clear all favourites'),
           ),
        
 Expanded(

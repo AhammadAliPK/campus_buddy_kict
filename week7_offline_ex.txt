@@ -1,0 +1,8 @@
+//Website links require an internet connection to retrieve online content,
+// so they fail to load when the device is offline.
+// Phone and email links launch external applications, 
+// which still open without internet access, 
+// but display the error dino. 
+// Map links open the Maps application, 
+// but loading map information can depend on internet access
+// and cached data. 

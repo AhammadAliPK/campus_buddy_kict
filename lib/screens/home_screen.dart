@@ -1,8 +1,9 @@
 
 import 'package:flutter/material.dart';
-import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
+import 'package:campus_buddy_kict/screens/links_screen.dart';
 import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
 import 'package:campus_buddy_kict/screens/clear_favorites_screen.dart';
+import 'package:share_plus/share_plus.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,6 +15,17 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Campus Buddy KICT'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Share Campus Buddy KICT',
+            onPressed: () {
+              SharePlus.instance.share(
+                ShareParams(
+                  text: 'Campus Buddy KICT — built in CSCI 4311 at IIUM.',
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => Navigator.pushNamed(context, '/about'),
@@ -41,16 +53,18 @@ class HomeScreen extends StatelessWidget {
           ),
           Card(
             child: ListTile(
-              leading: Icon(Icons.link),
-              title: Text('Campus links'),
-              subtitle: Text('Arrives in Week 7'),
-              trailing: Icon(Icons.chevron_right),
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const CampusLinksScreen(),
-                ),
-              ),
+              leading: const Icon(Icons.link),
+              title: const Text('Campus links'),
+              subtitle: const Text('Websites, map, call, email, share'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const LinksScreen(),
+                  ),
+                );
+              },
             ),
           ),
           Card(
@@ -77,13 +91,7 @@ class HomeScreen extends StatelessWidget {
               if (!context.mounted) return;
 
               if (confirmed == true) {
-                // Cannot clear favourites from Home. The Home screen cannot clear the favourites
-                // because the favourites are stored in the Courses screen's state. 
-                //The Home screen cannot directly access or change the `_courses` list. 
-                //This problem can be solved using **state management**, 
-                //which allows different screens to share and update data. 
-                //For now, the Clear All Favourites button works in the Courses screen 
-                //because it can update its own state using `setState()`.
+                
               }
 
             },
