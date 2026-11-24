@@ -15,6 +15,7 @@ class CampusBuddyKictApp extends StatelessWidget {
       ),
       home: const ShellScreen(),
       routes: {'/about': (context) => const AboutScreen()},
+      
     );
   }
 }
