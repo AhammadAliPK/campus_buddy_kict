@@ -2,18 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:campus_buddy_kict/screens/links_screen.dart';
+import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  void _openPlaceholder(BuildContext context, String title, String message) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PlaceholderScreen(title: title, message: message),
-      ),
-    );
-  }
 
   void _share(BuildContext context) {
     SharePlus.instance.share(
@@ -48,13 +40,12 @@ class HomeScreen extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.wb_twilight),
               title: const Text('Prayer times'),
-              subtitle: const Text('Arrives in Week 8'),
+              subtitle: const Text('Today prayer times in Kuala Lumpur'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
-                _openPlaceholder(
+                Navigator.push(
                   context,
-                  'Prayer Times',
-                  'Prayer times will arrive in Week 8.',
+                  MaterialPageRoute(builder: (_) => const PrayerTimesScreen()),
                 );
               },
             ),
@@ -85,25 +76,6 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class PlaceholderScreen extends StatelessWidget {
-  const PlaceholderScreen({
-    super.key,
-    required this.title,
-    required this.message,
-  });
-
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(child: Text(message)),
     );
   }
 }
