@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/add_course_dialog.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart';
-import 'package:campus_buddy_kict/profile_screen.dart';
+import 'package:campus_buddy_kict/screens/confirm_screen.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart';
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -71,6 +72,46 @@ class _CoursesScreenState extends State<CoursesScreen> {
     setState(() => _courses.removeAt(index));
   }
 
+  // Week 6: open the detail page. It answers true (remove) or an edited Course.
+  Future<void> _openDetail(Course course) async {
+    final result = await Navigator.push<Object>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CourseDetailScreen(
+          course: course,
+          existingCodes: _courses.map((c) => c.code).toList(),
+        ),
+      ),
+    );
+    if (!mounted) return;
+    // Find the course again by object, not by the old position.
+    final i = _courses.indexOf(course);
+    if (i < 0) return;
+    if (result == true) {
+      setState(() => _courses.removeAt(i));
+    } else if (result is Course) {
+      setState(() => _courses[i] = result);
+    }
+    // Back button = null = nothing changes.
+  }
+
+  // Week 6 exercise: clear all stars, after a full confirmation screen.
+  Future<void> _clearFavourites() async {
+    final sure = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ConfirmScreen(
+          title: 'Clear favourites',
+          message: 'Are you sure? Every starred course loses its star.',
+        ),
+      ),
+    );
+    if (sure != true) return;
+    setState(() {
+      _courses = [for (final c in _courses) c.copyWith(isFavorite: false)];
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
@@ -103,10 +144,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
             onPressed: () => setState(() => _isGrid = !_isGrid),
           ),
           IconButton(
-            icon: const Icon(Icons.person),
-            tooltip: 'My Profile',
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const ProfileScreen())),
+            icon: const Icon(Icons.star_half),
+            tooltip: 'Clear all favourites',
+            onPressed: _clearFavourites,
           ),
         ],
       ),
@@ -151,7 +191,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       final course = _courses[index];
                       return Card(
                         child: InkWell(
-                          onTap: () => _toggleEnrolled(index),
+                          onTap: () => _openDetail(course),
                           onLongPress: () => _confirmRemove(index),
                           child: Center(
                             child: Column(
@@ -191,17 +231,23 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       final index = shown[i];
                       final course = _courses[index];
                       return ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Theme.of(context)
-                              .colorScheme
-                              .primaryContainer,
-                          child: Icon(
-                            course.enrolled ? Icons.check_circle : course.icon,
-                            color: course.enrolled
-                                ? Colors.green
-                                : Theme.of(context)
-                                      .colorScheme
-                                      .onPrimaryContainer,
+                        // Tap the round icon to enroll (the row itself opens the detail page).
+                        leading: GestureDetector(
+                          onTap: () => _toggleEnrolled(index),
+                          child: CircleAvatar(
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer,
+                            child: Icon(
+                              course.enrolled
+                                  ? Icons.check_circle
+                                  : course.icon,
+                              color: course.enrolled
+                                  ? Colors.green
+                                  : Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                            ),
                           ),
                         ),
                         title: Text(course.code),
@@ -216,7 +262,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           ),
                           onPressed: () => _toggleFavorite(index),
                         ),
-                        onTap: () => _toggleEnrolled(index),
+                        onTap: () => _openDetail(course),
                         onLongPress: () => _confirmRemove(index),
                       );
                     },
