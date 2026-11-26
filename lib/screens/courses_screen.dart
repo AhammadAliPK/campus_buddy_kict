@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/data/courses.dart';
 import 'package:campus_buddy_kict/models/course.dart'; 
 import 'package:campus_buddy_kict/add_course_dialog.dart';
+import 'package:campus_buddy_kict/screens/course_detail_screen.dart'; 
+import 'package:campus_buddy_kict/screens/clear_favorites_screen.dart'; 
 
 class CoursesScreen extends StatefulWidget {
   const CoursesScreen({super.key});
@@ -13,15 +15,15 @@ class CoursesScreen extends StatefulWidget {
 class _CoursesScreenState extends State<CoursesScreen> {
   bool _isGrid = false;
   bool _showFavoritesOnly = false;
-  late List<Course> _courses; // 
+  late List<Course> _courses;
 
   @override
-  void initState() { // 
+  void initState() {
     super.initState();
     _courses = List.of(sampleCourses);
   }
 
-    void _toggleFavorite(Course course) {
+  void _toggleFavorite(Course course) {
     setState(() {
       final index = _courses.indexOf(course);
       if (index != -1) {
@@ -42,15 +44,17 @@ class _CoursesScreenState extends State<CoursesScreen> {
       }
     });
   }
-    Future<void> _addCourse() async {
+
+  Future<void> _addCourse() async {
     final course = await showDialog<Course>(
       context: context,
       builder: (_) => AddCourseDialog(),
     );
-    if (course == null) return; // User cancelled
+    if (course == null) return; 
     setState(() => _courses.add(course));
   }
-    Future<void> _removeCourse(Course course) async {
+
+  Future<void> _removeCourse(Course course) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -80,23 +84,43 @@ class _CoursesScreenState extends State<CoursesScreen> {
   @override
   Widget build(BuildContext context) {
     int totalCh = 0;
-    for (final c in _courses) { // 
+    for (final c in _courses) {
       totalCh = totalCh + c.creditHours;
     }
     final enrolledCh = _courses
         .where((c) => c.enrolled)
         .fold<int>(0, (sum, c) => sum + c.creditHours);
-          // Filter the list based on the chip
+        
     final shownCourses = _showFavoritesOnly
         ? _courses.where((c) => c.isFavorite).toList()
         : _courses;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
-                actions: [
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.clear_all),
+            tooltip: 'Clear all favourites',
+            onPressed: () async{
+              
+              final confirm = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(builder: (_) => const ClearFavoritesScreen()),
+              ).then((confirm) {
+                if (confirm == true) {
+                  setState(() {
+                    for (int i = 0; i < _courses.length; i++) {
+                      _courses[i] = _courses[i].copyWith(isFavorite: false);
+                    }
+                  });
+                }
+              });
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: _addCourse, // 
+            onPressed: _addCourse, 
           ),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
@@ -109,7 +133,15 @@ class _CoursesScreenState extends State<CoursesScreen> {
         children: [
           Card(
             margin: const EdgeInsets.all(12),
-            child:           Padding(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                '${_courses.length} courses - $totalCh credit hours\nEnrolled: $enrolledCh CH',
+              ),
+            ),
+          ),
+          // Filter Chip
+          Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Align(
               alignment: Alignment.centerLeft,
@@ -124,7 +156,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
               ),
             ),
           ),
-          ),
           Expanded(
             child: _isGrid
                 ? GridView.builder(
@@ -135,9 +166,9 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       crossAxisSpacing: 8,
                       childAspectRatio: 1.2,
                     ),
-                    itemCount: _courses.length, // 
+                    itemCount: shownCourses.length, 
                     itemBuilder: (context, index) {
-                      final course = _courses[index]; // 
+                      final course = shownCourses[index]; 
                       return Card(
                         child: Center(
                           child: Column(
@@ -155,11 +186,30 @@ class _CoursesScreenState extends State<CoursesScreen> {
                   )
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    itemCount: shownCourses.length, // 
+                    itemCount: shownCourses.length, 
                     itemBuilder: (context, index) {
-                      final course = shownCourses[index]; // 
+                      final course = shownCourses[index]; 
                       return ListTile(
                         onLongPress: () => _removeCourse(course),
+                        onTap: () async {
+                          final result = await Navigator.push<Object>(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CourseDetailScreen(course: course),
+                            ),
+                          );
+
+                          if (result == true) {
+                            setState(() => _courses.remove(course));
+                          } else if (result is Course) {
+                            setState(() {
+                              final index = _courses.indexOf(course);
+                              if (index != -1) {
+                                _courses[index] = result; 
+                              }
+                            });
+                          }
+                        },
                         tileColor: index.isOdd ? Colors.black.withValues(alpha: 0.03) : null,
                         leading: CircleAvatar(
                           backgroundColor: course.enrolled
@@ -177,8 +227,6 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             Text(course.instructor ?? 'TBA'),
                           ],
                         ),
-                        //
-                        onTap: () => _toggleEnrolled(course),
                         trailing: IconButton(
                           icon: Icon(
                             course.isFavorite ? Icons.star : Icons.star_border,
