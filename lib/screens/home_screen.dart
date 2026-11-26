@@ -3,6 +3,8 @@ import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
 import 'package:campus_buddy_kict/screens/campus_links_screen.dart';
 import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 import 'package:campus_buddy_kict/screens/links_screen.dart';
+import 'package:campus_buddy_kict/screens/prayer_screen.dart';
+
 
 
 class HomeScreen extends StatelessWidget {
@@ -31,12 +33,13 @@ class HomeScreen extends StatelessWidget {
             child: ListTile(
               leading: Icon(Icons.wb_twilight),
               title: Text('Prayer times'),
-              subtitle: Text('Arrives in Week 8'),
+              subtitle: Text('Today in Kuala Lumpur'),
               trailing: Icon(Icons.chevron_right),
-              onTap: () => Navigator.push(
+              onTap: () async{ 
+                await Navigator.push<bool>(
                 context,
-                MaterialPageRoute(builder: (_) => const PrayerTimesScreen()),
-              ),
+                MaterialPageRoute(builder: (_) => const PrayerScreen()),
+            );},//park
             ),
           ),
           Card(
