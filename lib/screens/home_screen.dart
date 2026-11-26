@@ -36,6 +36,11 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Campus Buddy KICT'),
         actions: [
+          const IconButton(
+            icon: Icon(Icons.share),
+            tooltip: 'Share Campus Buddy KICT',
+            onPressed: shareApp, // same helper as the links page
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             tooltip: 'About',
@@ -62,7 +67,7 @@ class HomeScreen extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.link),
               title: const Text('Campus links'),
-              subtitle: const Text('Arrives in Week 7'),
+              subtitle: const Text('Websites, map, call, email, share'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.push(
                 context,

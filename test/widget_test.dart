@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:campus_buddy_kict/main.dart';
+import 'package:campus_buddy_kict/screens/links_screen.dart';
 import 'package:campus_buddy_kict/screens/profile_screen.dart';
 
 // Opens the app on the Courses tab.
@@ -184,13 +185,51 @@ void main() {
 
     await tester.tap(find.text('Campus links'));
     await tester.pumpAndSettle();
-    expect(find.text('Campus links arrive in Week 7'), findsOneWidget);
+    expect(find.text('IIUM website'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Prayer times'));
     await tester.pumpAndSettle();
     expect(find.text('Prayer times arrive in Week 8'), findsOneWidget);
+  });
+
+  testWidgets('Links page: all rows and the in-app switch', (tester) async {
+    await tester.pumpWidget(const CampusBuddyKictApp());
+    expect(find.byTooltip('Share Campus Buddy KICT'), findsOneWidget);
+    await tester.tap(find.text('Campus links'));
+    await tester.pumpAndSettle();
+    for (final t in [
+      'IIUM portal',
+      'IIUM website',
+      'Library',
+      'KICT',
+      'CELPAD',
+    ]) {
+      expect(find.text(t), findsOneWidget);
+    }
+    expect(find.text('Websites open in your browser'), findsOneWidget);
+    await tester.tap(find.byType(Switch));
+    await tester.pump();
+    expect(find.text('Websites open inside Campus Buddy'), findsOneWidget);
+
+    await tester.scrollUntilVisible(find.text('Share Campus Buddy KICT'), 200);
+    for (final t in [
+      'Campus map: Gombak',
+      'Campus map: Kuantan',
+      'Call university hotline',
+      'Email academic advisor',
+      'Share Campus Buddy KICT',
+    ]) {
+      expect(find.text(t), findsOneWidget);
+    }
+  });
+
+  test('Advisor mail link is URL-encoded and has my matric', () {
+    expect(advisorMailUri.contains(' '), isFalse);
+    expect(advisorMailUri, contains('2311687'));
+    final body = Uri.parse(advisorMailUri).queryParameters['body']!;
+    expect(body, contains('matric 2311687'));
   });
 
   testWidgets('Add course: validation, new row, duplicate guard', (
