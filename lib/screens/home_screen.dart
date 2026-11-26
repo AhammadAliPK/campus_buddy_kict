@@ -107,6 +107,23 @@ _courses list is private state stored inside CoursesScreen. Since
 HomeScreen and CoursesScreen are separate sibling screens, Home 
 doesn't have direct access to modify _courses or trigger setState on
 it. Normal StatefulWidget state can't pass data across different screen 
-trees like this. To olve this problem and share app state across screens, 
+trees like this. To solve this problem and share app state across screens, 
 we need to use state management
+*/
+
+/* 
+In-Class Exercise Answers (Malfunction Report)
+
+1. Observations
+- Website links: Tapping them opens the web browser, but the browser displays "Looks like you're 
+                not connected to a network. Check your settings and try again" page.
+- Map, Dialer, Mail: The phone dialer opens with +60361964000 pre-filled, and the email app opens
+  with the subject/body pre-filled. The map app opens but fails to show the direction because no 
+  internet connection.
+
+2. Explanation
+Web links fail because HTTP/HTTPS require internet connection to access to access external websites.
+On the other hand, tel:, mailto:, and geo: links work through apps already instaled on the device.
+The internet connection can be checked in LinkOpener.open() using a network connectivity
+checking package before opening web links with launchURL().
 */
