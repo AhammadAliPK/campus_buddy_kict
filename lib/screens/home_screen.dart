@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/prayer_times_screen.dart';
 import 'package:campus_buddy_kict/screens/links_screen.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:campus_buddy_kict/screens/prayer_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -35,14 +36,12 @@ class HomeScreen extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.wb_twilight),
               title: const Text('Prayer times'),
-              subtitle: const Text('Arrives in Week 8'),
+              subtitle: const Text('Today in Kuala Lumpur'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.push(
+              onTap: () async {
+                await Navigator.push<bool>(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const PrayerTimesScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const PrayerScreen()),
                 );
               },
             ),
