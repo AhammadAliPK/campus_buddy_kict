@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:campus_buddy_kict/main.dart';
 import 'package:campus_buddy_kict/screens/links_screen.dart';
@@ -28,6 +29,8 @@ Future<void> addCourse(WidgetTester tester, String code, String name) async {
 }
 
 void main() {
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('Shell: four tabs switch screens and keep state', (tester) async {
     await tester.pumpWidget(const CampusBuddyKictApp());
     expect(find.text('Campus Buddy KICT'), findsOneWidget); // Home
@@ -189,9 +192,10 @@ void main() {
     await tester.pageBack();
     await tester.pumpAndSettle();
 
+    expect(find.text('Today in Kuala Lumpur'), findsOneWidget);
     await tester.tap(find.text('Prayer times'));
     await tester.pumpAndSettle();
-    expect(find.text('Prayer times arrive in Week 8'), findsOneWidget);
+    expect(find.text('Prayer times · Kuala Lumpur'), findsOneWidget);
   });
 
   testWidgets('Links page: all rows and the in-app switch', (tester) async {
