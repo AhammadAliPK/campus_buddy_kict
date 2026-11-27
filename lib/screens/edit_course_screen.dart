@@ -105,7 +105,7 @@ State<EditCourseScreen> {
               ),    
             ],
           ),
-        ),
+      ),
     );
   }
 }
