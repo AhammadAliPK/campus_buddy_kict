@@ -6,14 +6,17 @@ import 'package:campus_buddy_kict/models/prayer_times.dart';
 class PrayerService {
   static const _baseUrl = 'https://api.aladhan.com/v1';
 
-  Future<PrayerTimes> fetchKlTimes() async {
+  Future<PrayerTimes> fetchTimesForCity(String city) async {
+    final uri = Uri.parse('$_baseUrl/timingsByCity').replace(
+      queryParameters: {
+        'city': city,
+        'country': 'Malaysia',
+        'method': '8',
+      },
+    );
+
     final response = await http
-        .get(
-          Uri.parse(
-            '$_baseUrl/timingsByCity'
-            '?city=Kuala%20Lumpur&country=Malaysia&method=8',
-          ),
-        )
+        .get(uri)
         .timeout(const Duration(seconds: 10));
 
     if (response.statusCode != 200) {

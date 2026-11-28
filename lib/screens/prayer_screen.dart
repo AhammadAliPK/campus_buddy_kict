@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/models/prayer_times.dart';
 import 'package:campus_buddy_kict/services/prayer_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PrayerScreen extends StatefulWidget {
   const PrayerScreen({super.key});
@@ -11,17 +12,35 @@ class PrayerScreen extends StatefulWidget {
 
 class _PrayerScreenState extends State<PrayerScreen> {
   final _service = PrayerService();
+  final _prefs = SharedPreferencesAsync();
+  String _selectedCity = 'Kuala Lumpur';
+
   late Future<PrayerTimes> _future;
 
   @override
   void initState() {
     super.initState();
-    _future = _service.fetchKlTimes();
+    _future = _loadSavedCity();
   }
 
+  Future<PrayerTimes> _loadSavedCity() async {
+    final savedCity = await _prefs.getString('selected_city');
+    final cities = {'Kuala Lumpur', 'Kota Bharu', 'Putrajaya'};
+    final city = cities.contains(savedCity) ? savedCity! : 'Kuala Lumpur';
+
+    if (mounted) {
+      setState(() {
+        _selectedCity = city;
+      });
+    }
+
+    return _service.fetchTimesForCity(city);
+  }
+  
   void _reload() {
     setState(() {
-      _future = _service.fetchKlTimes();
+      
+      _future = _service.fetchTimesForCity(_selectedCity);
     });
   }
 
@@ -29,7 +48,28 @@ class _PrayerScreenState extends State<PrayerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Prayer times · KL'),
+        title: DropdownButton<String>(
+          value: _selectedCity,
+          isExpanded: true,
+          items: const [
+            'Kuala Lumpur',
+            'Kota Bharu',
+            'Putrajaya',
+          ].map((city) {
+            return DropdownMenuItem(
+              value: city,
+              child: Text(city),
+            );
+          }).toList(),
+          onChanged: (city) async {
+            if (city == null) return;
+            setState(() {
+              _selectedCity = city;
+              _future = _service.fetchTimesForCity(city);
+            });
+            await _prefs.setString('selected_city', city);
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -70,10 +110,12 @@ class _PrayerScreenState extends State<PrayerScreen> {
 
           final times = snapshot.data!;
           final rows = [
+            ('Imsak', times.imsak, Icons.nightlight),
             ('Fajr', times.fajr, Icons.nightlight),
             ('Sunrise', times.sunrise, Icons.wb_sunny),
             ('Dhuhr', times.dhuhr, Icons.wb_sunny),
             ('Asr', times.asr, Icons.wb_cloudy),
+            ('Sunset', times.sunset, Icons.nightlight),
             ('Maghrib', times.maghrib, Icons.brightness_3),
             ('Isha', times.isha, Icons.dark_mode),
           ];
