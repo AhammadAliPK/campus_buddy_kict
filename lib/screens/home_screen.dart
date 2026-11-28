@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:campus_buddy_kict/screens/confirm_screen.dart';
 import 'package:campus_buddy_kict/screens/links_screen.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:campus_buddy_kict/screens/prayer_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -30,13 +31,22 @@ class HomeScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          Card(child: ListTile(
-            leading: Icon(Icons.wb_twilight),
-            title: Text('Prayer times'),
-            subtitle: Text('Arrives in Week 8'),
-            trailing: Icon(Icons.chevron_right),
-            onTap: () => Navigator.pushNamed(context, '/prayer_times'),
-          )),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.wb_twilight),
+              title: const Text('Prayer times'),
+              subtitle: const Text('Today in Kuala Lumpur'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const PrayerScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
           Card(child: ListTile(
             leading: Icon(Icons.link),
             title: Text('Campus links'),
