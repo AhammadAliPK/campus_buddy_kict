@@ -31,20 +31,11 @@ class _CoursesScreenState extends State<CoursesScreen> {
     });
   }
 
-  void _toggleEnrolled(int index) {
-    setState(() {
-      _courses[index] = _courses[index].copyWith(
-        enrolled: !_courses[index].enrolled,
-      );
-    });
-  }
-
   Future<void> _addCourse() async {
     final course = await showDialog<Course>(
       context: context,
-      builder: (_) => AddCourseDialog(
-        existingCodes: _courses.map((c) => c.code).toList(),
-      ),
+      builder: (_) =>
+          AddCourseDialog(existingCodes: _courses.map((c) => c.code).toList()),
     );
 
     if (course == null) return;
@@ -55,9 +46,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
   Future<void> _confirmClearFavourites() async {
     final confirmed = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (_) => const ClearFavouritesScreen(),
-      ),
+      MaterialPageRoute(builder: (_) => const ClearFavouritesScreen()),
     );
     if (!mounted || confirmed != true) return;
 
@@ -76,24 +65,24 @@ class _CoursesScreenState extends State<CoursesScreen> {
     }
 
     final enrolledCh = _courses
-      .where((c) => c.enrolled)
-      .fold<int>(0, (sum, c) => sum + c.creditHours);
-    final shown = _courses.asMap().entries
-      .where((entry) => !_favoritesOnly || entry.value.isFavorite)
-      .toList();
+        .where((c) => c.enrolled)
+        .fold<int>(0, (sum, c) => sum + c.creditHours);
+    final shown = _courses
+        .asMap()
+        .entries
+        .where((entry) => !_favoritesOnly || entry.value.isFavorite)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Courses'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _addCourse,
-          ),
+          IconButton(icon: const Icon(Icons.add), onPressed: _addCourse),
           IconButton(
             icon: _isGrid ? const Icon(Icons.grid_on) : const Icon(Icons.list),
             tooltip: 'Grid view',
-            onPressed: () => setState(() => _isGrid = !_isGrid), // D. wires this up
+            onPressed: () =>
+                setState(() => _isGrid = !_isGrid), // D. wires this up
           ),
           IconButton(
             icon: const Icon(Icons.star_outline),
@@ -136,10 +125,10 @@ class _CoursesScreenState extends State<CoursesScreen> {
                     padding: const EdgeInsets.all(8),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                    ),
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                        ),
                     itemCount: _courses.length,
                     itemBuilder: (context, index) {
                       final course = _courses[index];
@@ -168,10 +157,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                       );
                     },
                   )
-                  : shown.isEmpty
-                  ? const Center(
-                    child: Text('No classes! Alhamdulillah :)'),
-                  )
+                : shown.isEmpty
+                ? const Center(child: Text('No classes! Alhamdulillah :)'))
                 : ListView.builder(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: shown.length,
@@ -190,7 +177,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                               ),
                               actions: [
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context, false),
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
                                   child: const Text('Cancel'),
                                 ),
                                 TextButton(
@@ -211,15 +199,16 @@ class _CoursesScreenState extends State<CoursesScreen> {
                             ? Colors.black.withValues(alpha: 0.03)
                             : null,
                         leading: CircleAvatar(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.primaryContainer,
+                          backgroundColor: Theme.of(context)
+                              .colorScheme
+                              .primaryContainer,
                           child: Icon(
-                            course.enrolled
-                              ? Icons.check_circle
-                              : course.icon,
+                            course.enrolled ? Icons.check_circle : course.icon,
                             color: course.enrolled
                                 ? Colors.green
-                                : Theme.of(context).colorScheme.onPrimaryContainer,
+                                : Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer,
                           ),
                         ),
                         title: Text(course.code),
@@ -227,15 +216,15 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(course.name),
-                            Text('${course.day} ${course.time} . ${course.venue}'),
+                            Text(
+                              '${course.day} ${course.time} . ${course.venue}',
+                            ),
                             Text(course.instructor ?? 'TBA'),
                           ],
                         ),
                         trailing: IconButton(
                           icon: Icon(
-                            course.isFavorite
-                              ? Icons.star
-                              : Icons.star_border,
+                            course.isFavorite ? Icons.star : Icons.star_border,
                             color: course.isFavorite ? Colors.amber : null,
                           ),
                           onPressed: () => _toggleFavorite(courseIndex),
@@ -246,7 +235,8 @@ class _CoursesScreenState extends State<CoursesScreen> {
                           final result = await Navigator.push<Object?>(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => CourseDetailScreen(course: selectedCourse),
+                              builder: (_) =>
+                                  CourseDetailScreen(course: selectedCourse),
                             ),
                           );
                           if (!mounted) return;
@@ -255,7 +245,7 @@ class _CoursesScreenState extends State<CoursesScreen> {
 
                           if (currentIndex == -1) return;
 
-                          if (result ==true) {
+                          if (result == true) {
                             setState(() {
                               _courses.removeAt(currentIndex);
                             });

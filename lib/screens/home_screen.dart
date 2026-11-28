@@ -50,7 +50,7 @@ class HomeScreen extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.wb_twilight),
               title: const Text('Prayer times'),
-              subtitle: const Text('Arrives in Week 8'),
+              subtitle: const Text('Today in Kuala Lumpur'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => Navigator.push(
                 context,
