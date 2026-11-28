@@ -1,18 +1,10 @@
 import 'package:campus_buddy_kict/screens/links_screen.dart';
+import 'package:campus_buddy_kict/screens/prayer_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  void _openComingSoon(BuildContext context, String title) {
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (_) => _ComingSoonScreen(title: title),
-      ),
-    );
-  }
 
   Future<void> _share(BuildContext context) async {
     try {
@@ -54,9 +46,16 @@ class HomeScreen extends StatelessWidget {
             child: ListTile(
               leading: const Icon(Icons.wb_twilight),
               title: const Text('Prayer times'),
-              subtitle: const Text('Arrives in Week 8'),
+              subtitle: const Text('Today in Kuala Lumpur'),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () => _openComingSoon(context, 'Prayer times'),
+              onTap: () {
+                Navigator.push<void>(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PrayerScreen(),
+                  ),
+                );
+              },
             ),
           ),
           Card(
@@ -85,20 +84,6 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ComingSoonScreen extends StatelessWidget {
-  const _ComingSoonScreen({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(child: Text('$title — coming soon')),
     );
   }
 }

@@ -22,7 +22,7 @@ void main() {
 
     await tester.tap(find.text('Prayer times'));
     await tester.pumpAndSettle();
-    expect(find.text('Prayer times — coming soon'), findsOneWidget);
+    expect(find.text('Prayer times · KL'), findsOneWidget);
     await tester.pageBack();
     await tester.pumpAndSettle();
 
